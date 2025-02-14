@@ -143,13 +143,15 @@ export class Runtime {
             msg: "Storing user message in memory",
             user: userInput.user,
             platform: userInput.pluginId,
-            message: userInput.rawMessage
+            message: userInput.rawMessage,
+            messageId: userInput.id
           });
           await this.memoryService.storeUserInteraction(
             userInput.user,
             userInput.pluginId,
             userInput.rawMessage,
-            userInput.timestamp
+            userInput.timestamp,
+            userInput.id
           );
         }
 

@@ -41,14 +41,16 @@ export class MemoryService {
     user: string,
     platform: string,
     message: string,
-    timestamp: number
+    timestamp: number,
+    messageId?: string
   ): Promise<void> {
     try {
       log.info({
         msg: "Storing user interaction",
         user,
         platform,
-        message
+        message,
+        messageId
       });
       const conversationId = await this.getOrCreateConversation(user, platform);
       log.info({
@@ -57,18 +59,19 @@ export class MemoryService {
         user,
         platform
       });
-      const messageId = `${platform}-${timestamp}`;
+
+      // Use provided messageId or generate one
+      const finalMessageId = messageId || `${platform}-${timestamp}`;
       log.info({
-        msg: "Generated user message ID",
-        messageId,
-        timestamp,
-        platform
+        msg: "Using message ID",
+        messageId: finalMessageId,
+        wasProvided: !!messageId
       });
 
       // Store the user's message
       await this.storeMessage(
         {
-          id: messageId,
+          id: finalMessageId,
           role: "user",
           content: message,
           timestamp
@@ -77,7 +80,7 @@ export class MemoryService {
       );
       log.info({
         msg: "Stored user message",
-        messageId,
+        messageId: finalMessageId,
         conversationId
       });
     } catch (error) {
@@ -264,7 +267,7 @@ export class MemoryService {
   async getRecentConversationHistory(
     user: string,
     platform: string,
-    limit: number = 5
+    limit: number = 100
   ): Promise<{ role: string; content: string; timestamp: number }[]> {
     try {
       const conversationId = this.generateConversationId(user, platform);

@@ -14,9 +14,8 @@ config({
 import { createRuntime } from "@maiar-ai/core";
 
 // Import all plugins
-import { PluginTerminal } from "@maiar-ai/plugin-terminal";
 import { PluginExpress } from "@maiar-ai/plugin-express";
-import { PluginWebSocket } from "@maiar-ai/plugin-websocket";
+import { PluginX } from "@maiar-ai/plugin-x";
 import { PluginTextGeneration } from "@maiar-ai/plugin-text";
 import { PluginTime } from "@maiar-ai/plugin-time";
 
@@ -33,9 +32,12 @@ const runtime = createRuntime({
     dbPath: path.join(process.cwd(), "data", "conversations.db")
   }),
   plugins: [
-    new PluginTerminal({ prompt: "maiar> " }),
     new PluginExpress({ port: 3000 }),
-    new PluginWebSocket({ port: 3001 }),
+    new PluginX({
+      username: process.env.X_USERNAME as string,
+      password: process.env.X_PASSWORD as string,
+      email: process.env.X_EMAIL as string
+    }),
     new PluginTextGeneration(),
     new PluginTime()
   ]

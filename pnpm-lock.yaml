@@ -363,7 +363,7 @@ importers:
         specifier: workspace:*
         version: link:../core
       agent-twitter-client:
-        specifier: ^0.0.18
+        specifier: 0.0.18
         version: 0.0.18
       zod:
         specifier: 3.24.1

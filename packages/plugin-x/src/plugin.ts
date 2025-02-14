@@ -149,14 +149,14 @@ export class PluginX extends PluginBase {
               await this.checkMentions();
             } catch (error: unknown) {
               log.error(
-                "[X Plugin] Error in checkMentions:",
+                "Error in checkMentions:",
                 error instanceof Error ? error.message : String(error)
               );
               if (error instanceof Error && error.stack) {
-                log.error("[X Plugin] Stack trace:", error.stack);
+                log.error("Stack trace:", error.stack);
               }
               // Log the full error object for debugging
-              log.error("[X Plugin] Full error:", error);
+              log.error("Full error:", error);
             }
           };
 

@@ -48,7 +48,7 @@
   "dependencies": {
     "@maiar-ai/core": "workspace:*",
     "zod": "3.24.1",
-    "agent-twitter-client": "^0.0.18"
+    "agent-twitter-client": "0.0.18"
   },
   "devDependencies": {
     "@types/node": "22.13.1",

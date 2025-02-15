@@ -19,7 +19,7 @@ import { PluginExpress } from "@maiar-ai/plugin-express";
 import { PluginTextGeneration } from "@maiar-ai/plugin-text";
 import { PluginTime } from "@maiar-ai/plugin-time";
 import { PluginCharacter } from "@maiar-ai/plugin-character";
-
+import { PluginSearch } from "@maiar-ai/plugin-search";
 import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
 import { OpenAIProvider } from "@maiar-ai/model-openai";
 
@@ -41,6 +41,9 @@ const runtime = createRuntime({
         path.join(process.cwd(), "character.xml"),
         "utf-8"
       )
+    }),
+    new PluginSearch({
+      apiKey: process.env.PERPLEXITY_API_KEY as string
     })
   ]
 });

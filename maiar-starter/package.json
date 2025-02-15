@@ -20,6 +20,7 @@
     "@maiar-ai/plugin-websocket": "workspace:*",
     "@maiar-ai/plugin-x": "workspace:*",
     "@maiar-ai/plugin-character": "workspace:*",
+    "@maiar-ai/plugin-search": "workspace:*",
     "dotenv": "16.4.7"
   },
   "devDependencies": {

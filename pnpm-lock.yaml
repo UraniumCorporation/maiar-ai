@@ -79,6 +79,9 @@ importers:
       "@maiar-ai/plugin-image":
         specifier: workspace:*
         version: link:../packages/plugin-image
+      "@maiar-ai/plugin-search":
+        specifier: workspace:*
+        version: link:../packages/plugin-search
       "@maiar-ai/plugin-telegram":
         specifier: workspace:*
         version: link:../packages/plugin-telegram
@@ -257,6 +260,28 @@ importers:
         version: 5.7.3
 
   packages/plugin-image:
+    dependencies:
+      "@maiar-ai/core":
+        specifier: workspace:*
+        version: link:../core
+      axios:
+        specifier: 1.7.9
+        version: 1.7.9
+      zod:
+        specifier: 3.24.1
+        version: 3.24.1
+    devDependencies:
+      "@types/node":
+        specifier: 22.13.1
+        version: 22.13.1
+      tsup:
+        specifier: 8.3.6
+        version: 8.3.6(jiti@2.4.2)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0)
+      typescript:
+        specifier: 5.7.3
+        version: 5.7.3
+
+  packages/plugin-search:
     dependencies:
       "@maiar-ai/core":
         specifier: workspace:*
@@ -12867,14 +12892,6 @@ packages:
       eslint: ^8.57.0 || ^9.0.0
       typescript: ">=4.8.4 <5.8.0"
 
-  typescript@5.6.3:
-    resolution:
-      {
-        integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==
-      }
-    engines: { node: ">=14.17" }
-    hasBin: true
-
   typescript@5.7.3:
     resolution:
       {
@@ -15805,7 +15822,7 @@ snapshots:
 
   "@leichtgewicht/ip-codec@2.0.5": {}
 
-  "@lerna/create@8.1.9(encoding@0.1.13)(typescript@5.6.3)":
+  "@lerna/create@8.1.9(encoding@0.1.13)(typescript@5.7.3)":
     dependencies:
       "@npmcli/arborist": 7.5.4
       "@npmcli/package-json": 5.2.0
@@ -15823,7 +15840,7 @@ snapshots:
       console-control-strings: 1.1.0
       conventional-changelog-core: 5.0.1
       conventional-recommended-bump: 7.0.1
-      cosmiconfig: 9.0.0(typescript@5.6.3)
+      cosmiconfig: 9.0.0(typescript@5.7.3)
       dedent: 1.5.3
       execa: 5.0.0
       fs-extra: 11.3.0
@@ -17672,15 +17689,6 @@ snapshots:
     optionalDependencies:
       typescript: 5.7.3
 
-  cosmiconfig@9.0.0(typescript@5.6.3):
-    dependencies:
-      env-paths: 2.2.1
-      import-fresh: 3.3.0
-      js-yaml: 4.1.0
-      parse-json: 5.2.0
-    optionalDependencies:
-      typescript: 5.6.3
-
   cosmiconfig@9.0.0(typescript@5.7.3):
     dependencies:
       env-paths: 2.2.1
@@ -19477,7 +19485,7 @@ snapshots:
 
   lerna@8.1.9(encoding@0.1.13):
     dependencies:
-      "@lerna/create": 8.1.9(encoding@0.1.13)(typescript@5.6.3)
+      "@lerna/create": 8.1.9(encoding@0.1.13)(typescript@5.7.3)
       "@npmcli/arborist": 7.5.4
       "@npmcli/package-json": 5.2.0
       "@npmcli/run-script": 8.1.0
@@ -19495,7 +19503,7 @@ snapshots:
       conventional-changelog-angular: 7.0.0
       conventional-changelog-core: 5.0.1
       conventional-recommended-bump: 7.0.1
-      cosmiconfig: 9.0.0(typescript@5.6.3)
+      cosmiconfig: 9.0.0(typescript@5.7.3)
       dedent: 1.5.3
       envinfo: 7.13.0
       execa: 5.0.0
@@ -19548,7 +19556,7 @@ snapshots:
       strong-log-transformer: 2.1.0
       tar: 6.2.1
       temp-dir: 1.0.0
-      typescript: 5.6.3
+      typescript: 5.7.3
       upath: 2.0.1
       uuid: 10.0.0
       validate-npm-package-license: 3.0.4
@@ -22726,8 +22734,6 @@ snapshots:
       typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
-
-  typescript@5.6.3: {}
 
   typescript@5.7.3: {}
 

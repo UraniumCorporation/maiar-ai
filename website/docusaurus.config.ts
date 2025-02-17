@@ -100,6 +100,10 @@ const config: Config = {
               to: "/docs/getting-started"
             },
             {
+              label: "Contributing to Maiar",
+              to: "/docs/contributing-guide"
+            },
+            {
               label: "API",
               to: "/api"
             },

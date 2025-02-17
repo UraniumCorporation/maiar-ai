@@ -23,6 +23,11 @@ const sidebars: SidebarsConfig = {
       label: "Getting Started"
     },
     {
+      type: "doc",
+      id: "contributing-guide",
+      label: "Contributing to Maiar"
+    },
+    {
       type: "category",
       label: "Building Plugins",
       link: {

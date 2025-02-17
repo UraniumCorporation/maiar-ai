@@ -16,6 +16,8 @@ export class PluginX extends PluginBase {
   private mentionsTimer?: ReturnType<typeof setInterval>;
   private scraper: Scraper;
   private initialized: Promise<void>;
+  private mentionsCheckIntervalMins: number;
+  private loginRetries: number;
 
   constructor(private config: XPluginConfig) {
     super({
@@ -23,6 +25,10 @@ export class PluginX extends PluginBase {
       name: "X",
       description: "Handles x requests for the Maiar agent"
     });
+
+    // Set default values for optional config parameters
+    this.mentionsCheckIntervalMins = this.config.mentionsCheckIntervalMins || 5;
+    this.loginRetries = this.config.loginRetries || 3;
 
     if (!this.config.username || !this.config.password || !this.config.email) {
       throw new Error(
@@ -144,7 +150,7 @@ export class PluginX extends PluginBase {
           await this.initialized;
 
           log.info("Starting mentions trigger");
-          const intervalMs = 1 * 60 * 1000; // 1 minute
+          const intervalMs = this.mentionsCheckIntervalMins * 60 * 1000;
 
           await this.checkMentions();
           this.mentionsTimer = setInterval(
@@ -159,7 +165,7 @@ export class PluginX extends PluginBase {
   }
 
   private async initializeTwitter(): Promise<void> {
-    const maxRetries = 3;
+    const maxRetries = this.loginRetries;
     let retries = maxRetries;
 
     while (retries > 0) {

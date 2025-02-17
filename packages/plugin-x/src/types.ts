@@ -4,6 +4,8 @@ export interface XPluginConfig {
   username: string;
   password: string;
   email: string;
+  mentionsCheckIntervalMins?: number;
+  loginRetries?: number;
 }
 
 export interface XPlatformContext

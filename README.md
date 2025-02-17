@@ -10,7 +10,7 @@ Maiar is designed around the **thesis** that AI agents, in their current iterati
 
 Instead of rigid workflows or monolithic agent logic, Maiar abstracts these steps into a **modular, plugin-based system**. Developers define **triggers** and **actions** as standalone plugins, while the core runtime dynamically handles decision-making. This enables a highly extensible, composable, and LLM-driven framework where new functionality can be added seamlessly.
 
-## Getting Started with Maiar
+## Getting Started Running Maiar
 
 Welcome to Maiar! This guide will help you set up and run your own AI agent using the Maiar framework.
 
@@ -132,6 +132,69 @@ curl -X POST http://localhost:3000/message \
 ```
 
 You should receive a response from your agent explaining its capabilities.
+
+## Getting Started Contributing to Maiar
+
+### Prerequisites
+
+> [!IMPORTANT]
+>
+> **Please make sure to checkout the [contributing guide](.github/CONTRIBUTING.md) first and foremost**
+
+1. Make sure you have the following installed:
+
+- [Node.js](https://nodejs.org/) (v22.13.1) - We recommend using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) to manage Node.js versions:
+
+```bash
+nvm install 22.13.1
+nvm use 22.13.1
+```
+
+- The [pnpm](https://pnpm.io/) package manager explicitly - Required for managing the monorepo workspace and its dependencies efficiently
+
+2. Install the project dependencies:
+
+```bash
+# From the root of the repository
+pnpm install
+```
+
+3. Start the development environment. You'll need two terminal windows:
+
+**Terminal 1 - Core Packages:**
+
+```bash
+# From the root of the repository
+pnpm dev
+```
+
+This command watches for changes in the core packages (`packages/**/*.ts`) and automatically rebuilds them. It:
+
+1. Cleans any previous build state
+2. Builds all core packages
+3. Creates a `.build-complete` marker file to indicate the core packages build is finished as a state file to communicate with the starter project
+4. Watches for changes and repeats the process
+
+**Terminal 2 - Starter Project:**
+
+```bash
+# From the root of the repository
+cd maiar-starter
+pnpm dev
+```
+
+This command runs the starter project in development mode. It:
+
+1. Watches for changes in both the starter project's source files and core package builds
+2. Waits for core packages to finish building (using the `.build-complete` marker)
+3. Rebuilds the starter project
+4. Restarts the application automatically
+
+This setup ensures that changes to either the core packages or the starter project are automatically rebuilt and reflected in your running application, providing a seamless development experience.
+
+> [!NOTE]
+>
+> The `maiar-starter` project serves as a reference implementation demonstrating how to develop against the core Maiar packages. You can apply this same development setup to any project that depends on Maiar packages - simply mirror the dev script configuration and `.build-complete` marker file handling shown in the starter project's package.json. The key focus of this repository is the core packages in `packages/*`, with `maiar-starter` serving as an example consumer.
 
 ## **How It Works**
 

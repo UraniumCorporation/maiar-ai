@@ -10,6 +10,15 @@ Maiar is designed around the **thesis** that AI agents, in their current iterati
 
 Instead of rigid workflows or monolithic agent logic, Maiar abstracts these steps into a **modular, plugin-based system**. Developers define **triggers** and **actions** as standalone plugins, while the core runtime dynamically handles decision-making. This enables a highly extensible, composable, and LLM-driven framework where new functionality can be added seamlessly.
 
+## Table of Contents
+
+- [Getting Started Running Maiar](#getting-started-running-maiar)
+- [Getting Started Contributing to Maiar](#getting-started-contributing-to-maiar)
+- [How It Works](#how-it-works)
+- [Pipes & Context Chains](#pipes-context-chains)
+- [Extensibility & Modularity](#extensibility-modularity)
+- [Design Principles](#design-principles)
+
 ## Getting Started Running Maiar
 
 Welcome to Maiar! This guide will help you set up and run your own AI agent using the Maiar framework.

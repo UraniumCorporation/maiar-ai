@@ -42,6 +42,7 @@
     "@commitlint/types": "19.5.0",
     "@eslint/js": "9.19.0",
     "@types/node": "22.13.1",
+    "chokidar-cli": "3.0.0",
     "commitizen": "4.3.1",
     "conventional-changelog-atom": "5.0.0",
     "cz-conventional-changelog": "3.3.0",

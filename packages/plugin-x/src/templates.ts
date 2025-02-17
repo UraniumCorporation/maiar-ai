@@ -19,6 +19,6 @@ export function generateTweetTemplate(contextChain: BaseContextItem[]): string {
 
     Your job is to synthesize the context chain into a comprehensive and useful response to the user's intitial message.
 
-    Return a JSON object with a single "tweetText" field containing your response.
+    Return a JSON object with a single "tweetText" field containing your response. The response needs to be short enough to fit in a single tweet. Less than 270 characters.
     `;
 }

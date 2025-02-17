@@ -15,13 +15,14 @@ config({
 import { createRuntime } from "@maiar-ai/core";
 
 // Import all plugins
-import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
-import { OpenAIProvider } from "@maiar-ai/model-openai";
-import { PluginCharacter } from "@maiar-ai/plugin-character";
 import { PluginExpress } from "@maiar-ai/plugin-express";
-import { PluginSearch } from "@maiar-ai/plugin-search";
 import { PluginTextGeneration } from "@maiar-ai/plugin-text";
 import { PluginTime } from "@maiar-ai/plugin-time";
+import { PluginCharacter } from "@maiar-ai/plugin-character";
+import { PluginSearch } from "@maiar-ai/plugin-search";
+import { PluginX } from "@maiar-ai/plugin-x";
+import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
+import { OpenAIProvider } from "@maiar-ai/model-openai";
 
 import appRouter from "./app";
 // Create and start the agent
@@ -48,6 +49,11 @@ const runtime = createRuntime({
     }),
     new PluginSearch({
       apiKey: process.env.PERPLEXITY_API_KEY as string
+    }),
+    new PluginX({
+      username: process.env.X_USERNAME as string,
+      password: process.env.X_PASSWORD as string,
+      email: process.env.X_EMAIL as string
     })
   ]
 });

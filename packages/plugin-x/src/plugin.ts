@@ -62,10 +62,11 @@ export class PluginX extends PluginBase {
                 "This is the tweet that you posted. You can use the URL to communicate it back to the user if they initiated this action on another channel. Do not use this URL in a tweet itself."
             }
           };
-        } catch (error) {
+        } catch (err) {
+          log.error({ err }, "Error posting tweet");
           return {
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            error: err instanceof Error ? err.message : String(err)
           };
         }
       }
@@ -126,10 +127,11 @@ export class PluginX extends PluginBase {
               helpfulInstruction: "This reply was sent to the mentioned tweet"
             }
           };
-        } catch (error) {
+        } catch (err) {
+          log.error({ err }, "Error sending tweet");
           return {
             success: false,
-            error: error instanceof Error ? error.message : String(error)
+            error: err instanceof Error ? err.message : String(err)
           };
         }
       }
@@ -144,27 +146,13 @@ export class PluginX extends PluginBase {
           log.info("Starting mentions trigger");
           const intervalMs = 1 * 60 * 1000; // 1 minute
 
-          const checkMentions = async () => {
-            try {
-              await this.checkMentions();
-            } catch (error: unknown) {
-              log.error(
-                "Error in checkMentions:",
-                error instanceof Error ? error.message : String(error)
-              );
-              if (error instanceof Error && error.stack) {
-                log.error("Stack trace:", error.stack);
-              }
-              // Log the full error object for debugging
-              log.error("Full error:", error);
-            }
-          };
-
-          await checkMentions();
-          this.mentionsTimer = setInterval(checkMentions, intervalMs);
-        } catch (error) {
-          log.error("Failed to start mentions trigger:", error);
-          throw error;
+          await this.checkMentions();
+          this.mentionsTimer = setInterval(
+            () => this.checkMentions(),
+            intervalMs
+          );
+        } catch (err) {
+          log.error({ err }, "Error in mentions trigger");
         }
       }
     });
@@ -204,15 +192,9 @@ export class PluginX extends PluginBase {
           // Add a delay between retries
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
-      } catch (error) {
+      } catch (err) {
         retries--;
-        log.error(
-          "Error during Twitter login:",
-          error instanceof Error ? error.message : String(error)
-        );
-        if (error instanceof Error && error.stack) {
-          log.error("Login error stack trace:", error.stack);
-        }
+        log.error({ err }, "Error during Twitter login");
 
         if (retries > 0) {
           log.warn(
@@ -232,27 +214,21 @@ export class PluginX extends PluginBase {
   private async checkMentions(): Promise<void> {
     try {
       // Verify we're still logged in before proceeding
-      const isLoggedIn = await this.scraper
-        .isLoggedIn()
-        .catch((err: unknown) => {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          log.error("Error checking login status:", errorMessage);
-          return false;
-        });
+      const isLoggedIn = await this.scraper.isLoggedIn().catch((err) => {
+        log.error({ err }, "Error checking login status");
+        throw err;
+      });
 
       if (!isLoggedIn) {
         log.warn("Twitter session expired or invalid, attempting to re-login");
         await this.initializeTwitter();
 
         // Double check login was successful
-        const loginSuccess = await this.scraper
-          .isLoggedIn()
-          .catch((err: unknown) => {
-            const errorMessage =
-              err instanceof Error ? err.message : String(err);
-            log.error("Error verifying login:", errorMessage);
-            return false;
-          });
+        const loginSuccess = await this.scraper.isLoggedIn().catch((err) => {
+          log.error({ err }, "Error verifying login");
+          throw err;
+        });
+
         if (!loginSuccess) {
           throw new Error("Failed to re-establish Twitter session");
         }
@@ -267,10 +243,9 @@ export class PluginX extends PluginBase {
           5,
           SearchMode.Latest
         );
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        log.error("Error searching tweets:", errorMessage);
-        throw new Error(`Failed to search tweets: ${errorMessage}`);
+      } catch (err) {
+        log.error({ err }, "Error searching tweets");
+        throw err;
       }
 
       const tweetsArray: Tweet[] = [];
@@ -294,10 +269,12 @@ export class PluginX extends PluginBase {
             );
           }
         }
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        log.error("Error processing tweets from generator:", errorMessage);
-        throw new Error(`Failed to process tweets: ${errorMessage}`);
+      } catch (err) {
+        log.error(
+          { err },
+          "Error processing tweets from agent-twitter-client generator"
+        );
+        throw err;
       }
 
       if (tweetsArray.length === 0) {
@@ -347,24 +324,10 @@ export class PluginX extends PluginBase {
       };
 
       // Let the runtime handle message storage and event creation
-      try {
-        await this.runtime.createEvent(userContext, platformContext);
-        log.info(`Created event for mention from tweet ID ${randomTweet.id}`);
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        log.error("Error creating event:", errorMessage);
-        throw new Error(`Failed to create event: ${errorMessage}`);
-      }
-    } catch (err: unknown) {
-      // Ensure we capture and log the full error details
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      log.error("Error in checkMentions:", errorMessage);
-      if (err instanceof Error && err.stack) {
-        log.error("Stack trace:", err.stack);
-      }
-      log.error("Full error details:", err);
-
-      // Re-throw the error to be handled by the caller
+      await this.runtime.createEvent(userContext, platformContext);
+      log.info(`Created event for mention from tweet ID ${randomTweet.id}`);
+    } catch (err) {
+      log.error({ err }, "Error in checkMentions");
       throw err;
     }
   }
@@ -385,13 +348,8 @@ export class PluginX extends PluginBase {
       return messages.some(
         (msg) => msg.user_message_id === messageId // Check for assistant response
       );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      log.error("Failed to check tweet response status:", errorMessage);
-      if (error instanceof Error && error.stack) {
-        log.error("Stack trace:", error.stack);
-      }
+    } catch (err) {
+      log.error({ err }, "Failed to check tweet response status");
       return false;
     }
   }

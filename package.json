@@ -24,6 +24,7 @@
   "type": "module",
   "scripts": {
     "prepare": "husky",
+    "dev": "rm -f .build-complete && pnpm run build && touch .build-complete && chokidar 'packages/**/*.ts' --ignore 'packages/**/dist/**' -c 'rm -f .build-complete && pnpm run build && touch .build-complete'",
     "build": "turbo run build --filter=./packages/*",
     "build:website": "turbo run build:website --filter=./website",
     "build:starter": "turbo run build:starter --filter=./maiar-starter",

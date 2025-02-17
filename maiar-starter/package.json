@@ -4,6 +4,8 @@
   "private": true,
   "main": "./dist/index.js",
   "scripts": {
+    "dev": "chokidar 'src/**/*.ts' '../.build-complete' -c 'pnpm run wait-for-build && pnpm build:starter && pkill -f \"node dist/index.js\"; pnpm start' --initial --verbose",
+    "wait-for-build": "[ -f ../.build-complete ] && printf \"\\e[32m⚡🟢 Core already built!\\e[0m\\n\" || (printf \"\\e[32m♻️🟢 Re-building core...\\e[0m\\n\"; while [ ! -f ../.build-complete ]; do sleep 0.1; done; printf \"\\e[32m✅🟢 Core build complete!\\e[0m\\n\")",
     "build:starter": "tsc --project tsconfig.json",
     "start": "node dist/index.js"
   },
@@ -19,6 +21,7 @@
     "dotenv": "16.4.7"
   },
   "devDependencies": {
+    "chokidar-cli": "3.0.0",
     "dotenv-cli": "8.0.0",
     "tsup": "8.3.6",
     "typescript": "5.7.3"

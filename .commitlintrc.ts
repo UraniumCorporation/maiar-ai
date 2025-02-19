@@ -50,11 +50,13 @@ const commitlintConfig: UserConfig = {
         "model-openai", // model-openai plugin
         "plugin-express", // plugin-express plugin
         "plugin-image", // plugin-image plugin
+        "plugin-search", // plugin-search plugin
         "plugin-telegram", // plugin-telegram plugin
         "plugin-terminal", // plugin-terminal plugin
         "plugin-text", // plugin-text plugin
         "plugin-time", // plugin-time plugin
-        "plugin-websocket", // plugin-websocket plugin
+        "plugin-websocket", // plugin-websocket plugin,
+        "plugin-x", // plugin-x plugin
         "maiar-starter", // maiar-starter directory
         "website" // documentation website
       ]

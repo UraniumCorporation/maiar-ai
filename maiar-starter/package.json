@@ -4,9 +4,8 @@
   "private": true,
   "main": "./dist/index.js",
   "scripts": {
-    "dev": "chokidar '../.build-complete' 'src/**/*.ts' --initial --verbose -c 'pnpm run wait-for-build && pnpm build && pnpm run restart'",
-    "wait-for-build": "[ -f ../.build-complete ] && printf \"\\e[32m⚡🟢 Core already built!\\e[0m\\n\" || (printf \"\\e[32m♻️🟢 Re-building core...\\e[0m\\n\"; while [ ! -f ../.build-complete ]; do sleep 0.1; done; printf \"\\e[32m✅🟢 Core build complete!\\e[0m\\n\")",
-    "restart": "node -e \"const fs=require('fs');const {spawn}=require('child_process');const pid=fs.existsSync('.pid')?fs.readFileSync('.pid','utf-8'):null;if(pid){try{process.kill(pid,'SIGTERM');console.log('Terminated previous process:',pid)}catch(e){console.log('No previous process found')}}setTimeout(()=>{const proc=spawn('node',['dist/index.js'],{stdio:'inherit',detached:true});proc.on('spawn',()=>console.log('Started new process:',proc.pid));proc.on('error',(err)=>console.error('Failed to start process:',err));fs.writeFileSync('.pid',String(proc.pid));proc.unref()},1000)\"",
+    "dev": "chokidar '../.build-complete' 'src/**/*.ts' --initial --verbose -c 'pnpm build && pnpm run restart'",
+    "restart": "node ../restart.js",
     "build": "tsc --project tsconfig.json",
     "start": "node dist/index.js"
   },

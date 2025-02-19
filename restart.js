@@ -19,7 +19,6 @@ const terminateExistingProcess = () => {
         );
       }
     }
-    fs.unlinkSync(pidFile);
   }
 };
 
@@ -43,9 +42,6 @@ const startChildProcess = () => {
 
   child.on("exit", (code, signal) => {
     console.log(`Child process exited with code ${code} and signal ${signal}`);
-    if (fs.existsSync(pidFile)) {
-      fs.unlinkSync(pidFile);
-    }
   });
 
   return child;

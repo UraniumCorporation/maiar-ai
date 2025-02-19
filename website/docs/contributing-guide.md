@@ -27,10 +27,11 @@ pnpm install
 
 3. Start the development environment. You'll need two terminal windows:
 
-**Terminal 1 - Core Packages:**
+### Terminal 1 - Core Packages
+
+**From the root of the repository**
 
 ```bash
-# From the root of the repository
 pnpm dev
 ```
 
@@ -38,14 +39,15 @@ This command watches for changes in the core packages (`packages/**/*.ts`) and a
 
 1. Cleans any previous build state
 2. Builds all core packages
-3. Updates the `.build-complete` marker file with current timestamp to indicate the core packages build is finished as a state file to communicate with the development project
+3. Updates the `.build-complete` marker file with current timestamp to indicate the core packages build is finished as a state file to communicate with the starter project
 4. Watches for changes and repeats the process
 
-**Terminal 2 - Development Project:**
+### Terminal 2 - Starter Project
+
+**From the root of the repository**
 
 ```bash
-# From the root of the repository
-cd maiar-starter # or your own development project
+cd maiar-starter
 pnpm dev
 ```
 
@@ -57,6 +59,6 @@ This command runs the starter project in development mode. It:
 
 This setup ensures that changes to either the core packages or the starter project are automatically rebuilt and reflected in your running application, providing a seamless development experience.
 
-> [!NOTE]
+> **_NOTE_**
 >
 > The `maiar-starter` project serves as a reference implementation demonstrating how to develop against the core Maiar packages. You can apply this same development setup to any project that depends on Maiar packages - simply mirror the dev script configuration and `.build-complete` marker file handling shown in the starter project's package.json. The key focus of this repository is the core packages in `packages/*`, with `maiar-starter` serving as an example consumer.

@@ -3,8 +3,7 @@ import { TerminalPluginConfig, TerminalResponseSchema } from "./types";
 import * as net from "net";
 import * as fs from "fs";
 import { generateResponseTemplate } from "./templates";
-
-const SOCKET_PATH = "/tmp/maiar.sock";
+import { CHAT_SOCKET_PATH } from "./index";
 
 interface TerminalPlatformContext {
   platform: string;
@@ -16,12 +15,13 @@ export class PluginTerminal extends PluginBase {
   private server: net.Server | null = null;
   private clients: Set<net.Socket> = new Set();
 
-  constructor(private config: TerminalPluginConfig = {}) {
+  constructor(private config: TerminalPluginConfig) {
     super({
       id: "plugin-terminal",
       name: "Terminal Plugin",
       description: "Handles terminal-based chat interaction"
     });
+    this.config = config;
 
     // Ensure socket cleanup on process exit
     process.on("SIGINT", () => this.cleanup());
@@ -91,8 +91,14 @@ export class PluginTerminal extends PluginBase {
 
             socket.on("data", async (data) => {
               try {
-                const { message, user } = JSON.parse(data.toString());
-                if (!message) return;
+                const { message, user, type } = JSON.parse(data.toString());
+                if (!message && !type) return;
+
+                // Handle config request from chat client
+                if (type === "get_config") {
+                  socket.write(JSON.stringify(this.config));
+                  return;
+                }
 
                 console.log(
                   `[Terminal Plugin] Received message from ${user}: ${message}`
@@ -158,11 +164,13 @@ export class PluginTerminal extends PluginBase {
             });
           });
 
-          this.server.listen(SOCKET_PATH, () => {
+          this.server.listen(CHAT_SOCKET_PATH, () => {
             // Set socket permissions to be readable/writable by all users
-            fs.chmodSync(SOCKET_PATH, 0o666);
-            console.log(`[Terminal Plugin] Server listening on ${SOCKET_PATH}`);
-            console.log("[Terminal Plugin] To connect, run: pnpm chat");
+            fs.chmodSync(CHAT_SOCKET_PATH, 0o666);
+            console.log(
+              `[Terminal Plugin] Server listening on ${CHAT_SOCKET_PATH}`
+            );
+            console.log("[Terminal Plugin] To connect, run: pnpm maiar-chat");
           });
 
           this.server.on("error", (error) => {
@@ -176,8 +184,8 @@ export class PluginTerminal extends PluginBase {
   }
 
   private cleanup(): void {
-    if (fs.existsSync(SOCKET_PATH)) {
-      fs.unlinkSync(SOCKET_PATH);
+    if (fs.existsSync(CHAT_SOCKET_PATH)) {
+      fs.unlinkSync(CHAT_SOCKET_PATH);
     }
   }
 }

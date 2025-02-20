@@ -5,16 +5,28 @@ import { z } from "zod";
  */
 export interface TerminalPluginConfig {
   /**
-   * Prompt prefix for the terminal input
-   * @default '> '
-   */
-  prompt?: string;
-
-  /**
-   * Default user identifier
+   * User identifier
    * @default 'local'
    */
-  defaultUser?: string;
+  user?: string;
+
+  /**
+   * Terminal name
+   * @default 'Terminal'
+   */
+  agentName?: string;
+
+  /**
+   * Maximum number of retries
+   * @default 3
+   */
+  maxRetries?: number;
+
+  /**
+   * Retry delay
+   * @default 1000
+   */
+  retryDelay?: number;
 }
 
 export const TerminalResponseSchema = z.object({

@@ -3,13 +3,37 @@
 import * as readline from "readline";
 import * as net from "net";
 import chalk from "chalk";
+import { CHAT_SOCKET_PATH } from "../index";
+import { TerminalPluginConfig } from "../types";
 
-const SOCKET_PATH = "/tmp/maiar.sock";
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
-const CONFIG = {
-  username: "0xpbit",
-  prompt: "0xpbit> "
+async function getConfig(): Promise<TerminalPluginConfig> {
+  console.log(chalk.blue("Getting config from agent..."));
+  try {
+    const configSocket = new net.Socket();
+    configSocket.connect({ path: CHAT_SOCKET_PATH }, () => {
+      configSocket.write(
+        JSON.stringify({
+          type: "get_config"
+        })
+      );
+    });
+
+    return new Promise<TerminalPluginConfig>((resolve) => {
+      configSocket.on("data", (data) => {
+        resolve(JSON.parse(data.toString()));
+      });
+    });
+  } catch (error) {
+    console.error(chalk.red("Error getting config:", error));
+    process.exit(1);
+  }
+}
+
+const DEFAULT_CONFIG = {
+  user: "local",
+  agentName: "Terminal",
+  maxRetries: 3,
+  retryDelay: 1000
 };
 
 class ChatClient {
@@ -20,21 +44,19 @@ class ChatClient {
   private isProcessingMessage = false;
   private currentLoadingInterval: NodeJS.Timeout | null = null;
 
-  constructor() {
+  constructor(private config: TerminalPluginConfig) {
     // Create readline interface
     this.rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
-      prompt: chalk.blue(CONFIG.prompt)
+      prompt: chalk.blue(`${this.config.user || DEFAULT_CONFIG.user}>`)
     });
 
     // Handle line input
     this.rl.on("line", (line) => this.handleInput(line));
 
-    // Handle Ctrl+C
-    process.on("SIGINT", () => {
-      this.handleSigInt();
-    });
+    // Handle SIGINT
+    this.rl.on("SIGINT", () => this.handleSigInt());
   }
 
   private handleSigInt() {
@@ -72,7 +94,7 @@ class ChatClient {
     this.socket.write(
       JSON.stringify({
         message,
-        user: CONFIG.username
+        user: this.config.user || DEFAULT_CONFIG.user
       })
     );
 
@@ -111,7 +133,10 @@ class ChatClient {
 
       try {
         const response = JSON.parse(data.toString());
-        console.log(chalk.green("mentat>"), response.message);
+        console.log(
+          chalk.green(`${this.config.agentName || DEFAULT_CONFIG.agentName}>`),
+          response.message
+        );
       } catch {
         console.log(chalk.red("Error: Failed to parse response"));
         console.log(chalk.yellow("Raw response:"), data.toString().trim());
@@ -137,7 +162,11 @@ class ChatClient {
   }
 
   public async connect() {
-    console.log(chalk.blue("Connecting to Mentat..."));
+    console.log(
+      chalk.blue(
+        `Connecting to ${this.config.agentName || DEFAULT_CONFIG.agentName}...`
+      )
+    );
 
     this.socket = new net.Socket();
 
@@ -145,28 +174,36 @@ class ChatClient {
       this.connected = true;
       this.retryCount = 0;
       console.log(
-        chalk.green("Connected to Mentat. Type your messages and press Enter.")
+        chalk.green(
+          `Connected to ${this.config.agentName || DEFAULT_CONFIG.agentName}. Type your messages and press Enter.`
+        )
       );
       console.log(chalk.dim("━".repeat(56)));
       this.rl.prompt();
     });
 
     this.socket.on("error", (err) => {
-      if (!this.connected && this.retryCount < MAX_RETRIES) {
+      if (
+        !this.connected &&
+        this.retryCount < (this.config.maxRetries || DEFAULT_CONFIG.maxRetries)
+      ) {
         this.retryCount++;
         console.log(
           chalk.yellow(
-            `Connection attempt ${this.retryCount}/${MAX_RETRIES} failed. Retrying...`
+            `Connection attempt ${this.retryCount}/${this.config.maxRetries || DEFAULT_CONFIG.maxRetries} failed. Retrying...`
           )
         );
-        setTimeout(() => this.connect(), RETRY_DELAY);
+        setTimeout(
+          () => this.connect(),
+          this.config.retryDelay || DEFAULT_CONFIG.retryDelay
+        );
         return;
       }
 
       if (err.message.includes("ENOENT")) {
         console.error(
           chalk.red(
-            "Error: Mentat agent is not running. Please start the agent first."
+            `Error: ${this.config.agentName || DEFAULT_CONFIG.agentName} agent is not running. Please start the agent first.`
           )
         );
       } else {
@@ -182,10 +219,15 @@ class ChatClient {
       }
     });
 
-    this.socket.connect({ path: SOCKET_PATH });
+    this.socket.connect({ path: CHAT_SOCKET_PATH });
   }
 }
 
 // Start the chat client
-const client = new ChatClient();
-client.connect();
+async function main() {
+  const config = await getConfig();
+  const client = new ChatClient(config);
+  client.connect();
+}
+
+main().catch(console.error);

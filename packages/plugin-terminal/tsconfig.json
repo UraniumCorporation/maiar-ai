@@ -6,5 +6,5 @@
     "declaration": true,
     "declarationDir": "./dist"
   },
-  "include": ["src/index.ts"]
+  "include": ["src/**/*.ts"]
 }

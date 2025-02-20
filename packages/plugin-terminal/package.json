@@ -4,8 +4,12 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "maiar-chat": "./dist/scripts/chat.js"
+  },
   "files": [
-    "dist"
+    "dist",
+    "dist/scripts"
   ],
   "exports": {
     ".": {
@@ -38,11 +42,11 @@
     "url": "https://github.com/UraniumCorporation/maiar-ai/issues"
   },
   "scripts": {
-    "dev": "tsup --config ../../tsup.config.base.ts --watch",
+    "dev": "tsup --config ./tsup.config.ts --watch",
     "chat": "NODE_NO_WARNINGS=1 tsc src/scripts/chat.ts && node src/scripts/chat.js",
     "lint": "tsc --project tsconfig.json",
     "lint:emit": "tsc --project tsconfig.json --noEmit false",
-    "build": "tsup --config ../../tsup.config.base.ts",
+    "build": "tsup --config ./tsup.config.ts",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },

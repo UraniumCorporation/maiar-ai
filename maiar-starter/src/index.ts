@@ -25,7 +25,7 @@ import { PluginTime } from "@maiar-ai/plugin-time";
 import { PluginCharacter } from "@maiar-ai/plugin-character";
 import { PluginSearch } from "@maiar-ai/plugin-search";
 import { PluginX } from "@maiar-ai/plugin-x";
-
+import { PluginTerminal } from "@maiar-ai/plugin-terminal";
 import appRouter from "./app";
 // Create and start the agent
 const runtime = createRuntime({
@@ -58,6 +58,10 @@ const runtime = createRuntime({
       email: process.env.X_EMAIL as string,
       mentionsCheckIntervalMins: 10,
       loginRetries: 3
+    }),
+    new PluginTerminal({
+      user: "test",
+      agentName: "maiar-starter"
     })
   ]
 });

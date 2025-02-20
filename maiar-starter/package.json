@@ -19,6 +19,7 @@
     "@maiar-ai/plugin-text": "workspace:*",
     "@maiar-ai/plugin-time": "workspace:*",
     "@maiar-ai/plugin-x": "workspace:*",
+    "@maiar-ai/plugin-terminal": "workspace:*",
     "dotenv": "16.4.7",
     "express": "4.21.2"
   },

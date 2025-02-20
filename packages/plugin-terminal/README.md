@@ -39,7 +39,7 @@ interface TerminalPluginConfig {
 
 ## Scripts
 
-You can use the following scripts to launch terminal features.
+You can use the following scripts to launch terminal features. This is available as a CLI binary when this package is installed.
 
 - `maiar-chat`: Start the terminal chat client.
 

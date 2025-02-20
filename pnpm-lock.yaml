@@ -82,6 +82,9 @@ importers:
       "@maiar-ai/plugin-search":
         specifier: workspace:*
         version: link:../packages/plugin-search
+      "@maiar-ai/plugin-terminal":
+        specifier: workspace:*
+        version: link:../packages/plugin-terminal
       "@maiar-ai/plugin-text":
         specifier: workspace:*
         version: link:../packages/plugin-text

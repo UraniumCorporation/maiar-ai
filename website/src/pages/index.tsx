@@ -417,11 +417,9 @@ export default function Home(): JSX.Element {
 
             .subheading {
               color: #88ff88;
-              font-family: monospace;
               font-size: 14px;
               margin: 10px 0 20px 0;
               opacity: 0.8;
-              text-transform: lowercase;
               letter-spacing: 1px;
             }
           `}

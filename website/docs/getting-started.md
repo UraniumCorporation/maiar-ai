@@ -54,17 +54,17 @@ pnpm init
 <Tabs groupId="package-manager">
 <TabItem value="npm" label="npm">
 ```bash
-npm install @maiar-ai/core @maiar-ai/model-openai @maiar-ai/memory-sqlite @maiar-ai/plugin-express @maiar-ai/plugin-text dotenv
+npm install @maiar-ai/core @maiar-ai/model-openai @maiar-ai/memory-sqlite @maiar-ai/plugin-terminal @maiar-ai/plugin-text @maiar-ai/plugin-time dotenv
 ```
 </TabItem>
 <TabItem value="yarn" label="yarn">
 ```bash
-yarn add @maiar-ai/core @maiar-ai/model-openai @maiar-ai/memory-sqlite @maiar-ai/plugin-express @maiar-ai/plugin-text dotenv
+yarn add @maiar-ai/core @maiar-ai/model-openai @maiar-ai/memory-sqlite @maiar-ai/plugin-terminal @maiar-ai/plugin-text @maiar-ai/plugin-time dotenv
 ```
 </TabItem>
 <TabItem value="pnpm" label="pnpm" default>
 ```bash
-pnpm add @maiar-ai/core @maiar-ai/model-openai @maiar-ai/memory-sqlite @maiar-ai/plugin-express @maiar-ai/plugin-text dotenv
+pnpm add @maiar-ai/core @maiar-ai/model-openai @maiar-ai/memory-sqlite @maiar-ai/plugin-terminal @maiar-ai/plugin-text @maiar-ai/plugin-time dotenv
 ```
 </TabItem>
 </Tabs>
@@ -74,21 +74,30 @@ pnpm add @maiar-ai/core @maiar-ai/model-openai @maiar-ai/memory-sqlite @maiar-ai
 ```typescript
 import "dotenv/config";
 import { createRuntime } from "@maiar-ai/core";
-import { OpenAIProvider } from "@maiar-ai/model-openai";
 import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
-import { PluginExpress } from "@maiar-ai/plugin-express";
+import { OpenAIProvider } from "@maiar-ai/model-openai";
+import { PluginTerminal } from "@maiar-ai/plugin-terminal";
 import { PluginTextGeneration } from "@maiar-ai/plugin-text";
+import { PluginTime } from "@maiar-ai/plugin-time";
 import path from "path";
 
+// Create and start the agent
 const runtime = createRuntime({
   model: new OpenAIProvider({
-    apiKey: process.env.OPENAI_API_KEY as string,
-    model: "gpt-3.5-turbo"
+    model: "gpt-4",
+    apiKey: process.env.OPENAI_API_KEY as string
   }),
   memory: new SQLiteProvider({
     dbPath: path.join(process.cwd(), "data", "conversations.db")
   }),
-  plugins: [new PluginExpress({ port: 3000 }), new PluginTextGeneration()]
+  plugins: [
+    new PluginTextGeneration(),
+    new PluginTime(),
+    new PluginTerminal({
+      user: "test",
+      agentName: "maiar-starter"
+    })
+  ]
 });
 
 // Start the runtime
@@ -109,8 +118,11 @@ process.on("SIGINT", async () => {
 4. Create a `.env` file in your project root:
 
 ```bash
+# Required for the OpenAI model provider
 OPENAI_API_KEY=your_api_key_here
 ```
+
+Make sure to replace `your_api_key_here` with your actual OpenAI API key. You can get one from [OpenAI's website](https://platform.openai.com/api-keys).
 
 5. Add TypeScript configuration. Create a `tsconfig.json`:
 
@@ -162,15 +174,15 @@ pnpm start
   </TabItem>
 </Tabs>
 
-8. Test your agent by sending a message:
+8. Test your agent by using the terminal interface:
 
 ```bash
-curl -X POST http://localhost:3000/message \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Hey there!", "user": "test-user"}'
+npx maiar-chat
 ```
 
-You should receive a response from your agent explaining its capabilities.
+You should now see a terminal prompt where you can interact with your agent directly. Try sending a message like "Hey there!" and the agent will respond.
+
+Note: The terminal interface provides a more interactive way to communicate with your agent compared to HTTP requests. You can have natural conversations and see the agent's responses in real-time.
 
 ## Configuration
 

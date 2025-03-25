@@ -1,13 +1,15 @@
 import { z } from "zod";
-import { Plugin } from "../plugin";
+
 import { MemoryService } from "../memory/service";
 import { MemoryProvider } from "../memory/types";
 import { ModelProvider } from "../models/base";
 import { ModelService } from "../models/service";
-import { BaseContextItem } from "../types/agent";
 import { MonitorService } from "../monitor/service";
 import { MonitorProvider } from "../monitor/types";
 import { OperationConfig } from "../operations/base";
+import { Plugin } from "../plugin";
+import { BaseContextItem } from "../types/agent";
+
 /**
  * A step in the execution pipeline
  */

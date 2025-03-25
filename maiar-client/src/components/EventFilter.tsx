@@ -1,16 +1,17 @@
+import { useEffect, useState } from "react";
+
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import {
+  alpha,
   Box,
-  TextField,
-  Typography,
+  Chip,
   IconButton,
   Popover,
-  Chip,
-  alpha,
-  Tooltip
+  TextField,
+  Tooltip,
+  Typography
 } from "@mui/material";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import { useState, useEffect } from "react";
 
 interface EventFilterProps {
   onFilterChange: (filter: string) => void;

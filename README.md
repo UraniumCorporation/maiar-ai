@@ -59,15 +59,19 @@ pnpm add @maiar-ai/core @maiar-ai/model-openai @maiar-ai/memory-sqlite @maiar-ai
 
 ```typescript
 import "dotenv/config";
+
+import path from "path";
+
 import { createRuntime } from "@maiar-ai/core";
+
 import { OpenAIProvider } from "@maiar-ai/model-openai";
+
 import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
 
 import { ConsoleMonitorProvider } from "@maiar-ai/monitor-console";
 
-import { PluginTextGeneration } from "@maiar-ai/plugin-text";
 import { PluginTerminal } from "@maiar-ai/plugin-terminal";
-import path from "path";
+import { PluginTextGeneration } from "@maiar-ai/plugin-text";
 
 const runtime = createRuntime({
   models: [

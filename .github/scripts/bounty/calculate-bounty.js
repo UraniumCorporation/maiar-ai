@@ -1,4 +1,5 @@
 import { appendFileSync } from "fs";
+
 import { GithubService, MAIAR_SYMBOL } from "../lib/github.js";
 
 /**

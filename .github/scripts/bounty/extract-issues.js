@@ -1,4 +1,5 @@
 import { appendFileSync } from "fs";
+
 import { GithubService } from "../lib/github.js";
 
 /**

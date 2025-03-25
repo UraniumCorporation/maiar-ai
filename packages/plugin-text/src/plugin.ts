@@ -1,10 +1,11 @@
 import {
-  PluginBase,
   AgentContext,
-  PluginResult,
   BaseContextItem,
-  getUserInput
+  getUserInput,
+  PluginBase,
+  PluginResult
 } from "@maiar-ai/core";
+
 import { generateTextTemplate } from "./templates";
 import { TEXT_GENERATION_CAPABILITY_ID } from "./types";
 

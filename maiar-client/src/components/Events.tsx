@@ -1,7 +1,9 @@
-import { Box, Typography, Paper, Stack, alpha } from "@mui/material";
-import { useRef, useEffect, useState, useMemo } from "react";
-import JsonView from "./JsonView";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { alpha, Box, Paper, Stack, Typography } from "@mui/material";
+
 import { EventFilter } from "./EventFilter";
+import JsonView from "./JsonView";
 
 interface Event {
   type: string;

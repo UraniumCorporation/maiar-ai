@@ -1,4 +1,4 @@
-import { GithubService, BOUNTY_PAID_LABEL } from "../lib/github.js";
+import { BOUNTY_PAID_LABEL, GithubService } from "../lib/github.js";
 
 /**
  * Main function that labels bounty issues on Github with the `bounty paid` label

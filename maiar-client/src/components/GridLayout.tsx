@@ -1,18 +1,19 @@
-import { ReactNode, useState, useEffect, useRef, useCallback } from "react";
-import { Responsive, Layout } from "react-grid-layout";
-// CSS is imported in index.html
-import {
-  Box,
-  Paper,
-  Typography,
-  IconButton,
-  useTheme,
-  alpha,
-  Button,
-  Tooltip
-} from "@mui/material";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { Layout, Responsive } from "react-grid-layout";
+
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+// CSS is imported in index.html
+import {
+  alpha,
+  Box,
+  Button,
+  IconButton,
+  Paper,
+  Tooltip,
+  Typography,
+  useTheme
+} from "@mui/material";
 
 // Create a custom responsive grid layout
 const ResponsiveGridLayout = Responsive;

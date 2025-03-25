@@ -1,5 +1,6 @@
-import { AgentContext } from "@maiar-ai/core";
 import { z } from "zod";
+
+import { AgentContext } from "@maiar-ai/core";
 
 export interface DiscordPlatformContext
   extends NonNullable<AgentContext["platformContext"]> {

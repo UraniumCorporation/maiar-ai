@@ -1,6 +1,7 @@
 import express, { Express, Request, Response } from "express";
 
 import { PluginBase, PluginResult } from "@maiar-ai/core";
+
 import { generateResponseTemplate } from "./templates";
 import {
   ExpressPluginConfig,

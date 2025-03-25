@@ -1,9 +1,11 @@
-import { PluginBase, PluginResult, UserInputContext } from "@maiar-ai/core";
-import { TerminalPluginConfig, TerminalResponseSchema } from "./types";
-import * as net from "net";
 import * as fs from "fs";
-import { generateResponseTemplate } from "./templates";
+import * as net from "net";
+
+import { PluginBase, PluginResult, UserInputContext } from "@maiar-ai/core";
+
 import { CHAT_SOCKET_PATH } from "./index";
+import { generateResponseTemplate } from "./templates";
+import { TerminalPluginConfig, TerminalResponseSchema } from "./types";
 
 interface TerminalPlatformContext {
   platform: string;

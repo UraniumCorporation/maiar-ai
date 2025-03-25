@@ -1,21 +1,23 @@
+import * as path from "path";
+
 import {
-  PluginBase,
   ExecutorImplementation,
-  Trigger,
+  MonitorService,
+  PluginBase,
   Runtime,
-  MonitorService
+  Trigger
 } from "@maiar-ai/core";
+
+import { createAllCustomExecutors } from "./executors";
+import { runAuthFlow } from "./scripts/auth-flow";
+import { TokenStorage, XService } from "./services";
+import { createAllCustomTriggers } from "./triggers";
 import {
-  XPluginConfig,
-  XExecutorFactory,
   TriggerConfig,
+  XExecutorFactory,
+  XPluginConfig,
   XTriggerFactory
 } from "./types";
-import { XService, TokenStorage } from "./services";
-import { runAuthFlow } from "./scripts/auth-flow";
-import * as path from "path";
-import { createAllCustomExecutors } from "./executors";
-import { createAllCustomTriggers } from "./triggers";
 
 export class PluginX extends PluginBase {
   private xService: XService;

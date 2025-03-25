@@ -43,6 +43,7 @@ Integrating the WebSocket Monitor into your agent:
 
 ```typescript
 import { createRuntime } from "@maiar-ai/core";
+
 import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
 
 const runtime = createRuntime({

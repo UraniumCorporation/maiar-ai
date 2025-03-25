@@ -1,3 +1,4 @@
+import { BaseContextItem } from "../types/agent";
 import { createLogger } from "../utils/logger";
 import {
   Context,
@@ -6,7 +7,6 @@ import {
   MemoryQueryOptions,
   Message
 } from "./types";
-import { BaseContextItem } from "../types/agent";
 
 const log = createLogger("memory");
 

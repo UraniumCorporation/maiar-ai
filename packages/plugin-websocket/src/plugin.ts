@@ -1,7 +1,9 @@
 import WebSocket, { WebSocketServer } from "ws";
+import { RawData } from "ws";
+
 import { PluginBase } from "@maiar-ai/core";
 import { Runtime, UserInputContext } from "@maiar-ai/core";
-import { RawData } from "ws";
+
 import { WebSocketPluginConfig } from "./types";
 
 interface WebSocketPlatformContext {

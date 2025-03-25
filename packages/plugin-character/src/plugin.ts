@@ -1,4 +1,5 @@
 import { createLogger, PluginBase, PluginResult } from "@maiar-ai/core";
+
 import { CharacterPluginConfig } from "./types";
 
 const log = createLogger("plugin:character");

@@ -1,18 +1,20 @@
 import { useState } from "react";
+
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SaveIcon from "@mui/icons-material/Save";
+import SettingsIcon from "@mui/icons-material/Settings";
 import {
   Box,
   Button,
   Chip,
+  IconButton,
+  InputAdornment,
   Popover,
   TextField,
-  Typography,
-  InputAdornment,
-  IconButton
+  Typography
 } from "@mui/material";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import SettingsIcon from "@mui/icons-material/Settings";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import SaveIcon from "@mui/icons-material/Save";
+
 import { DEFAULT_URLS } from "../config";
 
 interface ConnectionSettingsProps {

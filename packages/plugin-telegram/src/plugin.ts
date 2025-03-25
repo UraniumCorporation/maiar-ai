@@ -1,19 +1,19 @@
 import { Telegraf } from "telegraf";
 
 import {
-  PluginBase,
   AgentContext,
+  PluginBase,
   PluginResult,
   Runtime
 } from "@maiar-ai/core";
 import { createLogger } from "@maiar-ai/core";
 
-import {
-  TelegramPluginConfig,
-  TelegramResponseSchema,
-  TelegramContext
-} from "./types";
 import { generateResponseTemplate } from "./templates";
+import {
+  TelegramContext,
+  TelegramPluginConfig,
+  TelegramResponseSchema
+} from "./types";
 
 const log = createLogger("plugin:telegram");
 

@@ -1,14 +1,16 @@
-import { useMonitorSocket } from "./hooks/useMonitorSocket";
-import { CurrentPipeline } from "./components/CurrentPipeline";
-import { CurrentContextChain } from "./components/CurrentContextChain";
-import { Events } from "./components/Events";
-import { Chat } from "./components/Chat";
+import { useEffect, useState } from "react";
+
+import { AppBar, Box, Toolbar, Typography } from "@mui/material";
+
 import { AgentStatus } from "./components/AgentStatus";
+import { Chat } from "./components/Chat";
 import { ConnectionSettings } from "./components/ConnectionSettings";
-import { ThemeProvider } from "./theme/ThemeProvider";
+import { CurrentContextChain } from "./components/CurrentContextChain";
+import { CurrentPipeline } from "./components/CurrentPipeline";
+import { Events } from "./components/Events";
 import { GridLayout } from "./components/GridLayout";
-import { Box, Typography, AppBar, Toolbar } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useMonitorSocket } from "./hooks/useMonitorSocket";
+import { ThemeProvider } from "./theme/ThemeProvider";
 
 function App() {
   const { connected, agentState, events, url, setUrl } = useMonitorSocket();

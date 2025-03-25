@@ -1,16 +1,14 @@
+import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 
-import Database from "better-sqlite3";
-
 import { createLogger } from "@maiar-ai/core";
-
 import {
-  MemoryProvider,
-  Message,
   Context,
   Conversation,
-  MemoryQueryOptions
+  MemoryProvider,
+  MemoryQueryOptions,
+  Message
 } from "@maiar-ai/core";
 
 const log = createLogger("memory:sqlite");

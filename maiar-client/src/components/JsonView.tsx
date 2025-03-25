@@ -1,4 +1,4 @@
-import { Box, Typography, alpha, Chip } from "@mui/material";
+import { alpha, Box, Chip, Typography } from "@mui/material";
 
 interface JsonViewProps {
   data: unknown;

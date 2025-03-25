@@ -273,8 +273,10 @@ execute: async (context: AgentContext): Promise<PluginResult> => {
 Here's a complete example of an image generation plugin:
 
 ```typescript
-import { PluginBase, PluginResult, AgentContext } from "@maiar-ai/core";
 import { z } from "zod";
+
+import { AgentContext, PluginBase, PluginResult } from "@maiar-ai/core";
+
 import { ImageService } from "./service";
 import { generatePromptTemplate } from "./templates";
 

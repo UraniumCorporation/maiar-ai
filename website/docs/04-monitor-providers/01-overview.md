@@ -53,6 +53,7 @@ One of the strengths of MAIAR's monitoring system is the ability to use multiple
 ```typescript
 import { ConsoleMonitorProvider } from "@maiar-ai/monitor-console";
 import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
+
 import { CustomMonitorProvider } from "./custom-monitor";
 
 const runtime = createRuntime({

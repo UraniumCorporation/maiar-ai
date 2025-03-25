@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+
 import Layout from "@theme/Layout";
 import clsx from "clsx";
+
 import styles from "../css/plugins.module.css";
 
 interface Plugin {

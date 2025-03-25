@@ -1,9 +1,10 @@
-import { Trigger, UserInputContext, Runtime } from "@maiar-ai/core";
-import { XService } from "./services";
+import { Runtime, Trigger, UserInputContext } from "@maiar-ai/core";
 import { createLogger } from "@maiar-ai/core";
+import { MonitorService } from "@maiar-ai/core";
+
+import { XService } from "./services";
 import { xPostTemplate } from "./templates";
 import { TriggerConfig, XTriggerFactory } from "./types";
-import { MonitorService } from "@maiar-ai/core";
 
 const log = createLogger("plugin-x:periodic-post-trigger");
 

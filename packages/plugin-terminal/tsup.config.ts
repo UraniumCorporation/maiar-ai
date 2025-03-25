@@ -1,5 +1,5 @@
-import { defineConfig } from "tsup";
 import { chmod } from "fs/promises";
+import { defineConfig } from "tsup";
 
 export default defineConfig({
   entry: {

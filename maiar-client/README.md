@@ -60,6 +60,7 @@ To enable the WebSocket monitor in your Maiar agent, add the provider to your ag
 
 ```typescript
 import { createRuntime } from "@maiar-ai/core";
+
 import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
 
 const runtime = createRuntime({
@@ -83,6 +84,7 @@ If you need to configure a custom port or path for the WebSocket connection, you
 
 ```typescript
 import { createRuntime } from "@maiar-ai/core";
+
 import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
 
 const runtime = createRuntime({
@@ -134,9 +136,11 @@ The chat panel connects to a default endpoint of `http://localhost:3002/message`
 To enable chat functionality in your Maiar agent, you need to add the Express plugin to your agent configuration:
 
 ```typescript
-import { createRuntime } from "@maiar-ai/core";
-import { ExpressPlugin } from "@maiar-ai/plugin-express";
 import { Router } from "express";
+
+import { createRuntime } from "@maiar-ai/core";
+
+import { ExpressPlugin } from "@maiar-ai/plugin-express";
 
 // Create a router with the required /message endpoint
 const router = Router();

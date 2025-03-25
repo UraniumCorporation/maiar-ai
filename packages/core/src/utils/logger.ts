@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import pino from "pino";
-import { PipelineStep, PipelineModification } from "../runtime/types";
+
+import { PipelineModification, PipelineStep } from "../runtime/types";
 import { BaseContextItem } from "../types/agent";
 
 // Ensure logs directory exists and clear model interactions log file
@@ -171,13 +172,13 @@ const pipelineLogger = pino(
         const pipeline = object.currentPipeline as PipelineStep[] | undefined;
         const executed = object.executedStep as
           | {
-            step: PipelineStep;
-            result: {
-              success: boolean;
-              error?: string;
-              data?: unknown;
-            };
-          }
+              step: PipelineStep;
+              result: {
+                success: boolean;
+                error?: string;
+                data?: unknown;
+              };
+            }
           | undefined;
         const execContextChain = object.contextChain as
           | BaseContextItem[]

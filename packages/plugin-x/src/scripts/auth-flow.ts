@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+// Load environment variables from .env file
+import "dotenv/config";
 
-import "dotenv/config"; // Load environment variables from .env file
-import { XService, TokenStorage } from "../services";
-import * as readline from "readline";
 import * as path from "path";
+import * as readline from "readline";
+
+import { TokenStorage, XService } from "../services";
 
 /**
  * Interactive script that guides you through the complete X API auth flow

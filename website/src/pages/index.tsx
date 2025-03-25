@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import type { JSX } from "react";
+import GlitchClip from "react-glitch-effect/core/GlitchClip";
 
 import Head from "@docusaurus/Head";
 import Link from "@docusaurus/Link";
 
-import GlitchClip from "react-glitch-effect/core/GlitchClip";
 import { AsciiLogo } from "../components/AsciiLogo";
 
 export default function Home(): JSX.Element {

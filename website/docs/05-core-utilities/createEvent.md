@@ -207,8 +207,9 @@ class WebhookPlugin extends PluginBase {
 Here's a complete example of a trigger that uses createEvent:
 
 ```typescript
-import { PluginBase, AgentContext, Trigger } from "@maiar-ai/core";
 import { WebSocketServer } from "ws";
+
+import { AgentContext, PluginBase, Trigger } from "@maiar-ai/core";
 
 export class WebSocketPlugin extends PluginBase {
   private wss: WebSocketServer;

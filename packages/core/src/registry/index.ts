@@ -1,6 +1,6 @@
 import { Plugin } from "../plugin";
-import { PluginRegistryInterface } from "./types";
 import { createLogger } from "../utils/logger";
+import { PluginRegistryInterface } from "./types";
 
 const log = createLogger("plugins");
 

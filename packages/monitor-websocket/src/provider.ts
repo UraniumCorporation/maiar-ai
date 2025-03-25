@@ -1,4 +1,5 @@
-import { WebSocketServer, WebSocket } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
+
 import { MonitorProvider } from "@maiar-ai/core";
 
 /**

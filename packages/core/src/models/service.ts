@@ -1,7 +1,7 @@
-import { ModelProvider } from "./base";
-import { createLogger } from "../utils/logger";
-import { CapabilityRegistry, ModelCapability } from "./capabilities";
 import { OperationConfig } from "../operations/base";
+import { createLogger } from "../utils/logger";
+import { ModelProvider } from "./base";
+import { CapabilityRegistry, ModelCapability } from "./capabilities";
 import { ICapabilities } from "./types";
 
 const log = createLogger("models");

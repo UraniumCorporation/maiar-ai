@@ -1,5 +1,6 @@
 /* eslint-disable no-useless-escape */
 import { BaseContextItem } from "@maiar-ai/core";
+
 import { ChannelInfo } from "./types";
 
 export function generateResponseTemplate(

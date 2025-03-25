@@ -1,5 +1,5 @@
-import { readFileSync } from "fs";
 import { getOctokit } from "@actions/github";
+import { readFileSync } from "fs";
 
 // Constants
 export const MAIAR_SYMBOL = "$MAIAR";

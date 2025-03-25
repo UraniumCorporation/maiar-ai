@@ -1,44 +1,50 @@
 import "dotenv/config";
 
-// Suppress deprecation warnings
-process.removeAllListeners("warning");
-
 import { config } from "dotenv";
 import fs from "fs";
 import path from "path";
 
-// Load environment variables from root .env
-config({
-  path: path.resolve(__dirname, "../../..", ".env")
-});
-
 import { createRuntime } from "@maiar-ai/core";
 
-// Import providers
-import { PostgresProvider } from "@maiar-ai/memory-postgres";
+// Import model providers
 import {
   OpenAIImageGenerationModel,
   OpenAIProvider,
   OpenAITextGenerationModel
 } from "@maiar-ai/model-openai";
-import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
+
+// Import memory provider
+import { PostgresProvider } from "@maiar-ai/memory-postgres";
+
+// Import monitor providers
 import { ConsoleMonitorProvider } from "@maiar-ai/monitor-console";
-// Import all plugins
+import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
+
+// Import plugins
 import { PluginCharacter } from "@maiar-ai/plugin-character";
+import { PluginDiscord } from "@maiar-ai/plugin-discord";
+import { PluginExpress } from "@maiar-ai/plugin-express";
+import { PluginImageGeneration } from "@maiar-ai/plugin-image";
 import { PluginSearch } from "@maiar-ai/plugin-search";
 import { PluginTerminal } from "@maiar-ai/plugin-terminal";
 import { PluginTextGeneration } from "@maiar-ai/plugin-text";
 import { PluginTime } from "@maiar-ai/plugin-time";
-import { PluginPermissionsSearch } from "./plugins/plugin-permissions-search";
-import { PluginExpress } from "@maiar-ai/plugin-express";
 import {
   createPostExecutor,
   periodicPostTrigger,
   PluginX
 } from "@maiar-ai/plugin-x";
-import { PluginImageGeneration } from "@maiar-ai/plugin-image";
+
 import { router } from "./express-app";
-import { PluginDiscord } from "@maiar-ai/plugin-discord";
+import { PluginPermissionsSearch } from "./plugins/plugin-permissions-search";
+
+// Suppress deprecation warnings
+process.removeAllListeners("warning");
+
+// Load environment variables from root .env
+config({
+  path: path.resolve(__dirname, "../../..", ".env")
+});
 
 // Create and start the agent
 const runtime = createRuntime({

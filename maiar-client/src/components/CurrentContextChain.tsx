@@ -1,13 +1,14 @@
-import { Paper, Typography, Box } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+
 import {
   Timeline,
-  TimelineItem,
-  TimelineSeparator,
   TimelineConnector,
   TimelineContent,
-  TimelineDot
+  TimelineDot,
+  TimelineItem,
+  TimelineSeparator
 } from "@mui/lab";
-import { useState, useEffect, useRef } from "react";
+import { Box, Paper, Typography } from "@mui/material";
 
 interface BaseContextItem {
   id: string;

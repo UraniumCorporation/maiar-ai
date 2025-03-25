@@ -1,10 +1,12 @@
+import cors from "cors";
+import { NextFunction, Response, Router } from "express";
+
 import { UserInputContext } from "@maiar-ai/core";
+
 import {
   ExpressPlatformContext,
   ExpressRequest
 } from "@maiar-ai/plugin-express";
-import { NextFunction, Response, Router } from "express";
-import cors from "cors";
 
 const router = Router();
 

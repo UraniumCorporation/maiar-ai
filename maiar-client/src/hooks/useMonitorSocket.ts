@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { DEFAULT_URLS, STORAGE_KEYS } from "../config";
 
 // Types from the monitor

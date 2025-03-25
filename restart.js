@@ -1,5 +1,5 @@
-import fs from "fs";
 import { spawn } from "child_process";
+import fs from "fs";
 
 const pidFile = ".pid";
 

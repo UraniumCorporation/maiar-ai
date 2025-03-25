@@ -3,11 +3,11 @@ import path from "path";
 
 import { createLogger } from "@maiar-ai/core";
 import {
-  MemoryProvider,
-  Message,
   Context,
   Conversation,
-  MemoryQueryOptions
+  MemoryProvider,
+  MemoryQueryOptions,
+  Message
 } from "@maiar-ai/core";
 
 const log = createLogger("memory:filesystem");

@@ -4,9 +4,10 @@ import {
   PluginResult,
   Runtime
 } from "@maiar-ai/core";
+
 import { XService } from "./services";
-import { PostTweetSchema, TweetOptions, XExecutorFactory } from "./types";
 import { generateTweetTemplate } from "./templates";
+import { PostTweetSchema, TweetOptions, XExecutorFactory } from "./types";
 
 /**
  * Creates an executor with a bound XService and Runtime instance

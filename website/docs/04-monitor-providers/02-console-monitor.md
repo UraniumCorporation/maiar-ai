@@ -39,6 +39,7 @@ Integrating the Console Monitor into your agent is straightforward:
 
 ```typescript
 import { createRuntime } from "@maiar-ai/core";
+
 import { ConsoleMonitorProvider } from "@maiar-ai/monitor-console";
 
 const runtime = createRuntime({

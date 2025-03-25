@@ -1,20 +1,22 @@
-import { useState, useRef, useEffect } from "react";
-import {
-  Paper,
-  Box,
-  Typography,
-  TextField,
-  IconButton,
-  Stack,
-  alpha,
-  Popover,
-  Button
-} from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+
+import RefreshIcon from "@mui/icons-material/Refresh";
 import SendIcon from "@mui/icons-material/Send";
 import SettingsIcon from "@mui/icons-material/Settings";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import { useChatApi } from "../hooks/useChatApi";
+import {
+  alpha,
+  Box,
+  Button,
+  IconButton,
+  Paper,
+  Popover,
+  Stack,
+  TextField,
+  Typography
+} from "@mui/material";
+
 import { DEFAULT_URLS } from "../config";
+import { useChatApi } from "../hooks/useChatApi";
 
 interface Message {
   content: string;

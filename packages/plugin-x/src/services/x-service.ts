@@ -1,6 +1,7 @@
-import { XOAuthToken, TweetOptions } from "../types";
 import * as crypto from "crypto";
 import * as path from "path";
+
+import { TweetOptions, XOAuthToken } from "../types";
 
 // Twitter API v2 Base URL
 const API_BASE_URL = "https://api.twitter.com/2";

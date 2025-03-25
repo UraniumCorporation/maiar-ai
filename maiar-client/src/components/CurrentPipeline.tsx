@@ -1,6 +1,8 @@
-import { Paper, Typography, Box } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+
+import { Box, Paper, Typography } from "@mui/material";
+
 import { PipelineSteps } from "./PipelineSteps";
-import { useRef, useEffect, useState } from "react";
 
 interface CurrentPipelineProps {
   pipeline?: Array<{ pluginId: string; action: string }>;

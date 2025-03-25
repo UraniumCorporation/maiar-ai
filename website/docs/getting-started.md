@@ -79,13 +79,18 @@ mkdir -p src
 
 ```typescript
 import "dotenv/config";
+
+import path from "path";
+
 import { createRuntime } from "@maiar-ai/core";
-import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
+
 import { OpenAIProvider } from "@maiar-ai/model-openai";
+
+import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
+
 import { PluginTerminal } from "@maiar-ai/plugin-terminal";
 import { PluginTextGeneration } from "@maiar-ai/plugin-text";
 import { PluginTime } from "@maiar-ai/plugin-time";
-import path from "path";
 
 // Create and start the agent
 const runtime = createRuntime({

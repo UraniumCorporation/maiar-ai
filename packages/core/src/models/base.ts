@@ -1,6 +1,6 @@
+import { MonitorService } from "../monitor/service";
 import { logModelInteraction } from "../utils/logger";
 import { ModelCapability } from "./capabilities";
-import { MonitorService } from "../monitor/service";
 import { ICapabilities } from "./types";
 
 /**

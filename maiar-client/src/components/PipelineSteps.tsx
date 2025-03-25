@@ -1,13 +1,13 @@
-import { Paper, Stack, Chip, Typography, Box, alpha } from "@mui/material";
-import { styled, Theme } from "@mui/material/styles";
 import {
   Timeline,
-  TimelineItem,
+  TimelineConnector,
   TimelineContent,
-  TimelineSeparator,
   TimelineDot,
-  TimelineConnector
+  TimelineItem,
+  TimelineSeparator
 } from "@mui/lab";
+import { alpha, Box, Chip, Paper, Stack, Typography } from "@mui/material";
+import { styled, Theme } from "@mui/material/styles";
 
 interface PipelineStep {
   pluginId: string;

@@ -1,8 +1,7 @@
 // @ts-check
-
 import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
+import tseslint from "typescript-eslint";
 
 export default tseslint.config([
   {

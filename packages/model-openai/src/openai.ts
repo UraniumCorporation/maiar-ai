@@ -1,24 +1,24 @@
+import OpenAI from "openai";
 import { z } from "zod";
 
-import OpenAI from "openai";
 import {
   ModelProviderBase,
   ModelRequestConfig,
   MonitorService
 } from "@maiar-ai/core";
-import {
-  OpenAIModelRequestConfig,
-  OpenAITextGenerationModel,
-  OpenAIImageGenerationModel,
-  OpenAIModel,
-  OpenAIConfig,
-  textGenerationSchema,
-  imageGenerationSchema
-} from "./types";
 
 import {
-  TEXT_GENERATION_CAPABILITY_ID,
-  IMAGE_GENERATION_CAPABILITY_ID
+  imageGenerationSchema,
+  OpenAIConfig,
+  OpenAIImageGenerationModel,
+  OpenAIModel,
+  OpenAIModelRequestConfig,
+  OpenAITextGenerationModel,
+  textGenerationSchema
+} from "./types";
+import {
+  IMAGE_GENERATION_CAPABILITY_ID,
+  TEXT_GENERATION_CAPABILITY_ID
 } from "./types";
 
 // Helper functions to check model types

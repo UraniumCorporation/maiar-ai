@@ -1,5 +1,6 @@
-import { ModelRequestConfig } from "@maiar-ai/core";
 import { z } from "zod";
+
+import { ModelRequestConfig } from "@maiar-ai/core";
 
 export const TEXT_GENERATION_CAPABILITY_ID = "text-generation";
 export const IMAGE_GENERATION_CAPABILITY_ID = "image-generation";

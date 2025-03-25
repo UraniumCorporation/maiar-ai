@@ -1,8 +1,11 @@
+import { z } from "zod";
+
 import { AgentContext } from "@maiar-ai/core";
 import { ExecutorImplementation, Trigger } from "@maiar-ai/core";
-import { XService } from "./services";
 import { Runtime } from "@maiar-ai/core";
-import { z } from "zod";
+
+import { XService } from "./services";
+
 /**
  * Configuration for the X plugin
  */

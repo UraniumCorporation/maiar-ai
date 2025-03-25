@@ -1,6 +1,7 @@
-import { XOAuthToken } from "../types";
 import * as fs from "fs/promises";
 import * as path from "path";
+
+import { XOAuthToken } from "../types";
 
 /**
  * Token storage service for X API OAuth tokens

@@ -28,6 +28,7 @@ First, ensure your agent is configured to use the WebSocket Monitor:
 
 ```typescript
 import { createRuntime } from "@maiar-ai/core";
+
 import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
 
 const runtime = createRuntime({

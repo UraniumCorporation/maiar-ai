@@ -1,6 +1,7 @@
-import { PluginBase, AgentContext, PluginResult } from "@maiar-ai/core";
-import { IMAGE_GENERATION_CAPABILITY_ID, PromptResponseSchema } from "./types";
+import { AgentContext, PluginBase, PluginResult } from "@maiar-ai/core";
+
 import { generatePromptTemplate } from "./templates";
+import { IMAGE_GENERATION_CAPABILITY_ID, PromptResponseSchema } from "./types";
 
 export class PluginImageGeneration extends PluginBase {
   constructor() {

@@ -1,5 +1,5 @@
-import { AgentContext } from "../types/agent";
 import { Runtime } from "../runtime";
+import { AgentContext } from "../types/agent";
 
 /**
  * Result of a plugin execution

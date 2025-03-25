@@ -1,4 +1,12 @@
 import {
+  BaseGuildTextChannel,
+  Client,
+  Events,
+  GatewayIntentBits,
+  Message
+} from "discord.js";
+
+import {
   AgentContext,
   createLogger,
   MonitorService,
@@ -7,27 +15,21 @@ import {
   Runtime,
   UserInputContext
 } from "@maiar-ai/core";
+
 import {
-  Client,
-  Events,
-  GatewayIntentBits,
-  Message,
-  BaseGuildTextChannel
-} from "discord.js";
+  generateChannelSelectionTemplate,
+  generateMessageIntentTemplate,
+  generateResponseTemplate
+} from "./templates";
 import {
+  ChannelInfo,
+  DiscordChannelSelectionSchema,
+  DiscordPlatformContext,
   DiscordPluginConfig,
   DiscordReplySchema,
   DiscordSendSchema,
-  DiscordChannelSelectionSchema,
-  ChannelInfo,
-  MessageIntentSchema,
-  DiscordPlatformContext
+  MessageIntentSchema
 } from "./types";
-import {
-  generateResponseTemplate,
-  generateChannelSelectionTemplate,
-  generateMessageIntentTemplate
-} from "./templates";
 
 const log = createLogger("plugin:discord");
 

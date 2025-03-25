@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-
-import * as readline from "readline";
-import * as net from "net";
 import chalk from "chalk";
+import * as net from "net";
+import * as readline from "readline";
+
 import { CHAT_SOCKET_PATH } from "../index";
 import { TerminalPluginConfig } from "../types";
 

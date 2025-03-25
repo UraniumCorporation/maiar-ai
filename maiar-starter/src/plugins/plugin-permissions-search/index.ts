@@ -1,8 +1,8 @@
 import {
-  PluginBase,
   AgentContext,
-  PluginResult,
-  getUserInput
+  getUserInput,
+  PluginBase,
+  PluginResult
 } from "@maiar-ai/core";
 
 interface PermissionsSearchConfig {

@@ -1,7 +1,7 @@
 import { TemplateFunction } from "../operations/base";
 import {
-  PipelineModificationContext,
-  PipelineGenerationContext
+  PipelineGenerationContext,
+  PipelineModificationContext
 } from "./types";
 
 interface ConversationMessage {

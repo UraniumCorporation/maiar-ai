@@ -1,5 +1,6 @@
 import { appendFileSync } from "fs";
-import { GithubService, BOUNTY_PAID_LABEL } from "../lib/github.js";
+
+import { BOUNTY_PAID_LABEL, GithubService } from "../lib/github.js";
 
 /**
  * Main function that filters bounty issues that have not been paid

@@ -175,6 +175,7 @@ Here's a complete example showing how to extract complex, nested data:
 
 ```typescript
 import { z } from "zod";
+
 import { Runtime } from "@maiar-ai/core";
 
 // Define a complex schema

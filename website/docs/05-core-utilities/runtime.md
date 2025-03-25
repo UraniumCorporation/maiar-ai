@@ -12,6 +12,7 @@ The simplest way to create a runtime is using the `createRuntime` function:
 
 ```typescript
 import { createRuntime } from "@maiar-ai/core";
+
 import { ModelProvider } from "@maiar-ai/model-ollama";
 
 const runtime = createRuntime({
@@ -174,10 +175,13 @@ Here's a complete example of setting up a runtime with multiple plugins and erro
 
 ```typescript
 import { createRuntime } from "@maiar-ai/core";
+
 import { ModelProvider } from "@maiar-ai/model-ollama";
+
 import { SQLiteMemoryProvider } from "@maiar-ai/memory-sqlite";
-import { PluginTerminal } from "@maiar-ai/plugin-terminal";
+
 import { PluginExpress } from "@maiar-ai/plugin-express";
+import { PluginTerminal } from "@maiar-ai/plugin-terminal";
 
 async function main() {
   try {

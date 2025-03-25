@@ -53,7 +53,8 @@ Let's look at our SQLite implementation as an example. It demonstrates how to im
 
 ```typescript
 import Database from "better-sqlite3";
-import { MemoryProvider, Message, Context, Conversation } from "@maiar-ai/core";
+
+import { Context, Conversation, MemoryProvider, Message } from "@maiar-ai/core";
 import { createLogger } from "@maiar-ai/core";
 
 const log = createLogger("memory:sqlite");

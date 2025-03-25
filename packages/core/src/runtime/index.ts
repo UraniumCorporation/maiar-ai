@@ -1,42 +1,43 @@
 import { z } from "zod";
+
+import { MemoryService } from "../memory/service";
+import { LoggingModelDecorator, ModelRequestConfig } from "../models/base";
+import { ModelService } from "../models/service";
+import { ICapabilities } from "../models/types";
+import { MonitorService } from "../monitor/service";
+import { formatZodSchema, OperationConfig } from "../operations/base";
 import { Plugin } from "../plugin";
 import { PluginRegistry } from "../registry";
 import {
   AgentContext,
-  EventQueue,
-  UserInputContext,
   BaseContextItem,
-  getUserInput
+  EventQueue,
+  getUserInput,
+  UserInputContext
 } from "../types/agent";
+import { createLogger, logPipelineState } from "../utils/logger";
 import {
-  PipelineSchema,
-  PipelineStep,
+  cleanJsonString,
+  extractJson,
+  generateObjectTemplate,
+  generatePipelineModificationTemplate,
+  generatePipelineTemplate,
+  generateRetryTemplate
+} from "./templates";
+import {
+  ContextItemWithHistory,
+  ErrorContextItem,
+  GetObjectConfig,
   Pipeline,
   PipelineGenerationContext,
-  PipelineModificationContext,
   PipelineModification,
+  PipelineModificationContext,
   PipelineModificationSchema,
+  PipelineSchema,
+  PipelineStep,
   RuntimeConfig,
-  RuntimeOptions,
-  ErrorContextItem,
-  ContextItemWithHistory,
-  GetObjectConfig
+  RuntimeOptions
 } from "./types";
-import {
-  generatePipelineTemplate,
-  generatePipelineModificationTemplate,
-  generateObjectTemplate,
-  generateRetryTemplate,
-  cleanJsonString,
-  extractJson
-} from "./templates";
-import { ModelService } from "../models/service";
-import { createLogger, logPipelineState } from "../utils/logger";
-import { formatZodSchema, OperationConfig } from "../operations/base";
-import { MemoryService } from "../memory/service";
-import { MonitorService } from "../monitor/service";
-import { LoggingModelDecorator, ModelRequestConfig } from "../models/base";
-import { ICapabilities } from "../models/types";
 
 const log = createLogger("runtime");
 

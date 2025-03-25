@@ -1,7 +1,8 @@
 import { AgentContext, PluginBase, PluginResult } from "@maiar-ai/core";
-import { PerplexityQueryResponseSchema, SearchPluginConfig } from "./types";
-import { generateQueryTemplate } from "./templates";
+
 import { PerplexityService } from "./perplexity";
+import { generateQueryTemplate } from "./templates";
+import { PerplexityQueryResponseSchema, SearchPluginConfig } from "./types";
 
 export class PluginSearch extends PluginBase {
   private service: PerplexityService;

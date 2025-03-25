@@ -3,5 +3,22 @@
   "tabWidth": 2,
   "singleQuote": false,
   "trailingComma": "none",
-  "semi": true
+  "semi": true,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrder": [
+    "dotenv/config",
+    "^react",
+    "^vite",
+    "<THIRD_PARTY_MODULES>",
+    "^@maiar-ai/core",
+    "^@maiar-ai/model(.*)$",
+    "^@maiar-ai/memory(.*)$",
+    "^@maiar-ai/monitor(.*)$",
+    "^@maiar-ai/plugin(.*)$",
+    "^[./]",
+    "^[../]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrderCaseInsensitive": true
 }

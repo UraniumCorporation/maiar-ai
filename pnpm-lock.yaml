@@ -22,6 +22,9 @@ importers:
       "@eslint/js":
         specifier: 9.19.0
         version: 9.19.0
+      "@trivago/prettier-plugin-sort-imports":
+        specifier: 5.2.2
+        version: 5.2.2(prettier@3.4.2)
       "@types/node":
         specifier: 22.13.1
         version: 22.13.1
@@ -4288,6 +4291,25 @@ packages:
       {
         integrity: sha512-kGevOIbpMcIlCDeorKGpwZmdH7kHbqlk/Yj6dEpJMKEQw5lk0KVQY0OLXaCswy8GqlIVLd5625OB+rAntP9xVw==
       }
+
+  "@trivago/prettier-plugin-sort-imports@5.2.2":
+    resolution:
+      {
+        integrity: sha512-fYDQA9e6yTNmA13TLVSA+WMQRc5Bn/c0EUBditUHNfMMxN7M82c38b1kEggVE3pLpZ0FwkwJkUEKMiOi52JXFA==
+      }
+    engines: { node: ">18.12" }
+    peerDependencies:
+      "@vue/compiler-sfc": 3.x
+      prettier: 2.x - 3.x
+      prettier-plugin-svelte: 3.x
+      svelte: 4.x || 5.x
+    peerDependenciesMeta:
+      "@vue/compiler-sfc":
+        optional: true
+      prettier-plugin-svelte:
+        optional: true
+      svelte:
+        optional: true
 
   "@trysound/sax@0.2.0":
     resolution:
@@ -9094,6 +9116,12 @@ packages:
       }
     engines: { node: ">=10" }
     hasBin: true
+
+  javascript-natural-sort@0.7.1:
+    resolution:
+      {
+        integrity: sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==
+      }
 
   jest-diff@29.7.0:
     resolution:
@@ -18142,6 +18170,18 @@ snapshots:
 
   "@telegraf/types@7.1.0": {}
 
+  "@trivago/prettier-plugin-sort-imports@5.2.2(prettier@3.4.2)":
+    dependencies:
+      "@babel/generator": 7.26.5
+      "@babel/parser": 7.26.7
+      "@babel/traverse": 7.26.7
+      "@babel/types": 7.26.7
+      javascript-natural-sort: 0.7.1
+      lodash: 4.17.21
+      prettier: 3.4.2
+    transitivePeerDependencies:
+      - supports-color
+
   "@trysound/sax@0.2.0": {}
 
   "@tufjs/canonical-json@2.0.0": {}
@@ -21243,6 +21283,8 @@ snapshots:
       chalk: 4.1.2
       filelist: 1.0.4
       minimatch: 3.1.2
+
+  javascript-natural-sort@0.7.1: {}
 
   jest-diff@29.7.0:
     dependencies:

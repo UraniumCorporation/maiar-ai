@@ -34,10 +34,10 @@ export type Pipeline = z.infer<typeof PipelineSchema>;
  * Configuration options for the Runtime
  */
 export interface RuntimeConfig {
-  plugins?: Plugin[];
   modelService: ModelService;
   memoryService: MemoryService;
   monitorService: MonitorService;
+  plugins: Plugin[];
 }
 
 /**

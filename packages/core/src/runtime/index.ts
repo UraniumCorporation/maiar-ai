@@ -250,7 +250,7 @@ export class Runtime {
     this.memoryService = memoryService;
     this.monitorService = monitorService;
 
-    this.plugins = plugins || [];
+    this.plugins = plugins;
     this.registry = new PluginRegistry();
 
     this.isRunning = false;

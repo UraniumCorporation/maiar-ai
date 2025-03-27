@@ -234,7 +234,7 @@ export class Runtime {
   private monitorService: MonitorService;
 
   private plugins: Plugin[];
-  private registry: PluginRegistry;
+  private pluginRegistry: PluginRegistry;
 
   private isRunning: boolean;
   private eventQueue: AgentContext[];
@@ -251,20 +251,11 @@ export class Runtime {
     this.monitorService = monitorService;
 
     this.plugins = plugins;
-    this.registry = new PluginRegistry();
+    this.pluginRegistry = new PluginRegistry();
 
     this.isRunning = false;
     this.eventQueue = [];
     this.currentContext = undefined;
-
-    // Initialize monitoring if available
-    MonitorService.publishEvent({
-      type: "runtime.init",
-      message: "Runtime initialized",
-      metadata: {
-        plugins: this.plugins.map((p) => p.id)
-      }
-    });
   }
 
   /**
@@ -479,7 +470,7 @@ export class Runtime {
    * Register a plugin with the runtime
    */
   public async registerPlugin(plugin: Plugin): Promise<void> {
-    this.registry.register(plugin);
+    this.pluginRegistry.register(plugin);
 
     if (plugin.init) {
       await plugin.init(this);
@@ -546,7 +537,7 @@ export class Runtime {
       message: "Initialized runtime with plugins",
       logLevel: "info",
       metadata: {
-        plugins: this.registry.getAllPlugins().map((p) => p.id)
+        plugins: this.pluginRegistry.getAllPlugins().map((p) => p.id)
       }
     });
 
@@ -557,7 +548,7 @@ export class Runtime {
       type: "runtime.start",
       message: "Runtime started",
       metadata: {
-        plugins: this.registry.getAllPlugins().map((p) => p.id)
+        plugins: this.pluginRegistry.getAllPlugins().map((p) => p.id)
       }
     });
 
@@ -588,7 +579,7 @@ export class Runtime {
    * Get all registered plugins
    */
   public getPlugins(): Plugin[] {
-    return this.registry.getAllPlugins();
+    return this.pluginRegistry.getAllPlugins();
   }
 
   /**
@@ -792,7 +783,7 @@ export class Runtime {
     const userInput = getUserInput(context);
 
     // Get all available executors from plugins
-    const availablePlugins = this.registry
+    const availablePlugins = this.pluginRegistry
       .getAllPlugins()
       .map((plugin: Plugin) => ({
         id: plugin.id,
@@ -1038,7 +1029,7 @@ export class Runtime {
           continue;
         }
 
-        const plugin = this.registry.getPlugin(currentStep.pluginId);
+        const plugin = this.pluginRegistry.getPlugin(currentStep.pluginId);
         if (!plugin) {
           // Add error to context chain for missing plugin
           const errorContext: ErrorContextItem = {
@@ -1113,15 +1104,17 @@ export class Runtime {
             contextChain: context.contextChain,
             currentStep,
             pipeline: currentPipeline,
-            availablePlugins: this.registry.getAllPlugins().map((plugin) => ({
-              id: plugin.id,
-              name: plugin.name,
-              description: plugin.description,
-              executors: plugin.executors.map((e) => ({
-                name: e.name,
-                description: e.description
+            availablePlugins: this.pluginRegistry
+              .getAllPlugins()
+              .map((plugin) => ({
+                id: plugin.id,
+                name: plugin.name,
+                description: plugin.description,
+                executors: plugin.executors.map((e) => ({
+                  name: e.name,
+                  description: e.description
+                }))
               }))
-            }))
           });
 
           if (modification.shouldModify && modification.modifiedSteps) {

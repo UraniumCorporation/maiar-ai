@@ -126,5 +126,3 @@ export abstract class PluginBase implements Plugin {
     return executor.execute(context);
   }
 }
-
-export * from "./types";

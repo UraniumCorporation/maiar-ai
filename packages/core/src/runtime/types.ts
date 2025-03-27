@@ -46,9 +46,9 @@ export interface RuntimeConfig {
 export interface RuntimeOptions {
   models: ModelProvider[];
   memory: MemoryProvider;
+  monitor: MonitorProvider[];
   plugins: Plugin[];
-  monitor?: MonitorProvider[];
-  capabilityAliases?: string[][];
+  capabilityAliases: string[][];
 }
 
 interface PluginExecutor {

@@ -1,6 +1,6 @@
 import { MonitorService } from "../monitor";
 import { OperationConfig } from "../operations/base";
-import { ModelProvider } from "./base";
+import { LoggingModelDecorator, ModelProvider } from "./base";
 import { CapabilityRegistry } from "./capabilities";
 import { ICapabilities } from "./types";
 
@@ -8,11 +8,19 @@ import { ICapabilities } from "./types";
  * Service for managing operations on models
  */
 export class ModelService {
-  private models = new Map<string, ModelProvider>();
-  private registry = new CapabilityRegistry();
-  private capabilityAliases = new Map<string, string>();
+  private models: Map<string, ModelProvider>;
+  private registry: CapabilityRegistry;
+  private capabilityAliases: Map<string, string>;
 
-  constructor() {}
+  constructor(...models: ModelProvider[]) {
+    this.models = new Map<string, ModelProvider>();
+    this.registry = new CapabilityRegistry();
+    this.capabilityAliases = new Map<string, string>();
+
+    for (const model of models) {
+      this.registerModel(new LoggingModelDecorator(model));
+    }
+  }
 
   /**
    * Register a model
@@ -75,11 +83,15 @@ export class ModelService {
     modelId?: string
   ): Promise<ICapabilities[K]["output"]> {
     // Resolve the canonical capability ID
-    const resolvedCapabilityId = this.capabilityAliases.get(capabilityId as string) || capabilityId;
+    const resolvedCapabilityId =
+      this.capabilityAliases.get(capabilityId as string) || capabilityId;
 
     // Get the effective model to use
     const effectiveModelId =
-      modelId || this.registry.getDefaultModelForCapability(resolvedCapabilityId as string);
+      modelId ||
+      this.registry.getDefaultModelForCapability(
+        resolvedCapabilityId as string
+      );
 
     if (!effectiveModelId) {
       throw new Error(
@@ -95,7 +107,9 @@ export class ModelService {
     // Try to get the capability from the model
     const capability = model.getCapability(resolvedCapabilityId as string);
     if (!capability) {
-      throw new Error(`Capability ${resolvedCapabilityId} not found on model ${model.id}`);
+      throw new Error(
+        `Capability ${resolvedCapabilityId} not found on model ${model.id}`
+      );
     }
 
     // Validate the input against the capability's input schema

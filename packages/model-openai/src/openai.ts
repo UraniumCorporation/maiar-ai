@@ -171,7 +171,7 @@ export class OpenAIProvider extends ModelProviderBase {
     try {
       const resp = await this.executeCapability(
         TEXT_GENERATION_CAPABILITY_ID,
-        "are you alive? Please respond 'yes' or 'no' only.",
+        "[SYSTEM HEALTH CHECK] are you alive? please response with 'yes' only",
         {
           temperature: 0.7,
           maxTokens: 5

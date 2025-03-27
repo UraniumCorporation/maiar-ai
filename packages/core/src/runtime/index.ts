@@ -229,21 +229,33 @@ export async function getObject<T extends z.ZodType>(
  * Runtime class that manages the execution of plugins and agent state
  */
 export class Runtime {
-  private registry: PluginRegistry;
-  private plugins: Plugin[] = [];
-  private eventQueue: AgentContext[] = [];
-  private isRunning: boolean = false;
   private modelService: ModelService;
   private memoryService: MemoryService;
   private monitorService: MonitorService;
+
+  private plugins: Plugin[];
+  private registry: PluginRegistry;
+
+  private isRunning: boolean;
+  private eventQueue: AgentContext[];
   private currentContext: AgentContext | undefined;
 
-  constructor(config: RuntimeConfig) {
+  constructor({
+    modelService,
+    memoryService,
+    monitorService,
+    plugins
+  }: RuntimeConfig) {
+    this.modelService = modelService;
+    this.memoryService = memoryService;
+    this.monitorService = monitorService;
+
+    this.plugins = plugins || [];
     this.registry = new PluginRegistry();
-    this.modelService = config.modelService;
-    this.plugins = config.plugins || [];
-    this.memoryService = config.memoryService;
-    this.monitorService = config.monitorService;
+
+    this.isRunning = false;
+    this.eventQueue = [];
+    this.currentContext = undefined;
 
     // Initialize monitoring if available
     MonitorService.publishEvent({

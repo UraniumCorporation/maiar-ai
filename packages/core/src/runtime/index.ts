@@ -238,6 +238,23 @@ export class Runtime {
   private monitorService: MonitorService;
   private currentContext: AgentContext | undefined;
 
+  constructor(config: RuntimeConfig) {
+    this.registry = new PluginRegistry();
+    this.modelService = config.modelService;
+    this.plugins = config.plugins || [];
+    this.memoryService = config.memoryService;
+    this.monitorService = config.monitorService;
+
+    // Initialize monitoring if available
+    MonitorService.publishEvent({
+      type: "runtime.init",
+      message: "Runtime initialized",
+      metadata: {
+        plugins: this.plugins.map((p) => p.id)
+      }
+    });
+  }
+
   /**
    * Operations that can be used by plugins
    */
@@ -423,23 +440,6 @@ export class Runtime {
       return this.eventQueue.shift();
     }
   };
-
-  constructor(config: RuntimeConfig) {
-    this.registry = new PluginRegistry();
-    this.modelService = config.modelService;
-    this.plugins = config.plugins || [];
-    this.memoryService = config.memoryService;
-    this.monitorService = config.monitorService;
-
-    // Initialize monitoring if available
-    MonitorService.publishEvent({
-      type: "runtime.init",
-      message: "Runtime initialized",
-      metadata: {
-        plugins: this.plugins.map((p) => p.id)
-      }
-    });
-  }
 
   private async validatePluginCapabilities(plugin: Plugin): Promise<void> {
     for (const capability of plugin.capabilities) {

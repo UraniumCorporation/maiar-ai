@@ -12,6 +12,70 @@ export class PluginRegistry {
   }
 
   /**
+   * Register a new plugin
+   */
+  public register(plugin: Plugin): void {
+    if (!plugin) {
+      MonitorService.publishEvent({
+        type: "registry.plugin.registration.failed",
+        message: "Plugin registration failed",
+        logLevel: "error",
+        metadata: {
+          error: "Plugin is null or undefined"
+        }
+      });
+      throw new Error("Cannot register null or undefined plugin");
+    }
+
+    this.validatePluginId(plugin.id);
+
+    if (this.plugins.has(plugin.id)) {
+      const existing = Array.from(this.plugins.keys());
+      MonitorService.publishEvent({
+        type: "registry.plugin.id.collision",
+        message: "Plugin ID collision",
+        logLevel: "error",
+        metadata: {
+          id: plugin.id,
+          existingPlugins: existing
+        }
+      });
+      throw new Error(
+        `Plugin ID collision: ${plugin.id} is already registered.\n` +
+          `Currently registered plugins: ${existing.join(", ")}`
+      );
+    }
+
+    this.plugins.set(plugin.id, plugin);
+  }
+
+  /**
+   * Get a plugin by id
+   */
+  public getPlugin(id: string): Plugin | undefined {
+    const plugin = this.plugins.get(id);
+    if (!plugin) {
+      MonitorService.publishEvent({
+        type: "registry.plugin.not_found",
+        message: "Plugin not found",
+        logLevel: "warn",
+        metadata: {
+          id,
+          availablePlugins: Array.from(this.plugins.keys())
+        }
+      });
+    }
+    return plugin;
+  }
+
+  /**
+   * Get all registered plugins
+   */
+  public getAllPlugins(): Plugin[] {
+    return Array.from(this.plugins.values());
+  }
+
+  /**
    * Validate plugin ID format
    */
   private validatePluginId(id: string): void {
@@ -50,69 +114,5 @@ export class PluginRegistry {
       });
       throw new Error('Plugin ID must start with "plugin-"');
     }
-  }
-
-  /**
-   * Register a new plugin
-   */
-  register(plugin: Plugin): void {
-    if (!plugin) {
-      MonitorService.publishEvent({
-        type: "registry.plugin.registration.failed",
-        message: "Plugin registration failed",
-        logLevel: "error",
-        metadata: {
-          error: "Plugin is null or undefined"
-        }
-      });
-      throw new Error("Cannot register null or undefined plugin");
-    }
-
-    this.validatePluginId(plugin.id);
-
-    if (this.plugins.has(plugin.id)) {
-      const existing = Array.from(this.plugins.keys());
-      MonitorService.publishEvent({
-        type: "registry.plugin.id.collision",
-        message: "Plugin ID collision",
-        logLevel: "error",
-        metadata: {
-          id: plugin.id,
-          existingPlugins: existing
-        }
-      });
-      throw new Error(
-        `Plugin ID collision: ${plugin.id} is already registered.\n` +
-          `Currently registered plugins: ${existing.join(", ")}`
-      );
-    }
-
-    this.plugins.set(plugin.id, plugin);
-  }
-
-  /**
-   * Get a plugin by id
-   */
-  getPlugin(id: string): Plugin | undefined {
-    const plugin = this.plugins.get(id);
-    if (!plugin) {
-      MonitorService.publishEvent({
-        type: "registry.plugin.not_found",
-        message: "Plugin not found",
-        logLevel: "warn",
-        metadata: {
-          id,
-          availablePlugins: Array.from(this.plugins.keys())
-        }
-      });
-    }
-    return plugin;
-  }
-
-  /**
-   * Get all registered plugins
-   */
-  getAllPlugins(): Plugin[] {
-    return Array.from(this.plugins.values());
   }
 }

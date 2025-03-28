@@ -2,7 +2,7 @@ import { Telegraf } from "telegraf";
 
 import {
   AgentContext,
-  MonitorService,
+  MonitorManager,
   Plugin,
   PluginResult,
   Runtime
@@ -86,7 +86,7 @@ export class TelegramPlugin extends Plugin {
 
     // Log all bot errors
     this.bot.catch((error) => {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "telegram.bot.error",
         message: "Bot error",
         logLevel: "error",
@@ -104,7 +104,7 @@ export class TelegramPlugin extends Plugin {
 
     // Launch bot without awaiting to prevent blocking
     this.bot.launch(pollingOptions).catch((error) => {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "telegram.bot.launch.error",
         message: "Failed to start bot",
         logLevel: "error",
@@ -115,7 +115,7 @@ export class TelegramPlugin extends Plugin {
       });
     });
 
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "telegram.bot.start",
       message: "Bot started with polling",
       logLevel: "info",

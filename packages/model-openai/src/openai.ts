@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   ModelProvider,
   ModelRequestConfig,
-  MonitorService
+  MonitorManager
 } from "@maiar-ai/core";
 
 import {
@@ -135,7 +135,7 @@ export class OpenAIModelProvider extends ModelProvider {
       }
 
       // Log the interaction
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "model_interaction",
         message: `Model ${this.id} executed capability text-generation`,
         metadata: {
@@ -149,7 +149,7 @@ export class OpenAIModelProvider extends ModelProvider {
       return content;
     } catch (error) {
       // Log the error
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "model_error",
         message: `Error executing capability text-generation on model ${this.id}`,
         metadata: {
@@ -177,7 +177,7 @@ export class OpenAIModelProvider extends ModelProvider {
           maxTokens: 5
         }
       );
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "openai.model.health.check",
         message: "health.check.passed",
         metadata: {
@@ -186,7 +186,7 @@ export class OpenAIModelProvider extends ModelProvider {
         }
       });
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "openai.model.health.check",
         message: "health.check.failed",
         metadata: {

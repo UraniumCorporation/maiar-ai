@@ -3,7 +3,7 @@ import { BaseGuildTextChannel } from "discord.js";
 import {
   AgentContext,
   ExecutorImplementation,
-  MonitorService,
+  MonitorManager,
   PluginResult,
   Runtime
 } from "@maiar-ai/core";
@@ -67,7 +67,7 @@ export const sendMessageExecutor = discordExecutorFactory(
         ? await service.client.guilds.fetch(service.guildId)
         : service.client.guilds.cache.first();
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.guild.fetch",
         message: "Fetched guild",
         metadata: {
@@ -94,7 +94,7 @@ export const sendMessageExecutor = discordExecutorFactory(
         };
       }
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.message.sending",
         message: "Text channels fetched",
         metadata: {
@@ -119,7 +119,7 @@ export const sendMessageExecutor = discordExecutorFactory(
       })) as ChannelInfo[];
 
       // Log channel info
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.channel.info",
         message: "Channel info fetched",
         metadata: {
@@ -141,7 +141,7 @@ export const sendMessageExecutor = discordExecutorFactory(
         };
       }
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.channel.selection",
         message: "Channel selected",
         metadata: {
@@ -174,7 +174,7 @@ export const sendMessageExecutor = discordExecutorFactory(
         }
       };
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.message.send.error",
         message: "Error sending Discord message",
         logLevel: "error",
@@ -239,7 +239,7 @@ export const replyMessageExecutor = discordExecutorFactory(
 
       // Release processing lock after reply is sent
       service.isProcessing = false;
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.message.processing.complete",
         message: "Message processing complete - agent unlocked",
         logLevel: "info",
@@ -267,7 +267,7 @@ export const replyMessageExecutor = discordExecutorFactory(
       service.isProcessing = false;
       service.stopTypingIndicator(channelId);
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.message.reply.error",
         message: "Error sending Discord reply",
         logLevel: "error",

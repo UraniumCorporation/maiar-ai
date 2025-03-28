@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 
-import { MonitorService, Plugin } from "@maiar-ai/core";
+import { MonitorManager, Plugin } from "@maiar-ai/core";
 import {
   Context,
   Conversation,
@@ -9,9 +9,9 @@ import {
   Message
 } from "@maiar-ai/core";
 
-import { PostgresConfig } from "./types";
 import { PostgresDatabase } from "./database";
 import { PostgresMemoryPlugin } from "./plugin";
+import { PostgresConfig } from "./types";
 
 type JSONValue =
   | string
@@ -44,7 +44,7 @@ export class PostgresProvider implements MemoryProvider {
       const client = await this.pool.connect();
       try {
         await client.query("SELECT 1");
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "memory.postgres.health_check",
           message: "PostgreSQL health check passed",
           logLevel: "info"
@@ -53,7 +53,7 @@ export class PostgresProvider implements MemoryProvider {
         client.release();
       }
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.postgres.health_check.failed",
         message: "PostgreSQL health check failed",
         logLevel: "error",
@@ -70,13 +70,13 @@ export class PostgresProvider implements MemoryProvider {
   private async initializeStorage() {
     try {
       await this.createTables();
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.postgres.storage.initialized",
         message: "Initialized PostgreSQL memory storage",
         logLevel: "info"
       });
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.postgres.storage.initialization_failed",
         message: "Failed to initialize storage",
         logLevel: "error",
@@ -138,7 +138,7 @@ export class PostgresProvider implements MemoryProvider {
     const [user, platform] = id.split("-");
     const timestamp = Date.now();
 
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "memory.postgres.conversation.creating",
       message: "Creating new conversation",
       logLevel: "info",
@@ -158,7 +158,7 @@ export class PostgresProvider implements MemoryProvider {
             options?.metadata ? JSON.stringify(options.metadata) : null
           ]
         );
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "memory.postgres.conversation.created",
           message: "Created conversation successfully",
           logLevel: "info",
@@ -169,7 +169,7 @@ export class PostgresProvider implements MemoryProvider {
         client.release();
       }
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.postgres.conversation.creation_failed",
         message: "Failed to create conversation",
         logLevel: "error",
@@ -276,7 +276,7 @@ export class PostgresProvider implements MemoryProvider {
   }
 
   async getConversation(conversationId: string): Promise<Conversation> {
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "memory.postgres.conversation.fetching",
       message: "Fetching conversation",
       logLevel: "info",
@@ -291,7 +291,7 @@ export class PostgresProvider implements MemoryProvider {
       );
 
       if (conversationResult.rows.length === 0) {
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "memory.postgres.conversation.not_found",
           message: "Conversation not found",
           logLevel: "error",
@@ -304,7 +304,7 @@ export class PostgresProvider implements MemoryProvider {
       const messages = await this.getMessages({ conversationId });
       const contexts = await this.getContexts(conversationId);
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.postgres.conversation.retrieved",
         message: "Retrieved conversation",
         logLevel: "info",
@@ -338,7 +338,7 @@ export class PostgresProvider implements MemoryProvider {
         await client.query("COMMIT");
       } catch (error) {
         await client.query("ROLLBACK");
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "memory.postgres.conversation.deletion_failed",
           message: "Failed to delete conversation",
           logLevel: "error",

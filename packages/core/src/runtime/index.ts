@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ICapabilities } from "../config";
 import { MemoryService } from "./managers/memory";
 import { ModelService } from "./managers/model";
-import { MonitorService } from "./managers/monitor";
+import { MonitorManager } from "./managers/monitor";
 import { PluginRegistry } from "./managers/plugin";
 import {
   AgentContext,
@@ -79,7 +79,7 @@ export async function getObject<T extends z.ZodType>(
         const parsed = JSON.parse(jsonString);
         const result = schema.parse(parsed);
         if (attempt > 0) {
-          MonitorService.publishEvent({
+          MonitorManager.publishEvent({
             type: "runtime.getObject.success.retry",
             message: "Successfully parsed JSON after retries",
             logLevel: "info",
@@ -89,7 +89,7 @@ export async function getObject<T extends z.ZodType>(
         return result;
       } catch (parseError) {
         lastError = parseError as Error;
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.getObject.parse.failed",
           message: `Attempt ${attempt + 1}/${maxRetries} failed`,
           logLevel: "warn",
@@ -102,7 +102,7 @@ export async function getObject<T extends z.ZodType>(
       }
     } catch (error) {
       lastError = error as Error;
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.getObject.execution.failed",
         message: `Attempt ${attempt + 1}/${maxRetries} failed`,
         logLevel: "error",
@@ -130,7 +130,7 @@ export class Runtime {
 
   private modelService: ModelService;
   private memoryService: MemoryService;
-  private monitorService: MonitorService;
+  private monitorService: MonitorManager;
 
   private plugins: Plugin[];
   private pluginRegistry: PluginRegistry;
@@ -143,7 +143,7 @@ export class Runtime {
   private constructor(
     modelService: ModelService,
     memoryService: MemoryService,
-    monitorService: MonitorService,
+    monitorService: MonitorManager,
     plugins: Plugin[]
   ) {
     this.operations = {
@@ -174,7 +174,7 @@ export class Runtime {
         const userInput = getUserInput(context);
 
         // Pre-event logging and store user message
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.context.pre_event",
           message: "Pre-event context chain state",
           logLevel: "info",
@@ -217,7 +217,7 @@ export class Runtime {
         try {
           // Store user message in memory
           if (userInput) {
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "runtime.memory.user_message.storing",
               message: "Storing user message in memory",
               logLevel: "info",
@@ -243,7 +243,7 @@ export class Runtime {
             fullContext.platformContext.responseHandler = async (response) => {
               try {
                 // Pre-response logging
-                MonitorService.publishEvent({
+                MonitorManager.publishEvent({
                   type: "runtime.context.pre_response",
                   message: "Pre-response context chain state",
                   logLevel: "info",
@@ -260,7 +260,7 @@ export class Runtime {
                 await originalHandler(response);
 
                 // Post-response logging
-                MonitorService.publishEvent({
+                MonitorManager.publishEvent({
                   type: "runtime.context.post_response",
                   message: "Post-response context chain state",
                   logLevel: "info",
@@ -273,7 +273,7 @@ export class Runtime {
                   }
                 });
               } catch (error) {
-                MonitorService.publishEvent({
+                MonitorManager.publishEvent({
                   type: "runtime.response.storing.failed",
                   message: "Error storing assistant response",
                   logLevel: "error",
@@ -290,7 +290,7 @@ export class Runtime {
           }
 
           this.eventQueue.push(fullContext);
-          MonitorService.publishEvent({
+          MonitorManager.publishEvent({
             type: "runtime.queue.updated",
             message: "Queue updated",
             logLevel: "debug",
@@ -299,7 +299,7 @@ export class Runtime {
             }
           });
         } catch (error) {
-          MonitorService.publishEvent({
+          MonitorManager.publishEvent({
             type: "runtime.message.storing.failed",
             message: "Error storing user message",
             logLevel: "error",
@@ -328,20 +328,20 @@ export class Runtime {
   ): Promise<Runtime> {
     const modelService = new ModelService(...modelProviders);
     const memoryService = new MemoryService(memoryProvider);
-    const monitorService = MonitorService.getInstance();
+    const monitorService = MonitorManager.getInstance();
 
     // Initialize the global monitor service with monitor providers
     try {
-      MonitorService.init(monitorProviders);
-      await MonitorService.checkHealth();
+      MonitorManager.init(monitorProviders);
+      await MonitorManager.checkHealth();
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "monitor.healthcheck.passed",
         message: "Monitor service healthcheck passed"
       });
     } catch (err: unknown) {
       const error = err as Error;
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.monitor.healthcheck.failed",
         message: "Monitor service healthcheck failed",
         logLevel: "error",
@@ -353,14 +353,14 @@ export class Runtime {
     for (const modelProvider of modelProviders) {
       try {
         await modelProvider.init?.();
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.model.initialized",
           message: "Model initialized successfully!",
           logLevel: "debug"
         });
       } catch (err: unknown) {
         const error = err as Error;
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.model.initialization.failed",
           message: "Model failed to initialize",
           logLevel: "error",
@@ -371,14 +371,14 @@ export class Runtime {
 
       try {
         await modelProvider.checkHealth?.();
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.model.healthcheck.passed",
           message: "Model healthcheck passed!",
           logLevel: "debug"
         });
       } catch (err: unknown) {
         const error = err as Error;
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.model.healthcheck.failed",
           message: "Model healthcheck failed",
           logLevel: "error",
@@ -401,7 +401,7 @@ export class Runtime {
       }
     }
 
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "runtime.init",
       message: "Runtime initialized",
       metadata: {
@@ -422,7 +422,7 @@ export class Runtime {
   /**
    * Access to the monitor service for plugins
    */
-  public get monitor(): MonitorService {
+  public get monitor(): MonitorManager {
     return this.monitorService;
   }
 
@@ -436,7 +436,7 @@ export class Runtime {
   private async validatePluginCapabilities(plugin: Plugin): Promise<void> {
     for (const capability of plugin.requiredCapabilities) {
       if (!this.modelService.hasCapability(capability)) {
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.plugin.capability.missing",
           message: `Plugin ${plugin.id} specified an optional capability ${capability} that is not available`,
           logLevel: "warn"
@@ -492,7 +492,7 @@ export class Runtime {
       }
     }
 
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "runtime.capabilities.validated",
       message: "Runtime validated required capabilities",
       logLevel: "info",
@@ -512,7 +512,7 @@ export class Runtime {
     }
 
     // Print registered plugins after they're all registered
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "runtime.plugins.initialized",
       message: "Initialized runtime with plugins",
       logLevel: "info",
@@ -524,7 +524,7 @@ export class Runtime {
     this.isRunning = true;
 
     // Log start event
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "runtime.start",
       message: "Runtime started",
       metadata: {
@@ -549,7 +549,7 @@ export class Runtime {
     this.isRunning = false;
 
     // Log stop event
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "runtime.stop",
       message: "Runtime stopped"
     });
@@ -613,7 +613,7 @@ export class Runtime {
     try {
       await this.queueInterface.push(context);
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.event.queue.push.failed",
         message: "Error pushing event to queue",
         logLevel: "error",
@@ -631,7 +631,7 @@ export class Runtime {
   }
 
   private async runEvaluationLoop(): Promise<void> {
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "runtime.evaluation.loop.starting",
       message: "Starting evaluation loop",
       logLevel: "info"
@@ -645,7 +645,7 @@ export class Runtime {
       }
 
       const userInput = getUserInput(context);
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.context.processing",
         message: "Processing context from queue",
         logLevel: "debug",
@@ -662,21 +662,21 @@ export class Runtime {
         // Set current context before pipeline
         this.currentContext = context;
 
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.pipeline.evaluating",
           message: "Evaluating pipeline for context",
           logLevel: "debug"
         });
 
         const pipeline = await this.evaluatePipeline(context);
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.pipeline.generated",
           message: "Generated pipeline",
           logLevel: "info",
           metadata: { pipeline }
         });
 
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.pipeline.executing",
           message: "Executing pipeline",
           logLevel: "debug"
@@ -685,7 +685,7 @@ export class Runtime {
         await this.executePipeline(pipeline, context);
 
         // Post-event logging
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.context.post_event",
           message: "Post-event context chain state",
           logLevel: "info",
@@ -702,7 +702,7 @@ export class Runtime {
           const lastContext = context.contextChain[
             context.contextChain.length - 1
           ] as BaseContextItem & { message: string };
-          MonitorService.publishEvent({
+          MonitorManager.publishEvent({
             type: "runtime.assistant.response.storing",
             message: "Storing assistant response in memory",
             logLevel: "info",
@@ -721,13 +721,13 @@ export class Runtime {
           );
         }
 
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.pipeline.execution.complete",
           message: "Pipeline execution complete",
           logLevel: "info"
         });
       } catch (error) {
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "runtime.evaluation.loop.error",
           message: "Error in evaluation loop",
           logLevel: "error",
@@ -742,7 +742,7 @@ export class Runtime {
         });
 
         // Log the error
-        await MonitorService.publishEvent({
+        await MonitorManager.publishEvent({
           type: "runtime_error",
           message: `Runtime error occurred`,
           metadata: {
@@ -809,7 +809,7 @@ export class Runtime {
       const template = generatePipelineTemplate(pipelineContext);
 
       // Log pipeline generation start
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "pipeline.generation.start",
         message: "Starting pipeline generation",
         metadata: {
@@ -819,7 +819,7 @@ export class Runtime {
         }
       });
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.pipeline.generating",
         message: "Generating pipeline",
         logLevel: "debug",
@@ -840,7 +840,7 @@ export class Runtime {
 
       // Add concise pipeline steps log
       const steps = pipeline.map((step) => `${step.pluginId}:${step.action}`);
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.pipeline.steps",
         message: "Pipeline steps:",
         logLevel: "info",
@@ -848,7 +848,7 @@ export class Runtime {
       });
 
       // Log successful pipeline generation
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "pipeline.generation.complete",
         message: "Pipeline generation completed successfully",
         metadata: {
@@ -860,7 +860,7 @@ export class Runtime {
         }
       });
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.pipeline.generated",
         message: "Generated pipeline",
         logLevel: "info",
@@ -872,7 +872,7 @@ export class Runtime {
       return pipeline;
     } catch (error) {
       // Log pipeline generation error
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "pipeline.generation.error",
         message: "Pipeline generation failed",
         metadata: {
@@ -890,7 +890,7 @@ export class Runtime {
         }
       });
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.pipeline.generation.error",
         message: "Error generating pipeline",
         logLevel: "error",
@@ -920,7 +920,7 @@ export class Runtime {
     context: PipelineModificationContext
   ): Promise<PipelineModification> {
     const template = generatePipelineModificationTemplate(context);
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "runtime.pipeline.modification.evaluating",
       message: "Evaluating pipeline modification",
       logLevel: "debug",
@@ -939,7 +939,7 @@ export class Runtime {
         }
       );
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.pipeline.modification.result",
         message: "Pipeline modification evaluation result",
         logLevel: "info",
@@ -952,7 +952,7 @@ export class Runtime {
 
       return modification;
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.pipeline.modification.error",
         message: "Error evaluating pipeline modification",
         logLevel: "error",
@@ -979,7 +979,7 @@ export class Runtime {
       let currentStepIndex = 0;
 
       // Log initial pipeline state
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "runtime.pipeline.state",
         message: "Pipeline state updated",
         logLevel: "debug",
@@ -1031,7 +1031,7 @@ export class Runtime {
           const result = await plugin.execute(currentStep.action, context);
 
           // Log step execution
-          MonitorService.publishEvent({
+          MonitorManager.publishEvent({
             type: "runtime.pipeline.step.executed",
             message: "Step execution completed",
             logLevel: "debug",
@@ -1105,7 +1105,7 @@ export class Runtime {
             ];
 
             // Log modification
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "runtime.pipeline.modification.applied",
               message: "Pipeline modification applied",
               logLevel: "debug",
@@ -1119,7 +1119,7 @@ export class Runtime {
             });
 
             // Emit pipeline modification event
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "pipeline.modification",
               message: "Pipeline modified during execution",
               metadata: {
@@ -1148,7 +1148,7 @@ export class Runtime {
           await this.updateMonitoringState();
 
           // Log failed step
-          MonitorService.publishEvent({
+          MonitorManager.publishEvent({
             type: "runtime.pipeline.step.failed",
             message: "Step execution failed",
             logLevel: "error",
@@ -1177,7 +1177,7 @@ export class Runtime {
   }
 
   private async updateMonitoringState() {
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "state",
       message: "Agent state update",
       metadata: {

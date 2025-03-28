@@ -1,4 +1,4 @@
-import { MonitorService, Plugin, Runtime } from "@maiar-ai/core";
+import { MonitorManager, Plugin, Runtime } from "@maiar-ai/core";
 
 import { DiscordService } from "./services";
 import { DiscordExecutorFactory, DiscordTriggerFactory } from "./types";
@@ -52,7 +52,7 @@ export class DiscordPlugin extends Plugin {
     await this.discordService.login();
 
     setTimeout(() => {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "plugin-discord",
         message: "Discord plugin initialized",
         metadata: { inviteUrl: this.discordService.generateInviteUrl() }

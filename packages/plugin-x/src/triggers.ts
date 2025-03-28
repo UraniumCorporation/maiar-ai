@@ -1,5 +1,5 @@
 import { Runtime, Trigger, UserInputContext } from "@maiar-ai/core";
-import { MonitorService } from "@maiar-ai/core";
+import { MonitorManager } from "@maiar-ai/core";
 
 import { XService } from "./services";
 import { xPostTemplate } from "./templates";
@@ -35,12 +35,12 @@ export const periodicPostTrigger = createXTrigger(
     return {
       id: "x_periodic_post",
       start: (): void => {
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "plugin-x.trigger.start",
           message: `Starting X periodic post trigger (interval: ${baseIntervalMinutes} mins, randomization: ${randomizationMinutes} mins)`,
           logLevel: "info"
         });
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "plugin-x.trigger.template",
           message: `Using post template: "${postTemplate.substring(0, 50)}..." (truncated)`,
           logLevel: "info"
@@ -65,7 +65,7 @@ export const periodicPostTrigger = createXTrigger(
               user: "self-invoked-x-post-trigger"
             };
 
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "plugin-x.event.creating",
               message: "Creating X post event to invoke agent",
               logLevel: "info",
@@ -75,7 +75,7 @@ export const periodicPostTrigger = createXTrigger(
                 action: initialContext.action
               }
             });
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "plugin-x.event.content",
               message: `Context content length: ${initialContext.content.length} chars`,
               logLevel: "info"
@@ -85,7 +85,7 @@ export const periodicPostTrigger = createXTrigger(
             try {
               await runtime.createEvent(initialContext);
             } catch (eventError) {
-              MonitorService.publishEvent({
+              MonitorManager.publishEvent({
                 type: "plugin-x.event.creation_failed",
                 message: `Failed to create event: ${eventError instanceof Error ? eventError.message : String(eventError)}`,
                 logLevel: "error",
@@ -95,14 +95,14 @@ export const periodicPostTrigger = createXTrigger(
             }
 
             // Schedule next post
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "plugin-x.post.scheduling",
               message: `Scheduling next X post in ${Math.round(randomIntervalMinutes)} minutes (${Math.round((intervalMs / 1000 / 60 / 60) * 10) / 10} hours)`,
               logLevel: "info"
             });
             setTimeout(scheduleNextPost, intervalMs);
           } catch (error) {
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "plugin-x.post.scheduling_error",
               message: `Error in periodic post scheduling: ${error instanceof Error ? error.message : String(error)}`,
               logLevel: "error",
@@ -110,7 +110,7 @@ export const periodicPostTrigger = createXTrigger(
             });
 
             // Log internal state details
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "plugin-x.service.state_check",
               message: "Checking X Service internal state",
               logLevel: "info"
@@ -119,13 +119,13 @@ export const periodicPostTrigger = createXTrigger(
               // Log service health using public methods if available
               try {
                 await xService.checkHealth();
-                MonitorService.publishEvent({
+                MonitorManager.publishEvent({
                   type: "plugin-x.service.health_check",
                   message: "X service health check passed",
                   logLevel: "info"
                 });
               } catch (healthError) {
-                MonitorService.publishEvent({
+                MonitorManager.publishEvent({
                   type: "plugin-x.service.health_check_failed",
                   message: `X service health check failed: ${healthError instanceof Error ? healthError.message : String(healthError)}`,
                   logLevel: "error",
@@ -133,7 +133,7 @@ export const periodicPostTrigger = createXTrigger(
                 });
               }
             } catch (authCheckError) {
-              MonitorService.publishEvent({
+              MonitorManager.publishEvent({
                 type: "plugin-x.service.state_check_failed",
                 message: `Failed to check service state: ${authCheckError instanceof Error ? authCheckError.message : String(authCheckError)}`,
                 logLevel: "error",
@@ -144,7 +144,7 @@ export const periodicPostTrigger = createXTrigger(
             // If there's an error, still try to schedule the next post
             // but use a shorter interval (30-60 minutes)
             const recoveryMs = (30 + Math.random() * 30) * 60 * 1000;
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "plugin-x.post.recovery_scheduling",
               message: `Scheduling recovery attempt in ${Math.round(recoveryMs / 1000 / 60)} minutes`,
               logLevel: "warn"
@@ -173,7 +173,7 @@ export function createAllCustomTriggers(
   runtime: Runtime,
   config?: TriggerConfig
 ): Trigger[] {
-  MonitorService.publishEvent({
+  MonitorManager.publishEvent({
     type: "plugin-x.triggers.creating",
     message: `Creating all custom triggers with config: ${JSON.stringify(config || {})}`,
     logLevel: "info"

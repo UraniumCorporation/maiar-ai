@@ -1,17 +1,18 @@
 import fs from "fs/promises";
 import path from "path";
 
-import { MonitorService } from "@maiar-ai/core";
+import { MonitorManager } from "@maiar-ai/core";
 import {
-  MemoryProvider,
-  Message,
   Context,
   Conversation,
+  MemoryProvider,
   MemoryQueryOptions,
+  Message,
   Plugin
 } from "@maiar-ai/core";
-import { FileSystemConfig } from "./types";
+
 import { FileSystemMemoryPlugin } from "./plugin";
+import { FileSystemConfig } from "./types";
 
 export class FileSystemProvider implements MemoryProvider {
   readonly id = "filesystem";
@@ -30,14 +31,14 @@ export class FileSystemProvider implements MemoryProvider {
   private async initializeStorage() {
     try {
       await fs.mkdir(this.basePath, { recursive: true });
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.filesystem.init",
         message: "Initialized filesystem memory storage",
         logLevel: "info",
         metadata: { path: this.basePath }
       });
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.filesystem.init.failed",
         message: "Failed to initialize filesystem memory storage",
         logLevel: "error",
@@ -74,7 +75,7 @@ export class FileSystemProvider implements MemoryProvider {
     const filePath = this.getConversationPath(conversationId);
     await fs.writeFile(filePath, JSON.stringify(conversation, null, 2));
 
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "memory.filesystem.conversation.created",
       message: "Created new conversation",
       logLevel: "info",
@@ -143,7 +144,7 @@ export class FileSystemProvider implements MemoryProvider {
       );
       return JSON.parse(data);
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.filesystem.conversation.read.failed",
         message: "Failed to read conversation",
         logLevel: "error",
@@ -160,7 +161,7 @@ export class FileSystemProvider implements MemoryProvider {
     try {
       await fs.unlink(this.getConversationPath(conversationId));
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "memory.filesystem.conversation.delete.failed",
         message: "Failed to delete conversation",
         logLevel: "error",

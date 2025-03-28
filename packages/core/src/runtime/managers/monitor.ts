@@ -10,8 +10,8 @@ export interface MonitorEvent {
 /**
  * Global monitor service that can be accessed by any component
  */
-export class MonitorService {
-  private static instance: MonitorService;
+export class MonitorManager {
+  private static instance: MonitorManager;
   private providers: MonitorProvider[] = [];
 
   private constructor() {}
@@ -19,11 +19,11 @@ export class MonitorService {
   /**
    * Get the singleton instance of the monitor service
    */
-  public static getInstance(): MonitorService {
-    if (!MonitorService.instance) {
-      MonitorService.instance = new MonitorService();
+  public static getInstance(): MonitorManager {
+    if (!MonitorManager.instance) {
+      MonitorManager.instance = new MonitorManager();
     }
-    return MonitorService.instance;
+    return MonitorManager.instance;
   }
 
   /**
@@ -31,7 +31,7 @@ export class MonitorService {
    * This should be called during runtime creation
    */
   public static init(providers: MonitorProvider[]): void {
-    const instance = MonitorService.getInstance();
+    const instance = MonitorManager.getInstance();
     instance.providers = providers;
   }
 
@@ -39,7 +39,7 @@ export class MonitorService {
    * Publish an event to all registered monitors
    */
   public static publishEvent(event: MonitorEvent): void {
-    const instance = MonitorService.getInstance();
+    const instance = MonitorManager.getInstance();
     const eventWithTimestamp = {
       ...event,
       timestamp: Date.now()
@@ -54,11 +54,11 @@ export class MonitorService {
    * Checks the health of all registered monitor providers.
    */
   public static async checkHealth(): Promise<void> {
-    const instance = MonitorService.getInstance();
+    const instance = MonitorManager.getInstance();
     await Promise.all(
       instance.providers.map((provider) =>
         provider.checkHealth().catch((error: unknown) => {
-          MonitorService.publishEvent({
+          MonitorManager.publishEvent({
             type: "monitor_health_check_failed",
             message: `Health check failed for monitor provider ${provider.id}`,
             metadata: {

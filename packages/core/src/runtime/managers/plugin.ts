@@ -1,5 +1,5 @@
 import { Plugin } from "../providers/plugin";
-import { MonitorService } from "./monitor";
+import { MonitorManager } from "./monitor";
 
 /**
  * Registry for managing plugins
@@ -16,7 +16,7 @@ export class PluginRegistry {
    */
   public register(plugin: Plugin): void {
     if (!plugin) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "registry.plugin.registration.failed",
         message: "Plugin registration failed",
         logLevel: "error",
@@ -31,7 +31,7 @@ export class PluginRegistry {
 
     if (this.plugins.has(plugin.id)) {
       const existing = Array.from(this.plugins.keys());
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "registry.plugin.id.collision",
         message: "Plugin ID collision",
         logLevel: "error",
@@ -55,7 +55,7 @@ export class PluginRegistry {
   public getPlugin(id: string): Plugin | undefined {
     const plugin = this.plugins.get(id);
     if (!plugin) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "registry.plugin.not_found",
         message: "Plugin not found",
         logLevel: "warn",
@@ -80,7 +80,7 @@ export class PluginRegistry {
    */
   private validatePluginId(id: string): void {
     if (!id) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "registry.plugin.validation.failed",
         message: "Plugin ID validation failed",
         logLevel: "error",
@@ -91,7 +91,7 @@ export class PluginRegistry {
       throw new Error("Plugin ID cannot be empty");
     }
     if (typeof id !== "string") {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "registry.plugin.validation.failed",
         message: "Plugin ID validation failed",
         logLevel: "error",
@@ -103,7 +103,7 @@ export class PluginRegistry {
       throw new Error("Plugin ID must be a string");
     }
     if (!id.startsWith("plugin-")) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "registry.plugin.validation.failed",
         message: "Plugin ID validation failed",
         logLevel: "error",

@@ -55,7 +55,7 @@ Let's look at our SQLite implementation as an example. It demonstrates how to im
 import Database from "better-sqlite3";
 
 import { Context, Conversation, MemoryProvider, Message } from "@maiar-ai/core";
-import { MonitorService } from "@maiar-ai/core";
+import { MonitorManager } from "@maiar-ai/core";
 
 export interface SQLiteConfig {
   dbPath: string;

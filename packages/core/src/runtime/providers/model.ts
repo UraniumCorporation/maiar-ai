@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ICapabilities } from "../../config";
-import { MonitorService } from "../managers/monitor";
+import { MonitorManager } from "../managers/monitor";
 import { OperationConfig } from "../pipeline/operations";
 
 /**
@@ -46,7 +46,7 @@ export abstract class ModelProvider {
    * Get access to the monitor service
    */
   protected get monitor() {
-    return MonitorService;
+    return MonitorManager;
   }
 
   public addCapability(capability: ModelCapability): void {
@@ -114,7 +114,7 @@ export class LoggingModelDecorator extends ModelProvider {
         execute: async (input: unknown, config?: ModelRequestConfig) => {
           try {
             // Log the input
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "model.capability.prompt",
               message: `Model ${this.id} sending prompt to capability ${capability.id}`,
               logLevel: "debug",
@@ -130,7 +130,7 @@ export class LoggingModelDecorator extends ModelProvider {
             const response = await capability.execute(input, config);
 
             // Log the response
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "model.capability.response",
               message: `Model ${this.id} received response from capability ${capability.id}`,
               logLevel: "debug",
@@ -148,7 +148,7 @@ export class LoggingModelDecorator extends ModelProvider {
             return response;
           } catch (error) {
             // Log any errors
-            MonitorService.publishEvent({
+            MonitorManager.publishEvent({
               type: "model.capability.error",
               message: `Model ${this.id} encountered error with capability ${capability.id}`,
               logLevel: "error",

@@ -6,7 +6,7 @@ import {
   PermissionsBitField
 } from "discord.js";
 
-import { MonitorService } from "@maiar-ai/core";
+import { MonitorManager } from "@maiar-ai/core";
 
 export class DiscordService {
   public readonly clientId: string;
@@ -87,7 +87,7 @@ export class DiscordService {
     // (Discord's typing indicator lasts 10 seconds, so we refresh before it expires)
     const interval = setInterval(() => {
       channel.sendTyping().catch((error) => {
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "discord.typing.error",
           message: "Error sending typing indicator",
           logLevel: "error",
@@ -104,7 +104,7 @@ export class DiscordService {
 
     // Send initial typing indicator
     channel.sendTyping().catch((error) => {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.typing.error",
         message: "Error sending typing indicator",
         logLevel: "error",

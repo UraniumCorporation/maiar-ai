@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   ModelProvider,
   ModelRequestConfig,
-  MonitorService
+  MonitorManager
 } from "@maiar-ai/core";
 
 import { verifyBasicHealth } from "./index";
@@ -78,7 +78,7 @@ export class OllamaModelProvider extends ModelProvider {
       const data = await response.json();
       return data.response;
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "model.ollama.generation.error",
         message: "Error getting text from Ollama",
         logLevel: "error",
@@ -104,7 +104,7 @@ export class OllamaModelProvider extends ModelProvider {
       // Send a GET request to the tag endpoint and verify if the model exists
       await verifyBasicHealth(this.baseUrl, this.model);
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "model.ollama.health_check.passed",
         message: `Ollama model '${this.model}' health check passed`,
         logLevel: "info",
@@ -114,7 +114,7 @@ export class OllamaModelProvider extends ModelProvider {
         }
       });
     } catch (error) {
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "model.ollama.health_check.failed",
         message: "Ollama model health check failed",
         logLevel: "error",

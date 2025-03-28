@@ -5,7 +5,7 @@
 import { BaseGuildTextChannel, Events } from "discord.js";
 import { Message } from "discord.js";
 
-import { MonitorService, Runtime, UserInputContext } from "@maiar-ai/core";
+import { MonitorManager, Runtime, UserInputContext } from "@maiar-ai/core";
 
 import { DiscordService } from "./services";
 import { generateMessageIntentTemplate } from "./templates";
@@ -49,7 +49,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
           message.id
         );
 
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "discord.message.skipped",
           message: "Skipping message - not intended for agent",
           metadata: {
@@ -68,7 +68,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         `<@${discordService.clientId}>`
       );
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.message.processing",
         message: "Processing message",
         metadata: {
@@ -87,7 +87,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         10 // Limit to last 10 messages
       );
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.message.history",
         message: "Retrieved conversation history",
         metadata: {
@@ -114,7 +114,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         intentTemplate
       );
 
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.message.intent",
         message: "Intent analysis result",
         metadata: {
@@ -128,7 +128,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         // Set processing lock
         discordService.isProcessing = true;
 
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "discord.message.processing",
           message: "Message processing started - agent locked",
           metadata: {
@@ -186,7 +186,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         );
 
         // Add detailed info logging for skipped messages
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "discord.message.skipped",
           message: "Skipping message - not intended for agent",
           metadata: {
@@ -204,7 +204,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
     } catch (error) {
       // Make sure we unlock if there's an error
       discordService.isProcessing = false;
-      MonitorService.publishEvent({
+      MonitorManager.publishEvent({
         type: "discord.message.intent.error",
         message: "Error processing message intent",
         logLevel: "error",

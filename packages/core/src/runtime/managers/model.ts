@@ -2,7 +2,7 @@ import { ICapabilities } from "../../config";
 import { OperationConfig } from "../pipeline/operations";
 import { LoggingModelDecorator, ModelProvider } from "../providers/model";
 import { CapabilityRegistry } from "./capability";
-import { MonitorService } from "./monitor";
+import { MonitorManager } from "./monitor";
 
 /**
  * Service for managing operations on models
@@ -37,7 +37,7 @@ export class ModelService {
       // If not, set this model as the default for this capability
       if (!this.registry.getDefaultModelForCapability(capability.id)) {
         this.registry.setDefaultModelForCapability(capability.id, model.id);
-        MonitorService.publishEvent({
+        MonitorManager.publishEvent({
           type: "model.capability.default",
           message: "Set default model for capability",
           logLevel: "debug",
@@ -49,7 +49,7 @@ export class ModelService {
       }
     }
 
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "model.instance.registered",
       message: "Registered model instance",
       logLevel: "debug",
@@ -65,7 +65,7 @@ export class ModelService {
       throw new Error(`Capability ${canonicalId} not found`);
     }
     this.capabilityAliases.set(alias, canonicalId);
-    MonitorService.publishEvent({
+    MonitorManager.publishEvent({
       type: "model.capability.alias.registered",
       message: "Registered capability alias",
       logLevel: "debug",

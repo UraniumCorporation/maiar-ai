@@ -25,7 +25,7 @@ export class ModelService {
   /**
    * Register a model
    */
-  registerModel(model: ModelProvider): void {
+  private registerModel(model: ModelProvider): void {
     this.models.set(model.id, model);
 
     // Register all capabilities provided by the model
@@ -60,7 +60,7 @@ export class ModelService {
   /**
    * Register a capability alias
    */
-  registerCapabilityAlias(alias: string, canonicalId: string): void {
+  public registerCapabilityAlias(alias: string, canonicalId: string): void {
     if (!this.registry.hasCapability(canonicalId)) {
       throw new Error(`Capability ${canonicalId} not found`);
     }
@@ -76,7 +76,7 @@ export class ModelService {
   /**
    * Execute a capability with the given input
    */
-  async executeCapability<K extends keyof ICapabilities>(
+  public async executeCapability<K extends keyof ICapabilities>(
     capabilityId: K,
     input: ICapabilities[K]["input"],
     config?: OperationConfig,
@@ -99,16 +99,18 @@ export class ModelService {
       );
     }
 
-    const model = this.models.get(effectiveModelId);
-    if (!model) {
+    const modelProvider = this.models.get(effectiveModelId);
+    if (!modelProvider) {
       throw new Error(`Unknown model: ${effectiveModelId}`);
     }
 
     // Try to get the capability from the model
-    const capability = model.getCapability(resolvedCapabilityId as string);
+    const capability = modelProvider.getCapability(
+      resolvedCapabilityId as string
+    );
     if (!capability) {
       throw new Error(
-        `Capability ${resolvedCapabilityId} not found on model ${model.id}`
+        `Capability ${resolvedCapabilityId} not found on model ${modelProvider.id}`
       );
     }
 
@@ -126,14 +128,14 @@ export class ModelService {
   /**
    * Get all available capabilities
    */
-  getAvailableCapabilities(): string[] {
+  public getAvailableCapabilities(): string[] {
     return this.registry.getAllCapabilities();
   }
 
   /**
    * Get all models that support a capability
    */
-  getModelsWithCapability(capabilityId: string): string[] {
+  public getModelsWithCapability(capabilityId: string): string[] {
     const resolvedId = this.capabilityAliases.get(capabilityId) || capabilityId;
     return this.registry.getModelsWithCapability(resolvedId);
   }
@@ -141,7 +143,10 @@ export class ModelService {
   /**
    * Set the default model for a capability
    */
-  setDefaultModelForCapability(capabilityId: string, modelId: string): void {
+  public setDefaultModelForCapability(
+    capabilityId: string,
+    modelId: string
+  ): void {
     const resolvedId = this.capabilityAliases.get(capabilityId) || capabilityId;
     this.registry.setDefaultModelForCapability(resolvedId, modelId);
   }
@@ -149,7 +154,7 @@ export class ModelService {
   /**
    * Check if any model supports a capability
    */
-  hasCapability(capabilityId: string): boolean {
+  public hasCapability(capabilityId: string): boolean {
     const resolvedId = this.capabilityAliases.get(capabilityId) || capabilityId;
     return this.registry.hasCapability(resolvedId);
   }

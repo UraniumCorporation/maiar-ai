@@ -460,10 +460,7 @@ export class Runtime {
    */
   public async registerPlugin(plugin: Plugin): Promise<void> {
     this.pluginRegistry.register(plugin);
-
-    if (plugin.init) {
-      await plugin.init(this);
-    }
+    plugin.init(this);
 
     for (const trigger of plugin.triggers) {
       const initContext: UserInputContext = {

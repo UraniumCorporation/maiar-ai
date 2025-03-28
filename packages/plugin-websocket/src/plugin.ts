@@ -2,7 +2,7 @@ import WebSocket, { WebSocketServer } from "ws";
 import { RawData } from "ws";
 
 import { Plugin } from "@maiar-ai/core";
-import { Runtime, UserInputContext } from "@maiar-ai/core";
+import { UserInputContext } from "@maiar-ai/core";
 
 import { WebSocketPluginConfig } from "./types";
 
@@ -133,10 +133,6 @@ export class WebSocketPlugin extends Plugin {
         });
       }
     });
-  }
-
-  async init(runtime: Runtime): Promise<void> {
-    this.runtime = runtime;
   }
 
   async stop(): Promise<void> {

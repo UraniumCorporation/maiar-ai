@@ -44,18 +44,17 @@ export interface Capability {
 }
 
 /**
- * Base class that implements common plugin functionality
+ * Base class that all plugins must extend
  */
 export abstract class Plugin {
   public readonly id: string;
   public readonly name: string;
   public readonly description: string;
-  public readonly capabilitiesList: Capability[] = [];
+  public readonly capabilitiesList: Capability[];
 
-  public runtime!: Runtime;
-
-  private executorImplementations: ExecutorImplementation[] = [];
-  private triggerImplementations: Trigger[] = [];
+  private executorImplementations: ExecutorImplementation[];
+  private triggerImplementations: Trigger[];
+  private _runtime: Runtime | undefined;
 
   constructor({
     id,
@@ -72,10 +71,14 @@ export abstract class Plugin {
     this.name = name;
     this.description = description;
     this.capabilitiesList = capabilities || [];
+
+    this.executorImplementations = [];
+    this.triggerImplementations = [];
+    this._runtime = undefined;
   }
 
-  public async init(runtime: Runtime): Promise<void> {
-    this.runtime = runtime;
+  public init(runtime: Runtime): void {
+    this._runtime = runtime;
   }
 
   public addExecutor(executor: ExecutorImplementation): void {
@@ -104,6 +107,11 @@ export abstract class Plugin {
       };
     }
     return executor.execute(context);
+  }
+
+  public get runtime(): Runtime {
+    if (!this._runtime) throw new Error("Runtime is not initialized yet");
+    return this._runtime;
   }
 
   get executors(): Executor[] {

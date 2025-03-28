@@ -1,7 +1,7 @@
 import { Composer, Context } from "telegraf";
 import { z } from "zod";
 
-import { PluginTelegram } from "./plugin";
+import { TelegramPlugin } from "./plugin";
 
 export interface TelegramPlatformContext {
   platform: string;
@@ -12,7 +12,7 @@ export interface TelegramPlatformContext {
 }
 
 export interface TelegramContext extends Context {
-  plugin?: PluginTelegram;
+  plugin?: TelegramPlugin;
 }
 
 export interface TelegramPluginConfig {

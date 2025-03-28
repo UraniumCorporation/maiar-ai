@@ -3,7 +3,7 @@ import { Telegraf } from "telegraf";
 import {
   AgentContext,
   MonitorService,
-  PluginBase,
+  Plugin,
   PluginResult,
   Runtime
 } from "@maiar-ai/core";
@@ -15,7 +15,7 @@ import {
   TelegramResponseSchema
 } from "./types";
 
-export class PluginTelegram extends PluginBase {
+export class TelegramPlugin extends Plugin {
   private bot: Telegraf<TelegramContext>;
 
   constructor(private config: TelegramPluginConfig) {

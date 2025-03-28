@@ -1,7 +1,7 @@
 import { Request, Router } from "express";
 import { z } from "zod";
 
-import { PluginExpress } from "./plugin";
+import { ExpressPlugin } from "./plugin";
 
 /**
  * Configuration options for the Express plugin.
@@ -27,7 +27,7 @@ export interface ExpressPluginConfig {
 }
 
 export interface ExpressRequest extends Request {
-  plugin?: PluginExpress;
+  plugin?: ExpressPlugin;
 }
 
 export const ExpressResponseSchema = z.object({

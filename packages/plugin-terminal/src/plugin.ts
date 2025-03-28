@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as net from "net";
 
-import { PluginBase, PluginResult, UserInputContext } from "@maiar-ai/core";
+import { Plugin, PluginResult, UserInputContext } from "@maiar-ai/core";
 
 import { CHAT_SOCKET_PATH } from "./index";
 import { generateResponseTemplate } from "./templates";
@@ -13,7 +13,7 @@ interface TerminalPlatformContext {
   metadata?: Record<string, unknown>;
 }
 
-export class PluginTerminal extends PluginBase {
+export class TerminalPlugin extends Plugin {
   private server: net.Server | null = null;
   private clients: Set<net.Socket> = new Set();
 

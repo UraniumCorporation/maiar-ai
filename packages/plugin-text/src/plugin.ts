@@ -2,14 +2,14 @@ import {
   AgentContext,
   BaseContextItem,
   getUserInput,
-  PluginBase,
+  Plugin,
   PluginResult
 } from "@maiar-ai/core";
 
 import { generateTextTemplate } from "./templates";
 import { TEXT_GENERATION_CAPABILITY_ID } from "./types";
 
-export class PluginTextGeneration extends PluginBase {
+export class TextGenerationPlugin extends Plugin {
   constructor() {
     super({
       id: "plugin-text",

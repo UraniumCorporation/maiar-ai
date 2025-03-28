@@ -1,6 +1,6 @@
-import { PluginBase, PluginResult } from "@maiar-ai/core";
+import { Plugin, PluginResult } from "@maiar-ai/core";
 
-export class PluginTime extends PluginBase {
+export class TimePlugin extends Plugin {
   constructor() {
     super({
       id: "plugin-time",

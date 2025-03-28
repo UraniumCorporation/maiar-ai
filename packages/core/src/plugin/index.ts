@@ -44,46 +44,66 @@ export interface Capability {
 }
 
 /**
- * Plugin interface that all plugins must implement
- */
-export interface Plugin {
-  id: string;
-  name: string;
-  description: string;
-  executors: Executor[];
-  triggers: Trigger[];
-  capabilities: Capability[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  init?: (runtime: any) => Promise<void>;
-  execute: (action: string, context: AgentContext) => Promise<PluginResult>;
-}
-
-/**
  * Base class that implements common plugin functionality
  */
-export abstract class PluginBase implements Plugin {
-  private executorImplementations: ExecutorImplementation[] = [];
-  private triggerImplementations: Trigger[] = [];
-  public runtime!: Runtime;
+export abstract class Plugin {
   public readonly id: string;
   public readonly name: string;
   public readonly description: string;
   public readonly capabilitiesList: Capability[] = [];
 
-  constructor(config: {
+  public runtime!: Runtime;
+
+  private executorImplementations: ExecutorImplementation[] = [];
+  private triggerImplementations: Trigger[] = [];
+
+  constructor({
+    id,
+    name,
+    description,
+    capabilities
+  }: {
     id: string;
     name: string;
     description: string;
     capabilities?: Capability[];
   }) {
-    this.id = config.id;
-    this.name = config.name;
-    this.description = config.description;
-    this.capabilitiesList = config.capabilities || [];
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.capabilitiesList = capabilities || [];
   }
 
-  async init(runtime: Runtime): Promise<void> {
+  public async init(runtime: Runtime): Promise<void> {
     this.runtime = runtime;
+  }
+
+  public addExecutor(executor: ExecutorImplementation): void {
+    this.executorImplementations.push(executor);
+  }
+
+  public addTrigger(trigger: Trigger): void {
+    this.triggerImplementations.push(trigger);
+  }
+
+  public addCapability(capability: Capability): void {
+    this.capabilitiesList.push(capability);
+  }
+
+  public async execute(
+    action: string,
+    context: AgentContext
+  ): Promise<PluginResult> {
+    const executor = this.executorImplementations.find(
+      (e) => e.name === action
+    );
+    if (!executor) {
+      return {
+        success: false,
+        error: `Unsupported executor: ${action}`
+      };
+    }
+    return executor.execute(context);
   }
 
   get executors(): Executor[] {
@@ -99,30 +119,5 @@ export abstract class PluginBase implements Plugin {
 
   get capabilities(): Capability[] {
     return this.capabilitiesList;
-  }
-
-  public addExecutor(executor: ExecutorImplementation) {
-    this.executorImplementations.push(executor);
-  }
-
-  public addTrigger(trigger: Trigger) {
-    this.triggerImplementations.push(trigger);
-  }
-
-  public addCapability(capability: Capability) {
-    this.capabilitiesList.push(capability);
-  }
-
-  async execute(action: string, context: AgentContext): Promise<PluginResult> {
-    const executor = this.executorImplementations.find(
-      (e) => e.name === action
-    );
-    if (!executor) {
-      return {
-        success: false,
-        error: `Unsupported executor: ${action}`
-      };
-    }
-    return executor.execute(context);
   }
 }

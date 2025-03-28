@@ -1,7 +1,7 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { RawData } from "ws";
 
-import { PluginBase } from "@maiar-ai/core";
+import { Plugin } from "@maiar-ai/core";
 import { Runtime, UserInputContext } from "@maiar-ai/core";
 
 import { WebSocketPluginConfig } from "./types";
@@ -13,7 +13,7 @@ interface WebSocketPlatformContext {
   metadata?: Record<string, unknown>;
 }
 
-export class PluginWebSocket extends PluginBase {
+export class WebSocketPlugin extends Plugin {
   private wss: WebSocketServer | null = null;
 
   constructor(private config: WebSocketPluginConfig = { port: 3001 }) {

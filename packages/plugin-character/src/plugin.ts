@@ -1,8 +1,8 @@
-import { MonitorService, PluginBase, PluginResult } from "@maiar-ai/core";
+import { MonitorService, Plugin, PluginResult } from "@maiar-ai/core";
 
 import { CharacterPluginConfig } from "./types";
 
-export class PluginCharacter extends PluginBase {
+export class CharacterPlugin extends Plugin {
   constructor(private config: CharacterPluginConfig) {
     super({
       id: "plugin-character",

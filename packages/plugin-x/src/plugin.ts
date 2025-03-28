@@ -3,7 +3,7 @@ import * as path from "path";
 import {
   ExecutorImplementation,
   MonitorService,
-  PluginBase,
+  Plugin,
   Runtime,
   Trigger
 } from "@maiar-ai/core";
@@ -19,7 +19,7 @@ import {
   XTriggerFactory
 } from "./types";
 
-export class PluginX extends PluginBase {
+export class XPlugin extends Plugin {
   private xService: XService;
   private tokenStorage: TokenStorage;
   private isAuthenticated = false;

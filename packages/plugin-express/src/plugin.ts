@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from "express";
 
-import { PluginBase, PluginResult } from "@maiar-ai/core";
+import { Plugin, PluginResult } from "@maiar-ai/core";
 
 import { generateResponseTemplate } from "./templates";
 import {
@@ -18,7 +18,7 @@ export interface ExpressPlatformContext {
   };
 }
 
-export class PluginExpress extends PluginBase {
+export class ExpressPlugin extends Plugin {
   private app: Express | null = null;
 
   constructor(

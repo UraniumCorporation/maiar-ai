@@ -15,10 +15,6 @@ export class MemoryService {
   private provider: MemoryProvider;
 
   constructor(provider: MemoryProvider) {
-    if (!provider) {
-      throw new Error("Memory provider is required");
-    }
-
     this.provider = provider;
     MonitorService.publishEvent({
       type: "memory.service.initialized",

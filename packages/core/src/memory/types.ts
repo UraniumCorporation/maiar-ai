@@ -35,35 +35,57 @@ export interface MemoryQueryOptions {
 /**
  * Interface that all memory providers must implement
  */
-export interface MemoryProvider {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
+export abstract class MemoryProvider {
+  public readonly id: string;
+  public readonly name: string;
+  public readonly description: string;
+
+  constructor({
+    id,
+    name,
+    description
+  }: {
+    id: string;
+    name: string;
+    description: string;
+  }) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+  }
 
   // Get memory plugin
-  getPlugin(): Plugin;
+  public abstract getPlugin(): Plugin;
 
   // Store a new message
-  storeMessage(message: Message, conversationId: string): Promise<void>;
+  public abstract storeMessage(
+    message: Message,
+    conversationId: string
+  ): Promise<void>;
 
   // Store context used in generating a response
-  storeContext(context: Context, conversationId: string): Promise<void>;
+  public abstract storeContext(
+    context: Context,
+    conversationId: string
+  ): Promise<void>;
 
   // Get recent messages
-  getMessages(options: MemoryQueryOptions): Promise<Message[]>;
+  public abstract getMessages(options: MemoryQueryOptions): Promise<Message[]>;
 
   // Get contexts for a conversation
-  getContexts(conversationId: string): Promise<Context[]>;
+  public abstract getContexts(conversationId: string): Promise<Context[]>;
 
   // Get full conversation history
-  getConversation(conversationId: string): Promise<Conversation>;
+  public abstract getConversation(
+    conversationId: string
+  ): Promise<Conversation>;
 
   // Create a new conversation
-  createConversation(options?: {
+  public abstract createConversation(options?: {
     id?: string;
     metadata?: Record<string, unknown>;
   }): Promise<string>;
 
   // Delete a conversation and all its messages/contexts
-  deleteConversation(conversationId: string): Promise<void>;
+  public abstract deleteConversation(conversationId: string): Promise<void>;
 }

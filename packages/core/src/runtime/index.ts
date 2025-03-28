@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { MemoryService } from "../memory/service";
-import { LoggingModelDecorator, ModelRequestConfig } from "../models/base";
+import { ModelRequestConfig } from "../models/base";
 import { ModelService } from "../models/service";
 import { ICapabilities } from "../models/types";
 import { MonitorService } from "../monitor/service";
@@ -39,109 +39,6 @@ import {
 } from "./types";
 
 const REQUIRED_CAPABILITIES = ["text-generation"];
-
-export function createRuntime(options: RuntimeOptions): Runtime {
-  const modelService = new ModelService();
-
-  // Initialize the global monitor service with providers
-  MonitorService.init(options.monitor || []);
-
-  MonitorService.checkHealth()
-    .then(() => {
-      MonitorService.publishEvent({
-        type: "monitor.healthcheck.passed",
-        message: "Monitor service healthcheck passed"
-      });
-    })
-    .catch((error) => {
-      MonitorService.publishEvent({
-        type: "runtime.monitor.healthcheck.failed",
-        message: "Monitor service healthcheck failed",
-        logLevel: "error",
-        metadata: { error }
-      });
-    });
-
-  const monitorService = MonitorService.getInstance();
-
-  const memoryService = new MemoryService(options.memory);
-
-  // Create the runtime instance
-  const runtime = new Runtime({
-    modelService,
-    monitorService,
-    memoryService,
-    plugins: [options.memory.getPlugin(), ...options.plugins]
-  });
-
-  for (const model of options.models) {
-    // Register the model with the model service
-    // and wrap it with the logging decorator
-    modelService.registerModel(new LoggingModelDecorator(model));
-
-    // Initialize model if it has an init method
-    if ("init" in model && model.init) {
-      model
-        .init()
-        .then(() => {
-          MonitorService.publishEvent({
-            type: "runtime.model.initialized",
-            message: "Model initialized successfully!",
-            logLevel: "debug"
-          });
-        })
-        .catch((error: Error) => {
-          MonitorService.publishEvent({
-            type: "runtime.model.initialization.failed",
-            message: "Model failed to initialize",
-            logLevel: "error",
-            metadata: { error }
-          });
-          throw new Error(error.message);
-        });
-    }
-
-    // Run healthcheck before bootstrapping
-    model
-      .checkHealth()
-      .then(() => {
-        MonitorService.publishEvent({
-          type: "runtime.model.healthcheck.passed",
-          message: "Model healthcheck passed!",
-          logLevel: "debug"
-        });
-      })
-      .catch((error: Error) => {
-        MonitorService.publishEvent({
-          type: "runtime.model.healthcheck.failed",
-          message: "Model healthcheck failed",
-          logLevel: "error",
-          metadata: { error }
-        });
-        throw new Error(error.message);
-      });
-  }
-
-  // Register capability aliases if provided
-  if (options.capabilityAliases && options.capabilityAliases.length > 0) {
-    for (const aliasGroup of options.capabilityAliases) {
-      if (aliasGroup.length > 0) {
-        const canonicalId =
-          aliasGroup.find((id) => modelService.hasCapability(id)) ??
-          (aliasGroup[0] as string);
-
-        // Register all other IDs in the group as aliases to the canonical ID
-        for (const alias of aliasGroup) {
-          if (alias !== canonicalId) {
-            modelService.registerCapabilityAlias(alias, canonicalId);
-          }
-        }
-      }
-    }
-  }
-
-  return runtime;
-}
 
 export async function getObject<T extends z.ZodType>(
   service: ModelService,
@@ -240,7 +137,7 @@ export class Runtime {
   private eventQueue: AgentContext[];
   private currentContext: AgentContext | undefined;
 
-  constructor({
+  private constructor({
     modelService,
     memoryService,
     monitorService,
@@ -256,6 +153,104 @@ export class Runtime {
     this.isRunning = false;
     this.eventQueue = [];
     this.currentContext = undefined;
+  }
+
+  public static async init({
+    models,
+    memory,
+    monitor,
+    plugins,
+    capabilityAliases
+  }: RuntimeOptions): Promise<Runtime> {
+    const modelService = new ModelService(...models);
+    const memoryService = new MemoryService(memory);
+    const monitorService = MonitorService.getInstance();
+
+    // Initialize the global monitor service with monitor providers
+    try {
+      MonitorService.init(monitor);
+      await MonitorService.checkHealth();
+
+      MonitorService.publishEvent({
+        type: "monitor.healthcheck.passed",
+        message: "Monitor service healthcheck passed"
+      });
+    } catch (err: unknown) {
+      const error = err as Error;
+      MonitorService.publishEvent({
+        type: "runtime.monitor.healthcheck.failed",
+        message: "Monitor service healthcheck failed",
+        logLevel: "error",
+        metadata: { error }
+      });
+      throw error;
+    }
+
+    for (const model of models) {
+      try {
+        await model.init?.();
+        MonitorService.publishEvent({
+          type: "runtime.model.initialized",
+          message: "Model initialized successfully!",
+          logLevel: "debug"
+        });
+      } catch (err: unknown) {
+        const error = err as Error;
+        MonitorService.publishEvent({
+          type: "runtime.model.initialization.failed",
+          message: "Model failed to initialize",
+          logLevel: "error",
+          metadata: { error }
+        });
+        throw error;
+      }
+
+      try {
+        await model.checkHealth?.();
+        MonitorService.publishEvent({
+          type: "runtime.model.healthcheck.passed",
+          message: "Model healthcheck passed!",
+          logLevel: "debug"
+        });
+      } catch (err: unknown) {
+        const error = err as Error;
+        MonitorService.publishEvent({
+          type: "runtime.model.healthcheck.failed",
+          message: "Model healthcheck failed",
+          logLevel: "error",
+          metadata: { error }
+        });
+        throw error;
+      }
+    }
+
+    for (const aliasGroup of capabilityAliases) {
+      const canonicalId =
+        aliasGroup.find((id) => modelService.hasCapability(id)) ??
+        (aliasGroup[0] as string);
+
+      // Register all other IDs in the group as aliases to the canonical ID
+      for (const alias of aliasGroup) {
+        if (alias !== canonicalId) {
+          modelService.registerCapabilityAlias(alias, canonicalId);
+        }
+      }
+    }
+
+    MonitorService.publishEvent({
+      type: "runtime.init",
+      message: "Runtime initialized",
+      metadata: {
+        plugins: plugins.map((p) => p.id)
+      }
+    });
+
+    return new Runtime({
+      modelService,
+      memoryService,
+      monitorService,
+      plugins
+    });
   }
 
   /**

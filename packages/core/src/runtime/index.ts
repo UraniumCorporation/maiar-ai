@@ -126,6 +126,8 @@ export async function getObject<T extends z.ZodType>(
  * Runtime class that manages the execution of plugins and agent state
  */
 export class Runtime {
+  public readonly operations; // Operations that can be used by plugins
+
   private modelService: ModelService;
   private memoryService: MemoryService;
   private monitorService: MonitorService;
@@ -135,6 +137,7 @@ export class Runtime {
 
   private isRunning: boolean;
   private eventQueue: AgentContext[];
+  private queueInterface: EventQueue;
   private currentContext: AgentContext | undefined;
 
   private constructor({
@@ -143,6 +146,20 @@ export class Runtime {
     monitorService,
     plugins
   }: RuntimeConfig) {
+    this.operations = {
+      getObject: <T extends z.ZodType<unknown>>(
+        schema: T,
+        prompt: string,
+        config?: OperationConfig
+      ) => getObject(modelService, schema, prompt, config),
+      executeCapability: <K extends keyof ICapabilities>(
+        capabilityId: K,
+        input: ICapabilities[K]["input"],
+        config?: OperationConfig,
+        modelId?: string
+      ) => modelService.executeCapability(capabilityId, input, config, modelId)
+    };
+
     this.modelService = modelService;
     this.memoryService = memoryService;
     this.monitorService = monitorService;
@@ -152,6 +169,153 @@ export class Runtime {
 
     this.isRunning = false;
     this.eventQueue = [];
+    this.queueInterface = {
+      push: async (context: Omit<AgentContext, "eventQueue">) => {
+        const userInput = getUserInput(context);
+
+        // Pre-event logging and store user message
+        MonitorService.publishEvent({
+          type: "runtime.context.pre_event",
+          message: "Pre-event context chain state",
+          logLevel: "info",
+          metadata: {
+            phase: "pre-event",
+            user: userInput?.user,
+            message: userInput?.rawMessage,
+            contextChain: context.contextChain
+          }
+        });
+
+        // Get conversation history if user input exists
+        let conversationHistory: {
+          role: string;
+          content: string;
+          timestamp: number;
+        }[] = [];
+        if (userInput) {
+          conversationHistory =
+            await this.memoryService.getRecentConversationHistory(
+              userInput.user,
+              userInput.pluginId
+            );
+        }
+
+        // Add conversation history to the initial context item
+        if (context.contextChain.length > 0) {
+          context.contextChain[0] = {
+            ...context.contextChain[0],
+            messageHistory: conversationHistory
+          } as ContextItemWithHistory;
+        }
+
+        // Add event to queue with wrapped response handler
+        const fullContext: AgentContext = {
+          ...context,
+          eventQueue: this.queueInterface
+        };
+
+        try {
+          // Store user message in memory
+          if (userInput) {
+            MonitorService.publishEvent({
+              type: "runtime.memory.user_message.storing",
+              message: "Storing user message in memory",
+              logLevel: "info",
+              metadata: {
+                user: userInput.user,
+                platform: userInput.pluginId,
+                message: userInput.rawMessage,
+                messageId: userInput.id
+              }
+            });
+            await this.memoryService.storeUserInteraction(
+              userInput.user,
+              userInput.pluginId,
+              userInput.rawMessage,
+              userInput.timestamp,
+              userInput.id
+            );
+          }
+
+          // Wrap response handler if it exists
+          if (fullContext.platformContext?.responseHandler) {
+            const originalHandler = fullContext.platformContext.responseHandler;
+            fullContext.platformContext.responseHandler = async (response) => {
+              try {
+                // Pre-response logging
+                MonitorService.publishEvent({
+                  type: "runtime.context.pre_response",
+                  message: "Pre-response context chain state",
+                  logLevel: "info",
+                  metadata: {
+                    phase: "pre-response",
+                    platform: userInput?.pluginId,
+                    user: userInput?.user,
+                    contextChain: this.context?.contextChain,
+                    response
+                  }
+                });
+
+                // Original response handler
+                await originalHandler(response);
+
+                // Post-response logging
+                MonitorService.publishEvent({
+                  type: "runtime.context.post_response",
+                  message: "Post-response context chain state",
+                  logLevel: "info",
+                  metadata: {
+                    phase: "post-response",
+                    platform: userInput?.pluginId,
+                    user: userInput?.user,
+                    contextChain: this.context?.contextChain,
+                    response
+                  }
+                });
+              } catch (error) {
+                MonitorService.publishEvent({
+                  type: "runtime.response.storing.failed",
+                  message: "Error storing assistant response",
+                  logLevel: "error",
+                  metadata: {
+                    error:
+                      error instanceof Error ? error.message : String(error),
+                    user: userInput?.user,
+                    platform: userInput?.pluginId
+                  }
+                });
+                throw error;
+              }
+            };
+          }
+
+          this.eventQueue.push(fullContext);
+          MonitorService.publishEvent({
+            type: "runtime.queue.updated",
+            message: "Queue updated",
+            logLevel: "debug",
+            metadata: {
+              queueLength: this.eventQueue.length
+            }
+          });
+        } catch (error) {
+          MonitorService.publishEvent({
+            type: "runtime.message.storing.failed",
+            message: "Error storing user message",
+            logLevel: "error",
+            metadata: {
+              error: error instanceof Error ? error.message : String(error),
+              user: userInput?.user,
+              platform: userInput?.pluginId
+            }
+          });
+          throw error;
+        }
+      },
+      shift: async () => {
+        return this.eventQueue.shift();
+      }
+    };
     this.currentContext = undefined;
   }
 
@@ -254,24 +418,6 @@ export class Runtime {
   }
 
   /**
-   * Operations that can be used by plugins
-   */
-  public readonly operations = {
-    getObject: <T extends z.ZodType<unknown>>(
-      schema: T,
-      prompt: string,
-      config?: OperationConfig
-    ) => getObject(this.modelService, schema, prompt, config),
-    executeCapability: <K extends keyof ICapabilities>(
-      capabilityId: K,
-      input: ICapabilities[K]["input"],
-      config?: OperationConfig,
-      modelId?: string
-    ) =>
-      this.modelService.executeCapability(capabilityId, input, config, modelId)
-  };
-
-  /**
    * Access to the memory service for plugins
    */
   public get memory(): MemoryService {
@@ -291,153 +437,6 @@ export class Runtime {
   public get context(): AgentContext | undefined {
     return this.currentContext;
   }
-
-  private queueInterface: EventQueue = {
-    push: async (context: Omit<AgentContext, "eventQueue">) => {
-      const userInput = getUserInput(context);
-
-      // Pre-event logging and store user message
-      MonitorService.publishEvent({
-        type: "runtime.context.pre_event",
-        message: "Pre-event context chain state",
-        logLevel: "info",
-        metadata: {
-          phase: "pre-event",
-          user: userInput?.user,
-          message: userInput?.rawMessage,
-          contextChain: context.contextChain
-        }
-      });
-
-      // Get conversation history if user input exists
-      let conversationHistory: {
-        role: string;
-        content: string;
-        timestamp: number;
-      }[] = [];
-      if (userInput) {
-        conversationHistory =
-          await this.memoryService.getRecentConversationHistory(
-            userInput.user,
-            userInput.pluginId
-          );
-      }
-
-      // Add conversation history to the initial context item
-      if (context.contextChain.length > 0) {
-        context.contextChain[0] = {
-          ...context.contextChain[0],
-          messageHistory: conversationHistory
-        } as ContextItemWithHistory;
-      }
-
-      // Add event to queue with wrapped response handler
-      const fullContext: AgentContext = {
-        ...context,
-        eventQueue: this.queueInterface
-      };
-
-      try {
-        // Store user message in memory
-        if (userInput) {
-          MonitorService.publishEvent({
-            type: "runtime.memory.user_message.storing",
-            message: "Storing user message in memory",
-            logLevel: "info",
-            metadata: {
-              user: userInput.user,
-              platform: userInput.pluginId,
-              message: userInput.rawMessage,
-              messageId: userInput.id
-            }
-          });
-          await this.memoryService.storeUserInteraction(
-            userInput.user,
-            userInput.pluginId,
-            userInput.rawMessage,
-            userInput.timestamp,
-            userInput.id
-          );
-        }
-
-        // Wrap response handler if it exists
-        if (fullContext.platformContext?.responseHandler) {
-          const originalHandler = fullContext.platformContext.responseHandler;
-          fullContext.platformContext.responseHandler = async (response) => {
-            try {
-              // Pre-response logging
-              MonitorService.publishEvent({
-                type: "runtime.context.pre_response",
-                message: "Pre-response context chain state",
-                logLevel: "info",
-                metadata: {
-                  phase: "pre-response",
-                  platform: userInput?.pluginId,
-                  user: userInput?.user,
-                  contextChain: this.context?.contextChain,
-                  response
-                }
-              });
-
-              // Original response handler
-              await originalHandler(response);
-
-              // Post-response logging
-              MonitorService.publishEvent({
-                type: "runtime.context.post_response",
-                message: "Post-response context chain state",
-                logLevel: "info",
-                metadata: {
-                  phase: "post-response",
-                  platform: userInput?.pluginId,
-                  user: userInput?.user,
-                  contextChain: this.context?.contextChain,
-                  response
-                }
-              });
-            } catch (error) {
-              MonitorService.publishEvent({
-                type: "runtime.response.storing.failed",
-                message: "Error storing assistant response",
-                logLevel: "error",
-                metadata: {
-                  error: error instanceof Error ? error.message : String(error),
-                  user: userInput?.user,
-                  platform: userInput?.pluginId
-                }
-              });
-              throw error;
-            }
-          };
-        }
-
-        this.eventQueue.push(fullContext);
-        MonitorService.publishEvent({
-          type: "runtime.queue.updated",
-          message: "Queue updated",
-          logLevel: "debug",
-          metadata: {
-            queueLength: this.eventQueue.length
-          }
-        });
-      } catch (error) {
-        MonitorService.publishEvent({
-          type: "runtime.message.storing.failed",
-          message: "Error storing user message",
-          logLevel: "error",
-          metadata: {
-            error: error instanceof Error ? error.message : String(error),
-            user: userInput?.user,
-            platform: userInput?.pluginId
-          }
-        });
-        throw error;
-      }
-    },
-    shift: async () => {
-      return this.eventQueue.shift();
-    }
-  };
 
   private async validatePluginCapabilities(plugin: Plugin): Promise<void> {
     for (const capability of plugin.capabilities) {

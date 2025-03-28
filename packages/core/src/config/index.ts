@@ -1,4 +1,4 @@
-export const TEXT_GENERATION_CAPABILITY = "text-generation";
+import { TEXT_GENERATION_CAPABILITY } from "../constants";
 
 /**
  * The base interface for all capabilities

@@ -1,5 +1,5 @@
-import { MonitorService } from "../monitor";
-import { Plugin } from "../plugin";
+import { Plugin } from "../providers/plugin";
+import { MonitorService } from "./monitor";
 
 /**
  * Registry for managing plugins

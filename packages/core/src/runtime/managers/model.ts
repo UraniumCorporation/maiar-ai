@@ -1,8 +1,8 @@
-import { MonitorService } from "../monitor";
-import { OperationConfig } from "../operations/base";
-import { LoggingModelDecorator, ModelProvider } from "./base";
-import { CapabilityRegistry } from "./capabilities";
-import { ICapabilities } from "./types";
+import { ICapabilities } from "../../config";
+import { OperationConfig } from "../pipeline/operations";
+import { LoggingModelDecorator, ModelProvider } from "../providers/model";
+import { CapabilityRegistry } from "./capability";
+import { MonitorService } from "./monitor";
 
 /**
  * Service for managing operations on models

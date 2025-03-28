@@ -1,12 +1,12 @@
-import { MonitorService } from "../monitor";
-import { BaseContextItem } from "../types/agent";
+import { BaseContextItem } from "../pipeline/agent";
 import {
   Context,
   Conversation,
   MemoryProvider,
   MemoryQueryOptions,
   Message
-} from "./types";
+} from "../providers/memory";
+import { MonitorService } from "./monitor";
 
 /**
  * Service for managing memory operations

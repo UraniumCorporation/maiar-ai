@@ -1,22 +1,18 @@
 import { z } from "zod";
 
-import { MemoryService } from "../memory/service";
-import { MemoryProvider } from "../memory/types";
-import { ModelProvider, ModelRequestConfig } from "../models/base";
-import { ModelService } from "../models/service";
-import { ICapabilities } from "../models/types";
-import { MonitorProvider } from "../monitor";
-import { MonitorService } from "../monitor/service";
-import { formatZodSchema, OperationConfig } from "../operations/base";
-import { Plugin } from "../plugin";
-import { PluginRegistry } from "../registry";
+import { ICapabilities } from "../config";
+import { MemoryService } from "./managers/memory";
+import { ModelService } from "./managers/model";
+import { MonitorService } from "./managers/monitor";
+import { PluginRegistry } from "./managers/plugin";
 import {
   AgentContext,
   BaseContextItem,
   EventQueue,
   getUserInput,
   UserInputContext
-} from "../types/agent";
+} from "./pipeline/agent";
+import { formatZodSchema, OperationConfig } from "./pipeline/operations";
 import {
   cleanJsonString,
   extractJson,
@@ -24,7 +20,7 @@ import {
   generatePipelineModificationTemplate,
   generatePipelineTemplate,
   generateRetryTemplate
-} from "./templates";
+} from "./pipeline/templates";
 import {
   ContextItemWithHistory,
   ErrorContextItem,
@@ -36,7 +32,11 @@ import {
   PipelineModificationSchema,
   PipelineSchema,
   PipelineStep
-} from "./types";
+} from "./pipeline/types";
+import { MemoryProvider } from "./providers/memory";
+import { ModelProvider, ModelRequestConfig } from "./providers/model";
+import { MonitorProvider } from "./providers/monitor";
+import { Plugin } from "./providers/plugin";
 
 const REQUIRED_CAPABILITIES = ["text-generation"];
 
@@ -1203,4 +1203,4 @@ export class Runtime {
   }
 }
 
-export * from "./types";
+export * from "./pipeline/types";

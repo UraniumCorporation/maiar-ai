@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { OperationConfig } from "../operations/base";
-import { BaseContextItem } from "../types/agent";
+import { BaseContextItem } from "./agent";
+import { OperationConfig } from "./operations";
 
 /**
  * A step in the execution pipeline

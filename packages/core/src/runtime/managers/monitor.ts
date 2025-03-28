@@ -1,4 +1,4 @@
-import { MonitorProvider } from "./types";
+import { MonitorProvider } from "../providers/monitor";
 
 export interface MonitorEvent {
   type: string;

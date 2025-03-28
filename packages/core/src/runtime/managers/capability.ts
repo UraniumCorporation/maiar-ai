@@ -1,20 +1,3 @@
-import { z } from "zod";
-
-import { OperationConfig } from "../operations/base";
-
-/**
- * Interface that model capabilities must implement
- */
-export interface ModelCapability<InputType = unknown, OutputType = unknown> {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly input: z.ZodType<InputType>;
-  readonly output: z.ZodType<OutputType>;
-
-  execute(input: InputType, config?: OperationConfig): Promise<OutputType>;
-}
-
 /**
  * Registry for model capabilities
  */

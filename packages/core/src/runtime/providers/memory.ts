@@ -1,4 +1,4 @@
-import { Plugin } from "../plugin";
+import { Plugin } from "../providers/plugin";
 
 export interface Message {
   id: string;

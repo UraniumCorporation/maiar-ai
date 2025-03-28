@@ -1,4 +1,4 @@
-import { TemplateFunction } from "../operations/base";
+import { TemplateFunction } from "./operations";
 import {
   PipelineGenerationContext,
   PipelineModificationContext

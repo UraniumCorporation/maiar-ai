@@ -1,6 +1,6 @@
-import { ICapabilities } from "../models/types";
-import { Runtime } from "../runtime";
-import { AgentContext } from "../types/agent";
+import { Runtime } from "../";
+import { ICapabilities } from "../../config";
+import { AgentContext } from "../pipeline/agent";
 
 /**
  * Result of a plugin execution

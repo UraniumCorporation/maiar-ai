@@ -6,7 +6,11 @@ import { PluginRegistryInterface } from "./types";
  * Registry for managing plugins
  */
 export class PluginRegistry implements PluginRegistryInterface {
-  private plugins: Map<string, Plugin> = new Map();
+  private plugins: Map<string, Plugin>;
+
+  constructor() {
+    this.plugins = new Map<string, Plugin>();
+  }
 
   /**
    * Validate plugin ID format

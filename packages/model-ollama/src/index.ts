@@ -1,4 +1,4 @@
-export { OllamaProvider } from "./ollama";
+export { OllamaModelProvider } from "./ollama";
 export { DeepseekProvider } from "./deepseek";
 
 export async function verifyBasicHealth(

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import {
-  ModelProviderBase,
+  ModelProvider,
   ModelRequestConfig,
   MonitorService
 } from "@maiar-ai/core";
@@ -31,7 +31,7 @@ const PROVIDER_ID = "deepseek";
 const PROVIDER_NAME = "Deepseek";
 const PROVIDER_DESCRIPTION = "Deepseek models running through Ollama";
 
-export class DeepseekProvider extends ModelProviderBase {
+export class DeepseekProvider extends ModelProvider {
   private baseUrl: string;
   private model: string;
 
@@ -56,7 +56,47 @@ export class DeepseekProvider extends ModelProviderBase {
     });
   }
 
-  async generateText(
+  public async init(): Promise<void> {
+    // Nothing to init
+  }
+
+  public async checkHealth(): Promise<void> {
+    const prefix = "deepseek-";
+    if (!this.model.startsWith(prefix)) {
+      throw new Error(
+        `Deepseek Model "${this.model}" must be prefixed with ${prefix}`
+      );
+    }
+
+    try {
+      // Send a GET request to the tag endpoint and verify if the model exists
+      await verifyBasicHealth(this.baseUrl, this.model);
+
+      MonitorService.publishEvent({
+        type: "model.deepseek.health_check.passed",
+        message: `Deepseek model '${this.model}' health check passed`,
+        logLevel: "info",
+        metadata: {
+          model: this.model,
+          baseUrl: this.baseUrl
+        }
+      });
+    } catch (error) {
+      MonitorService.publishEvent({
+        type: "model.deepseek.health_check.failed",
+        message: "Deepseek model health check failed",
+        logLevel: "error",
+        metadata: {
+          model: this.model,
+          baseUrl: this.baseUrl,
+          error: error instanceof Error ? error.message : String(error)
+        }
+      });
+      throw error;
+    }
+  }
+
+  public async generateText(
     prompt: string,
     config?: ModelRequestConfig
   ): Promise<string> {
@@ -118,42 +158,6 @@ export class DeepseekProvider extends ModelProviderBase {
         logLevel: "error",
         metadata: {
           model: this.model,
-          error: error instanceof Error ? error.message : String(error)
-        }
-      });
-      throw error;
-    }
-  }
-
-  async checkHealth(): Promise<void> {
-    const prefix = "deepseek-";
-    if (!this.model.startsWith(prefix)) {
-      throw new Error(
-        `Deepseek Model "${this.model}" must be prefixed with ${prefix}`
-      );
-    }
-
-    try {
-      // Send a GET request to the tag endpoint and verify if the model exists
-      await verifyBasicHealth(this.baseUrl, this.model);
-
-      MonitorService.publishEvent({
-        type: "model.deepseek.health_check.passed",
-        message: `Deepseek model '${this.model}' health check passed`,
-        logLevel: "info",
-        metadata: {
-          model: this.model,
-          baseUrl: this.baseUrl
-        }
-      });
-    } catch (error) {
-      MonitorService.publishEvent({
-        type: "model.deepseek.health_check.failed",
-        message: "Deepseek model health check failed",
-        logLevel: "error",
-        metadata: {
-          model: this.model,
-          baseUrl: this.baseUrl,
           error: error instanceof Error ? error.message : String(error)
         }
       });

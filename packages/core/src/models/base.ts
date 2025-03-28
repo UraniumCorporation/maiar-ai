@@ -12,68 +12,19 @@ export interface ModelRequestConfig {
 }
 
 /**
- * Base interface for model providers
- */
-export interface ModelProvider {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly capabilities: Map<string, ModelCapability>;
-
-  /**
-   * Add a capability to the model
-   */
-  addCapability(capability: ModelCapability): void;
-
-  /**
-   * Get all capabilities supported by this model
-   */
-  getCapabilities(): ModelCapability[];
-
-  /**
-   * Check if the model supports a specific capability
-   */
-  hasCapability(capabilityId: string): boolean;
-
-  /**
-   * Get a specific capability instance
-   */
-  getCapability<I, O>(capabilityId: string): ModelCapability<I, O> | undefined;
-
-  /**
-   * Execute a capability
-   */
-  executeCapability<K extends keyof ICapabilities>(
-    capabilityId: K,
-    input: ICapabilities[K]["input"],
-    config?: ModelRequestConfig
-  ): Promise<ICapabilities[K]["output"]>;
-
-  /**
-   * Initialize the model with any necessary setup
-   */
-  init?(): Promise<void>;
-
-  /**
-   * Check model health
-   */
-  checkHealth(): Promise<void>;
-}
-
-/**
  * Base class for model providers
  */
-export abstract class ModelProviderBase implements ModelProvider {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly capabilities: Map<string, ModelCapability>;
+export abstract class ModelProvider {
+  public readonly id: string;
+  public readonly name: string;
+  public readonly description: string;
+  public readonly capabilities: Map<string, ModelCapability>;
 
   constructor(id: string, name: string, description: string) {
     this.id = id;
     this.name = name;
     this.description = description;
-    this.capabilities = new Map();
+    this.capabilities = new Map<string, ModelCapability>();
   }
 
   /**
@@ -120,6 +71,8 @@ export abstract class ModelProviderBase implements ModelProvider {
   }
 
   public abstract checkHealth(): Promise<void>;
+
+  public abstract init(): Promise<void>;
 }
 
 /**
@@ -129,7 +82,7 @@ export abstract class ModelProviderBase implements ModelProvider {
  * This follows the decorator pattern to add logging behavior to any model
  * without requiring the model implementations to handle logging themselves.
  */
-export class LoggingModelDecorator extends ModelProviderBase {
+export class LoggingModelDecorator extends ModelProvider {
   constructor(private model: ModelProvider) {
     super(model.id, model.name, model.description);
 

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import {
-  ModelProviderBase,
+  ModelProvider,
   ModelRequestConfig,
   MonitorService
 } from "@maiar-ai/core";
@@ -24,7 +24,7 @@ const PROVIDER_ID = "ollama";
 const PROVIDER_NAME = "Ollama";
 const PROVIDER_DESCRIPTION = "Local Ollama models like Llama 2 and Mistral";
 
-export class OllamaProvider extends ModelProviderBase {
+export class OllamaModelProvider extends ModelProvider {
   private baseUrl: string;
   private model: string;
 
@@ -92,7 +92,7 @@ export class OllamaProvider extends ModelProviderBase {
   }
 
   async init(): Promise<void> {
-    // Nothing to implement
+    // Nothing to init
   }
 
   /**

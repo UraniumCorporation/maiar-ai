@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import { z } from "zod";
 
 import {
-  ModelProviderBase,
+  ModelProvider,
   ModelRequestConfig,
   MonitorService
 } from "@maiar-ai/core";
@@ -43,7 +43,7 @@ const PROVIDER_ID = "openai";
 const PROVIDER_NAME = "OpenAI";
 const PROVIDER_DESCRIPTION = "OpenAI API models like GPT-4 and GPT-3.5";
 
-export class OpenAIProvider extends ModelProviderBase {
+export class OpenAIModelProvider extends ModelProvider {
   private client: OpenAI;
   private models: OpenAIModel[];
 

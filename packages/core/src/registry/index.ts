@@ -1,11 +1,10 @@
 import { MonitorService } from "../monitor";
 import { Plugin } from "../plugin";
-import { PluginRegistryInterface } from "./types";
 
 /**
  * Registry for managing plugins
  */
-export class PluginRegistry implements PluginRegistryInterface {
+export class PluginRegistry {
   private plugins: Map<string, Plugin>;
 
   constructor() {
@@ -117,5 +116,3 @@ export class PluginRegistry implements PluginRegistryInterface {
     return Array.from(this.plugins.values());
   }
 }
-
-export * from "./types";

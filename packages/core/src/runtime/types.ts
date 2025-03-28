@@ -1,13 +1,6 @@
 import { z } from "zod";
 
-import { MemoryService } from "../memory/service";
-import { MemoryProvider } from "../memory/types";
-import { ModelProvider } from "../models/base";
-import { ModelService } from "../models/service";
-import { MonitorService } from "../monitor/service";
-import { MonitorProvider } from "../monitor/types";
 import { OperationConfig } from "../operations/base";
-import { Plugin } from "../plugin";
 import { BaseContextItem } from "../types/agent";
 
 /**
@@ -29,27 +22,6 @@ export const PipelineSchema = z
 
 export type PipelineStep = z.infer<typeof PipelineStepSchema>;
 export type Pipeline = z.infer<typeof PipelineSchema>;
-
-/**
- * Configuration options for the Runtime
- */
-export interface RuntimeConfig {
-  modelService: ModelService;
-  memoryService: MemoryService;
-  monitorService: MonitorService;
-  plugins: Plugin[];
-}
-
-/**
- * Options for creating a new Runtime instance
- */
-export interface RuntimeOptions {
-  models: ModelProvider[];
-  memory: MemoryProvider;
-  monitor: MonitorProvider[];
-  plugins: Plugin[];
-  capabilityAliases: string[][];
-}
 
 interface PluginExecutor {
   name: string;

@@ -1,9 +1,11 @@
 import { z } from "zod";
 
 import { MemoryService } from "../memory/service";
-import { ModelRequestConfig } from "../models/base";
+import { MemoryProvider } from "../memory/types";
+import { ModelProvider, ModelRequestConfig } from "../models/base";
 import { ModelService } from "../models/service";
 import { ICapabilities } from "../models/types";
+import { MonitorProvider } from "../monitor";
 import { MonitorService } from "../monitor/service";
 import { formatZodSchema, OperationConfig } from "../operations/base";
 import { Plugin } from "../plugin";
@@ -33,9 +35,7 @@ import {
   PipelineModificationContext,
   PipelineModificationSchema,
   PipelineSchema,
-  PipelineStep,
-  RuntimeConfig,
-  RuntimeOptions
+  PipelineStep
 } from "./types";
 
 const REQUIRED_CAPABILITIES = ["text-generation"];
@@ -140,12 +140,12 @@ export class Runtime {
   private queueInterface: EventQueue;
   private currentContext: AgentContext | undefined;
 
-  private constructor({
-    modelService,
-    memoryService,
-    monitorService,
-    plugins
-  }: RuntimeConfig) {
+  private constructor(
+    modelService: ModelService,
+    memoryService: MemoryService,
+    monitorService: MonitorService,
+    plugins: Plugin[]
+  ) {
     this.operations = {
       getObject: <T extends z.ZodType<unknown>>(
         schema: T,
@@ -319,20 +319,20 @@ export class Runtime {
     this.currentContext = undefined;
   }
 
-  public static async init({
-    models,
-    memory,
-    monitor,
-    plugins,
-    capabilityAliases
-  }: RuntimeOptions): Promise<Runtime> {
-    const modelService = new ModelService(...models);
-    const memoryService = new MemoryService(memory);
+  public static async init(
+    modelProviders: ModelProvider[],
+    memoryProvider: MemoryProvider,
+    monitorProviders: MonitorProvider[],
+    plugins: Plugin[],
+    capabilityAliases: string[][]
+  ): Promise<Runtime> {
+    const modelService = new ModelService(...modelProviders);
+    const memoryService = new MemoryService(memoryProvider);
     const monitorService = MonitorService.getInstance();
 
     // Initialize the global monitor service with monitor providers
     try {
-      MonitorService.init(monitor);
+      MonitorService.init(monitorProviders);
       await MonitorService.checkHealth();
 
       MonitorService.publishEvent({
@@ -350,9 +350,9 @@ export class Runtime {
       throw error;
     }
 
-    for (const model of models) {
+    for (const modelProvider of modelProviders) {
       try {
-        await model.init?.();
+        await modelProvider.init?.();
         MonitorService.publishEvent({
           type: "runtime.model.initialized",
           message: "Model initialized successfully!",
@@ -370,7 +370,7 @@ export class Runtime {
       }
 
       try {
-        await model.checkHealth?.();
+        await modelProvider.checkHealth?.();
         MonitorService.publishEvent({
           type: "runtime.model.healthcheck.passed",
           message: "Model healthcheck passed!",
@@ -409,12 +409,7 @@ export class Runtime {
       }
     });
 
-    return new Runtime({
-      modelService,
-      memoryService,
-      monitorService,
-      plugins
-    });
+    return new Runtime(modelService, memoryService, monitorService, plugins);
   }
 
   /**

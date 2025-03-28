@@ -7,7 +7,8 @@ export class CharacterPlugin extends Plugin {
     super({
       id: "plugin-character",
       name: "Character",
-      description: "Handles character related context injection for the agent"
+      description: "Handles character related context injection for the agent",
+      requiredCapabilities: []
     });
 
     if (!this.config.character) {

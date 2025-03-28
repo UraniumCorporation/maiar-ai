@@ -45,7 +45,7 @@ export interface OpenAIModelRequestConfig extends ModelRequestConfig {
 
 // Define capability schemas
 export const textGenerationSchema = {
-  input: z.union([z.string(), z.array(z.string())]),
+  input: z.string(),
   output: z.string()
 };
 

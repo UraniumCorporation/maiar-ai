@@ -12,7 +12,8 @@ export class SearchPlugin extends Plugin {
       id: "plugin-search",
       name: "Search",
       description:
-        "Provides a way for the agent to get real time information from the web and to search for information on a given topic."
+        "Provides a way for the agent to get real time information from the web and to search for information on a given topic.",
+      requiredCapabilities: []
     });
 
     this.service = new PerplexityService(config.apiKey);

@@ -1,26 +1,15 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+export const TEXT_GENERATION_CAPABILITY = "text-generation";
 
 /**
- * This is the base interface for all capabilities.
- * Model providers and plugins can extend this interface
- * to add their own capabilities.
- */
-export interface ICapabilities {}
-
-/**
- * This is how model providers and plugins can extend the ICapabilities interface
- * to add their own capabilities.
+ * The base interface for all capabilities
  *
- * For example, the core runtime requires and consumes the "text-generation" capability,
- * which takes a string input (the prompt) and returns a string output (the generated text).
- * This capability must be provided by at least one registered model for text generation
- * features to work.
+ * ModelProviders can extend this interface to declare their own capabilities that gets registered to the runtime
+ * Plugin developers can extend this interface to declare required capabilities for their plugins
  */
-declare module "../models/types" {
-  interface ICapabilities {
-    "text-generation": {
-      input: string;
-      output: string;
-    };
-  }
+export interface ICapabilities {
+  // By default, the runtime provides the "text-generation" capability because it requires from a ModelProvder
+  [TEXT_GENERATION_CAPABILITY]: {
+    input: string;
+    output: string;
+  };
 }

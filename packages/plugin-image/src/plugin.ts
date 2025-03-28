@@ -9,13 +9,7 @@ export class ImageGenerationPlugin extends Plugin {
       id: "plugin-image-generation",
       name: "image",
       description: "Generate images from text descriptions using GetImg.ai API",
-      capabilities: [
-        {
-          id: IMAGE_GENERATION_CAPABILITY_ID,
-          description: "Generate an image based on a text prompt",
-          required: true
-        }
-      ]
+      requiredCapabilities: [IMAGE_GENERATION_CAPABILITY_ID]
     });
 
     this.addExecutor({

@@ -22,7 +22,8 @@ export class TelegramPlugin extends Plugin {
     super({
       id: "plugin-telegram",
       name: "Telegram",
-      description: "Handles Telegram bot interactions using long polling"
+      description: "Handles Telegram bot interactions using long polling",
+      requiredCapabilities: []
     });
 
     if (!config.token) {

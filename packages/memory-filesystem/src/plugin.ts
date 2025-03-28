@@ -1,7 +1,7 @@
 import fsPromises from "fs/promises";
 import path from "path";
 
-import { AgentContext, PluginBase, PluginResult } from "@maiar-ai/core";
+import { AgentContext, Plugin, PluginResult } from "@maiar-ai/core";
 
 import {
   generateQueryTemplate,
@@ -15,7 +15,7 @@ import {
   FileSystemQuerySchema
 } from "./types";
 
-export class FileSystemMemoryPlugin extends PluginBase {
+export class FileSystemMemoryPlugin extends Plugin {
   private sandboxPath: string;
 
   constructor(config: FileSystemConfig) {
@@ -23,7 +23,8 @@ export class FileSystemMemoryPlugin extends PluginBase {
       id: "plugin-filesystem-memory",
       name: "File System Memory Plugin",
       description:
-        "Memory extension that allows for runtime operations to control a sandbox table"
+        "Memory extension that allows for runtime operations to control a sandbox table",
+      requiredCapabilities: []
     });
     this.sandboxPath = path.join(config.basePath, "sandbox.json");
 

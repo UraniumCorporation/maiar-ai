@@ -20,7 +20,8 @@ export class WebSocketPlugin extends Plugin {
     super({
       id: "plugin-websocket",
       name: "WebSocket Plugin",
-      description: "Enables communication via WebSocket"
+      description: "Enables communication via WebSocket",
+      requiredCapabilities: []
     });
 
     this.addExecutor({

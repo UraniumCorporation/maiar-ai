@@ -31,7 +31,8 @@ export class ExpressPlugin extends Plugin {
     super({
       id: "plugin-express",
       name: "Express",
-      description: "Handles HTTP requests for the Maiar agent"
+      description: "Handles HTTP requests for the Maiar agent",
+      requiredCapabilities: []
     });
 
     this.addExecutor({

@@ -22,7 +22,8 @@ export class TerminalPlugin extends Plugin {
       id: "plugin-terminal",
       name: "Terminal Plugin",
       description:
-        "Handles terminal-based chat interaction. This plugin is used to receive messages from the user over terminal. All messages recieved over terminal must be sent to the user in the terminal as the very last action you perform. It is called send_response under the plugin-terminal namespace. You must make this your last action if the incoming message is from the terminal plugin."
+        "Handles terminal-based chat interaction. This plugin is used to receive messages from the user over terminal. All messages recieved over terminal must be sent to the user in the terminal as the very last action you perform. It is called send_response under the plugin-terminal namespace. You must make this your last action if the incoming message is from the terminal plugin.",
+      requiredCapabilities: []
     });
     this.config = config;
 

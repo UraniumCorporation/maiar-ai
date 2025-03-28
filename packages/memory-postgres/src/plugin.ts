@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 
-import { AgentContext, PluginBase, PluginResult } from "@maiar-ai/core";
+import { AgentContext, Plugin, PluginResult } from "@maiar-ai/core";
 
 import { PostgresDatabase } from "./database";
 import {
@@ -9,7 +9,7 @@ import {
 } from "./templates";
 import { PostgresMemoryUploadSchema, PostgresQuerySchema } from "./types";
 
-export class PostgresMemoryPlugin extends PluginBase {
+export class PostgresMemoryPlugin extends Plugin {
   private pool: Pool;
 
   constructor() {
@@ -17,7 +17,8 @@ export class PostgresMemoryPlugin extends PluginBase {
       id: "plugin-postgres-memory",
       name: "Postgres Memory Plugin",
       description:
-        "Memory extension that allows for runtime operations to control a sandbox table"
+        "Memory extension that allows for runtime operations to control a sandbox table",
+      requiredCapabilities: []
     });
     this.pool = PostgresDatabase.getInstance().getPool();
     this.createTable();

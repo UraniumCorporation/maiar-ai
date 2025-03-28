@@ -1,3 +1,4 @@
+import { ICapabilities } from "../models/types";
 import { Runtime } from "../runtime";
 import { AgentContext } from "../types/agent";
 
@@ -12,17 +13,11 @@ export interface PluginResult {
 }
 
 /**
- * Metadata about a plugin executor
- */
-export interface Executor {
-  name: string;
-  description: string;
-}
-
-/**
  * Implementation of a plugin executor
  */
-export interface ExecutorImplementation extends Executor {
+export interface ExecutorImplementation {
+  name: string;
+  description: string;
   execute: (context: AgentContext) => Promise<PluginResult>;
 }
 
@@ -35,22 +30,13 @@ export interface Trigger {
 }
 
 /**
- * Capability from model service required by plugin
- */
-export interface Capability {
-  id: string;
-  description: string;
-  required: boolean;
-}
-
-/**
  * Base class that all plugins must extend
  */
 export abstract class Plugin {
   public readonly id: string;
   public readonly name: string;
   public readonly description: string;
-  public readonly capabilitiesList: Capability[];
+  private _requiredCapabilities: (keyof ICapabilities)[];
 
   private executorImplementations: ExecutorImplementation[];
   private triggerImplementations: Trigger[];
@@ -60,17 +46,17 @@ export abstract class Plugin {
     id,
     name,
     description,
-    capabilities
+    requiredCapabilities
   }: {
     id: string;
     name: string;
     description: string;
-    capabilities?: Capability[];
+    requiredCapabilities: (keyof ICapabilities)[];
   }) {
     this.id = id;
     this.name = name;
     this.description = description;
-    this.capabilitiesList = capabilities || [];
+    this._requiredCapabilities = requiredCapabilities;
 
     this.executorImplementations = [];
     this.triggerImplementations = [];
@@ -87,10 +73,6 @@ export abstract class Plugin {
 
   public addTrigger(trigger: Trigger): void {
     this.triggerImplementations.push(trigger);
-  }
-
-  public addCapability(capability: Capability): void {
-    this.capabilitiesList.push(capability);
   }
 
   public async execute(
@@ -114,18 +96,18 @@ export abstract class Plugin {
     return this._runtime;
   }
 
-  get executors(): Executor[] {
+  public get executors(): Omit<ExecutorImplementation, "execute">[] {
     return this.executorImplementations.map(({ name, description }) => ({
       name,
       description
     }));
   }
 
-  get triggers(): Trigger[] {
+  public get triggers(): Trigger[] {
     return this.triggerImplementations;
   }
 
-  get capabilities(): Capability[] {
-    return this.capabilitiesList;
+  public get requiredCapabilities(): (keyof ICapabilities)[] {
+    return this._requiredCapabilities;
   }
 }

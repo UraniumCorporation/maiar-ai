@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 
-import { AgentContext, PluginBase, PluginResult } from "@maiar-ai/core";
+import { AgentContext, Plugin, PluginResult } from "@maiar-ai/core";
 
 import { SQLiteDatabase } from "./database";
 import {
@@ -9,14 +9,15 @@ import {
 } from "./templates";
 import { SQLiteMemoryUploadSchema, SQLiteQuerySchema } from "./types";
 
-export class SQLiteMemoryPlugin extends PluginBase {
+export class SQLiteMemoryPlugin extends Plugin {
   private db: Database.Database;
 
   constructor() {
     super({
       id: "plugin-sqlite-memory",
       name: "SQLite Memory Plugin",
-      description: "Memory plugin for SQLite"
+      description: "Memory plugin for SQLite",
+      requiredCapabilities: []
     });
 
     // Get database connection instance

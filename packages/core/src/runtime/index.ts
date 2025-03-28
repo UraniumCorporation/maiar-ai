@@ -434,23 +434,17 @@ export class Runtime {
   }
 
   private async validatePluginCapabilities(plugin: Plugin): Promise<void> {
-    for (const capability of plugin.capabilities) {
-      if (
-        capability.required &&
-        !this.modelService.hasCapability(capability.id)
-      ) {
-        throw new Error(
-          `Plugin ${plugin.id} requires capability ${capability.id} but it is not available`
-        );
-      } else if (
-        !capability.required &&
-        !this.modelService.hasCapability(capability.id)
-      ) {
+    for (const capability of plugin.requiredCapabilities) {
+      if (!this.modelService.hasCapability(capability)) {
         MonitorService.publishEvent({
           type: "runtime.plugin.capability.missing",
-          message: `Plugin ${plugin.id} specified an optional capability ${capability.id} that is not available`,
+          message: `Plugin ${plugin.id} specified an optional capability ${capability} that is not available`,
           logLevel: "warn"
         });
+
+        throw new Error(
+          `Plugin ${plugin.id} requires capability ${capability} but it is not available`
+        );
       }
     }
   }

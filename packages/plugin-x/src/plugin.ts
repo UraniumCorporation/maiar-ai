@@ -28,7 +28,8 @@ export class XPlugin extends Plugin {
     super({
       id: "plugin-x",
       name: "X",
-      description: "Handles X (Twitter) requests for the Maiar agent"
+      description: "Handles X (Twitter) requests for the Maiar agent",
+      requiredCapabilities: []
     });
 
     // Initialize token storage in the data directory

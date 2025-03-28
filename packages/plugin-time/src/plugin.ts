@@ -5,7 +5,8 @@ export class TimePlugin extends Plugin {
     super({
       id: "plugin-time",
       name: "Time",
-      description: "Provides current time information"
+      description: "Provides current time information",
+      requiredCapabilities: []
     });
 
     this.addExecutor({

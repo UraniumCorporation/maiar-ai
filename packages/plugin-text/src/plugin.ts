@@ -14,7 +14,8 @@ export class TextGenerationPlugin extends Plugin {
     super({
       id: "plugin-text",
       name: "Text Generation",
-      description: "Provides text generation capabilities"
+      description: "Provides text generation capabilities",
+      requiredCapabilities: [TEXT_GENERATION_CAPABILITY_ID]
     });
 
     this.addExecutor({

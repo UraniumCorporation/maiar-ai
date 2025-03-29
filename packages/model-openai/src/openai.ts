@@ -135,9 +135,9 @@ export class OpenAIModelProvider extends ModelProvider {
       }
 
       // Log the interaction
-      MonitorManager.publishEvent({
-        type: "model_interaction",
-        message: `Model ${this.id} executed capability text-generation`,
+      this.monitor.publishEvent({
+        type: "model.provider.interaction",
+        message: `model provider ${this.id} executed capability text-generation`,
         metadata: {
           modelId: this.id,
           capabilityId: "text-generation",
@@ -169,7 +169,7 @@ export class OpenAIModelProvider extends ModelProvider {
   async checkHealth(): Promise<void> {
     // Verifying if we can call the API
     try {
-      const resp = await this.executeCapability(
+      await this.executeCapability(
         TEXT_GENERATION_CAPABILITY_ID,
         "[SYSTEM HEALTH CHECK] are you alive? please response with 'yes' only",
         {
@@ -177,25 +177,10 @@ export class OpenAIModelProvider extends ModelProvider {
           maxTokens: 5
         }
       );
-      MonitorManager.publishEvent({
-        type: "openai.model.health.check",
-        message: "health.check.passed",
-        metadata: {
-          model: this.id,
-          response: resp
-        }
-      });
-    } catch (error) {
-      MonitorManager.publishEvent({
-        type: "openai.model.health.check",
-        message: "health.check.failed",
-        metadata: {
-          model: this.id,
-          error: error instanceof Error ? error.message : String(error)
-        }
-      });
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
       throw new Error(
-        `Failed to initialize Model ${this.id}: ${error instanceof Error ? error.message : String(error)}`
+        `health check failed for model provider ${this.id}: ${error.message}`
       );
     }
   }

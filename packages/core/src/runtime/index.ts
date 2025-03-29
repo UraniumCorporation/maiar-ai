@@ -131,8 +131,6 @@ export class Runtime {
   private modelService: ModelService;
   private memoryService: MemoryService;
   private monitorService: MonitorManager;
-
-  private plugins: Plugin[];
   private pluginRegistry: PluginRegistry;
 
   private isRunning: boolean;
@@ -144,7 +142,7 @@ export class Runtime {
     modelService: ModelService,
     memoryService: MemoryService,
     monitorService: MonitorManager,
-    plugins: Plugin[]
+    pluginRegistry: PluginRegistry
   ) {
     this.operations = {
       getObject: <T extends z.ZodType<unknown>>(
@@ -163,9 +161,7 @@ export class Runtime {
     this.modelService = modelService;
     this.memoryService = memoryService;
     this.monitorService = monitorService;
-
-    this.plugins = plugins;
-    this.pluginRegistry = new PluginRegistry();
+    this.pluginRegistry = pluginRegistry;
 
     this.isRunning = false;
     this.eventQueue = [];
@@ -329,6 +325,7 @@ export class Runtime {
     const modelService = new ModelService(...modelProviders);
     const memoryService = new MemoryService(memoryProvider);
     const monitorService = MonitorManager.getInstance();
+    const pluginRegistry = new PluginRegistry();
 
     // Initialize the global monitor service with monitor providers
     try {
@@ -409,7 +406,12 @@ export class Runtime {
       }
     });
 
-    return new Runtime(modelService, memoryService, monitorService, plugins);
+    return new Runtime(
+      modelService,
+      memoryService,
+      monitorService,
+      pluginRegistry
+    );
   }
 
   /**
@@ -502,12 +504,12 @@ export class Runtime {
     });
 
     // Initialize plugins
-    for (const plugin of this.plugins) {
+    for (const plugin of this.pluginRegistry.getAllPlugins()) {
       await this.registerPlugin(plugin);
     }
 
     // Validate all plugins have required capabilities implemented in the model service
-    for (const plugin of this.plugins) {
+    for (const plugin of this.pluginRegistry.getAllPlugins()) {
       await this.validatePluginCapabilities(plugin);
     }
 

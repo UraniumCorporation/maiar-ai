@@ -146,6 +146,9 @@ importers:
       "@maiar-ai/memory-sqlite":
         specifier: workspace:*
         version: link:../packages/memory-sqlite
+      "@maiar-ai/model-ollama":
+        specifier: workspace:*
+        version: link:../packages/model-ollama
       "@maiar-ai/model-openai":
         specifier: workspace:*
         version: link:../packages/model-openai
@@ -182,6 +185,9 @@ importers:
       "@maiar-ai/plugin-time":
         specifier: workspace:*
         version: link:../packages/plugin-time
+      "@maiar-ai/plugin-websocket":
+        specifier: workspace:*
+        version: link:../packages/plugin-websocket
       "@maiar-ai/plugin-x":
         specifier: workspace:*
         version: link:../packages/plugin-x
@@ -194,9 +200,6 @@ importers:
       express:
         specifier: 4.21.2
         version: 4.21.2
-      telegraf:
-        specifier: 4.16.3
-        version: 4.16.3(encoding@0.1.13)
     devDependencies:
       "@types/cors":
         specifier: 2.8.17

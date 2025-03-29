@@ -1,102 +1,99 @@
 import "dotenv/config";
 
 import { config } from "dotenv";
-import fs from "fs";
-import path from "path";
+import { readFileSync } from "fs";
+import { join, resolve } from "path";
 
-import { createRuntime } from "@maiar-ai/core";
+import {
+  MemoryProvider,
+  ModelProvider,
+  MonitorProvider,
+  Plugin,
+  Runtime
+} from "@maiar-ai/core";
 
-// Import model providers
 import {
   OpenAIImageGenerationModel,
-  OpenAIProvider,
+  OpenAIModelProvider,
   OpenAITextGenerationModel
 } from "@maiar-ai/model-openai";
 
-// Import memory provider
 import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
 
-// Import monitor providers
 import { ConsoleMonitorProvider } from "@maiar-ai/monitor-console";
 import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
 
-// Import plugins
-import { PluginCharacter } from "@maiar-ai/plugin-character";
+import { CharacterPlugin } from "@maiar-ai/plugin-character";
 import {
-  PluginDiscord,
+  DiscordPlugin,
   postListenerTrigger,
   replyMessageExecutor,
   sendMessageExecutor
 } from "@maiar-ai/plugin-discord";
-import { PluginExpress } from "@maiar-ai/plugin-express";
-import { PluginImageGeneration } from "@maiar-ai/plugin-image";
-import { PluginSearch } from "@maiar-ai/plugin-search";
-import { PluginTerminal } from "@maiar-ai/plugin-terminal";
-import { PluginTextGeneration } from "@maiar-ai/plugin-text";
-import { PluginTime } from "@maiar-ai/plugin-time";
+import { ExpressPlugin } from "@maiar-ai/plugin-express";
+import { ImageGenerationPlugin } from "@maiar-ai/plugin-image";
+import { SearchPlugin } from "@maiar-ai/plugin-search";
+import { TerminalPlugin } from "@maiar-ai/plugin-terminal";
+import { TextGenerationPlugin } from "@maiar-ai/plugin-text";
+import { TimePlugin } from "@maiar-ai/plugin-time";
 import {
   createPostExecutor,
   periodicPostTrigger,
-  PluginX
+  XPlugin
 } from "@maiar-ai/plugin-x";
 
-import { router } from "./express-app";
-import { PluginPermissionsSearch } from "./plugins/plugin-permissions-search";
+import { router } from "./lib/express";
 
 // Suppress deprecation warnings
 process.removeAllListeners("warning");
 
 // Load environment variables from root .env
 config({
-  path: path.resolve(__dirname, "../../..", ".env")
+  path: resolve(__dirname, "../../..", ".env")
 });
 
-// Create and start the agent
-const runtime = createRuntime({
-  models: [
-    new OpenAIProvider({
+async function main() {
+  const models: ModelProvider[] = [
+    new OpenAIModelProvider({
       models: [
         OpenAITextGenerationModel.GPT4O,
         OpenAIImageGenerationModel.DALLE3
       ],
       apiKey: process.env.OPENAI_API_KEY as string
     })
-  ],
-  memory: new SQLiteProvider({
-    dbPath: path.join(process.cwd(), "data", "conversations.db")
-  }),
-  monitor: [
+  ];
+
+  const memory: MemoryProvider = new SQLiteProvider({
+    dbPath: join(process.cwd(), "data", "conversations.db")
+  });
+
+  const monitor: MonitorProvider[] = [
     new ConsoleMonitorProvider(),
     new WebSocketMonitorProvider({
       port: 3001,
       path: "/monitor"
     })
-  ],
-  plugins: [
-    new PluginImageGeneration(),
-    new PluginExpress({
+  ];
+
+  const plugins: Plugin[] = [
+    new ImageGenerationPlugin(),
+    new ExpressPlugin({
       port: 3002,
       router
     }),
-    new PluginTextGeneration(),
-    new PluginTime(),
-    new PluginCharacter({
-      character: fs.readFileSync(
-        path.join(process.cwd(), "character.xml"),
-        "utf-8"
-      )
-    }),
-    new PluginSearch({
+    new TextGenerationPlugin(),
+    new TimePlugin(),
+    new SearchPlugin({
       apiKey: process.env.PERPLEXITY_API_KEY as string
     }),
-    new PluginPermissionsSearch({
-      whitelistedUsers: ["test"]
-    }),
-    new PluginTerminal({
+    new TerminalPlugin({
       user: "ligma",
       agentName: "maiar-starter"
     }),
-    new PluginX({
+    new CharacterPlugin({
+      character: readFileSync(join(process.cwd(), "character.xml"), "utf-8")
+    }),
+    new XPlugin({
       client_id: process.env.X_CLIENT_ID as string,
       client_secret: process.env.X_CLIENT_SECRET as string,
       callback_url: process.env.X_CALLBACK_URL as string,
@@ -105,32 +102,47 @@ const runtime = createRuntime({
       customExecutors: [createPostExecutor],
       customTriggers: [periodicPostTrigger]
     }),
-    new PluginDiscord({
+    new DiscordPlugin({
       token: process.env.DISCORD_BOT_TOKEN as string,
       clientId: process.env.DISCORD_CLIENT_ID as string,
       commandPrefix: "!",
       customExecutors: [sendMessageExecutor, replyMessageExecutor],
       customTriggers: [postListenerTrigger]
     })
-  ],
-  capabilityAliases: [
+  ];
+
+  const capabilityAliases: string[][] = [
     ["image-generation", "generate_image"],
     ["text-generation", "text-creation"]
-  ]
-});
+  ];
 
-// Start the runtime if this file is run directly
-if (require.main === module) {
-  console.log("Starting agent...");
-  runtime.start().catch((error: Error) => {
-    console.error("Failed to start agent:", error);
-    process.exit(1);
-  });
+  const agent = await Runtime.init(
+    models,
+    memory,
+    monitor,
+    plugins,
+    capabilityAliases
+  );
 
   // Handle shutdown gracefully
   process.on("SIGINT", async () => {
-    console.log("Shutting down agent...");
-    await runtime.stop();
+    console.log("\nReceived SIGINT. Shutting down agent...");
+    await agent.stop();
     process.exit(0);
   });
+
+  await agent.start();
+}
+
+// Start the runtime if this file is run directly
+if (require.main === module) {
+  (async () => {
+    try {
+      console.log("Starting agent...");
+      await main();
+    } catch (error) {
+      console.error("Failed to start agent:", error);
+      process.exit(1);
+    }
+  })();
 }

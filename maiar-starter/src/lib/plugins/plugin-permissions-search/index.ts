@@ -1,27 +1,26 @@
 import {
   AgentContext,
   getUserInput,
-  PluginBase,
+  Plugin,
   PluginResult
 } from "@maiar-ai/core";
-
-interface PermissionsSearchConfig {
-  // List of whitelisted users that can use post/send tweet actions
-  whitelistedUsers: string[];
-}
 
 /**
  * Example plugin that demonstrates how to use dynamic pipeline modification
  * to implement a permissions layer for the X plugin.
  */
-export class PluginPermissionsSearch extends PluginBase {
-  constructor(private config: PermissionsSearchConfig) {
+export class SearchPermissionPlugin extends Plugin {
+  private whitelistedUsers: string[];
+
+  constructor(whitelistedUsers: string[]) {
     super({
       id: "plugin-permissions-search",
       name: "Search Permissions",
       description:
-        "Handles permissions for search plugin actions. This plugin is used to check if the current user has permission to use search plugin actions. Should be run anytime before the search plugin is used."
+        "Handles permissions for search plugin actions. This plugin is used to check if the current user has permission to use search plugin actions. Should be run anytime before the search plugin is used.",
+      requiredCapabilities: []
     });
+    this.whitelistedUsers = whitelistedUsers;
 
     this.addExecutor({
       name: "search_permission_taunt",
@@ -50,9 +49,7 @@ export class PluginPermissionsSearch extends PluginBase {
           };
         }
 
-        const isWhitelisted = this.config.whitelistedUsers.includes(
-          userInput.user
-        );
+        const isWhitelisted = this.whitelistedUsers.includes(userInput.user);
 
         return {
           success: true,

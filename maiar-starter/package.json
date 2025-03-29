@@ -8,6 +8,7 @@
     "restart": "node ../restart.js",
     "build": "tsc --project tsconfig.json",
     "clean": "rm -rf data",
+    "prestart": "pnpm build",
     "start": "node dist/index.js"
   },
   "dependencies": {
@@ -15,10 +16,12 @@
     "@maiar-ai/memory-filesystem": "workspace:*",
     "@maiar-ai/memory-postgres": "workspace:*",
     "@maiar-ai/memory-sqlite": "workspace:*",
+    "@maiar-ai/model-ollama": "workspace:*",
     "@maiar-ai/model-openai": "workspace:*",
     "@maiar-ai/monitor-console": "workspace:*",
     "@maiar-ai/monitor-websocket": "workspace:*",
     "@maiar-ai/plugin-character": "workspace:*",
+    "@maiar-ai/plugin-discord": "workspace:*",
     "@maiar-ai/plugin-express": "workspace:*",
     "@maiar-ai/plugin-image": "workspace:*",
     "@maiar-ai/plugin-search": "workspace:*",
@@ -26,12 +29,11 @@
     "@maiar-ai/plugin-terminal": "workspace:*",
     "@maiar-ai/plugin-text": "workspace:*",
     "@maiar-ai/plugin-time": "workspace:*",
+    "@maiar-ai/plugin-websocket": "workspace:*",
     "@maiar-ai/plugin-x": "workspace:*",
     "cors": "2.8.5",
-    "@maiar-ai/plugin-discord": "workspace:*",
     "dotenv": "16.4.7",
-    "express": "4.21.2",
-    "telegraf": "4.16.3"
+    "express": "4.21.2"
   },
   "devDependencies": {
     "@types/cors": "2.8.17",

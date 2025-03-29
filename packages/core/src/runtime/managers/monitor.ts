@@ -12,9 +12,11 @@ export interface MonitorEvent {
  */
 export class MonitorManager {
   private static instance: MonitorManager;
-  private providers: MonitorProvider[] = [];
+  private providers: MonitorProvider[];
 
-  private constructor() {}
+  private constructor() {
+    this.providers = [];
+  }
 
   /**
    * Get the singleton instance of the monitor manager
@@ -30,18 +32,47 @@ export class MonitorManager {
    * Initialize the monitor manager with providers
    * This should be called during runtime creation
    */
-  public static init(...providers: MonitorProvider[]): void {
+  public static async init(...providers: MonitorProvider[]): Promise<void> {
     const instance = MonitorManager.getInstance();
     instance.providers = providers;
+
+    for (const provider of instance.providers) {
+      try {
+        await provider.init();
+        MonitorManager.publishEvent({
+          type: "monitor.provider.initialized",
+          message: `monitor provider ${provider.id} initialized successfully`,
+          logLevel: "info"
+        });
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        MonitorManager.publishEvent({
+          type: "monitor.provider.initialization.failed",
+          message: `monitor provider ${provider.id} initialization failed`,
+          logLevel: "error",
+          metadata: {
+            error: error.message
+          }
+        });
+      }
+    }
   }
 
   /**
    * Publish an event to all registered monitors
    */
-  public static publishEvent(event: MonitorEvent): void {
+  public static publishEvent({
+    type,
+    message,
+    logLevel,
+    metadata
+  }: MonitorEvent): void {
     const instance = MonitorManager.getInstance();
     const eventWithTimestamp = {
-      ...event,
+      type,
+      message,
+      logLevel,
+      metadata,
       timestamp: Date.now()
     };
 
@@ -56,18 +87,26 @@ export class MonitorManager {
   public static async checkHealth(): Promise<void> {
     const instance = MonitorManager.getInstance();
     await Promise.all(
-      instance.providers.map((provider) =>
-        provider.checkHealth().catch((error: unknown) => {
+      instance.providers.map(async (provider) => {
+        try {
+          await provider.checkHealth();
           MonitorManager.publishEvent({
-            type: "monitor_health_check_failed",
-            message: `Health check failed for monitor provider ${provider.id}`,
+            type: "monitor.healthcheck.passed",
+            message: `health check for monitor provider ${provider.id} passed`
+          });
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          MonitorManager.publishEvent({
+            type: "monitor.healthcheck.failed",
+            message: `health check for monitor provider ${provider.id} passed`,
             metadata: {
-              providerId: provider.id,
-              error: error instanceof Error ? error.message : String(error)
+              error: error.message
             }
           });
-        })
-      )
+
+          throw error;
+        }
+      })
     );
   }
 }

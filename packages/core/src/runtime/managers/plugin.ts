@@ -90,18 +90,7 @@ export class PluginRegistry {
       });
       throw new Error("Plugin ID cannot be empty");
     }
-    if (typeof id !== "string") {
-      MonitorManager.publishEvent({
-        type: "registry.plugin.validation.failed",
-        message: "Plugin ID validation failed",
-        logLevel: "error",
-        metadata: {
-          error: "ID must be a string",
-          received: typeof id
-        }
-      });
-      throw new Error("Plugin ID must be a string");
-    }
+
     if (!id.startsWith("plugin-")) {
       MonitorManager.publishEvent({
         type: "registry.plugin.validation.failed",

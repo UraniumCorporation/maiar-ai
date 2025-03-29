@@ -1,5 +1,5 @@
 import { OperationConfig } from "../../pipeline/operations";
-import { LoggingModelDecorator, ModelProvider } from "../../providers/model";
+import { ModelProvider } from "../../providers/model";
 import { MonitorManager } from "../monitor";
 import { CapabilityRegistry } from "./capability";
 import { ICapabilities } from "./capability/types";
@@ -9,65 +9,91 @@ import { ICapabilities } from "./capability/types";
  */
 export class ModelManager {
   private models: Map<string, ModelProvider>;
-  private registry: CapabilityRegistry;
+  private capabilityRegistry: CapabilityRegistry;
   private capabilityAliases: Map<string, string>;
 
   constructor(...models: ModelProvider[]) {
     this.models = new Map<string, ModelProvider>();
-    this.registry = new CapabilityRegistry();
+    this.capabilityRegistry = new CapabilityRegistry();
     this.capabilityAliases = new Map<string, string>();
 
     for (const model of models) {
-      this.registerModel(new LoggingModelDecorator(model));
+      this.registerModel(model);
     }
   }
 
   /**
    * Register a model
    */
-  private registerModel(model: ModelProvider): void {
-    this.models.set(model.id, model);
+  private registerModel(modelProvider: ModelProvider): void {
+    this.models.set(modelProvider.id, modelProvider);
 
     // Register all capabilities provided by the model
-    const capabilities = model.getCapabilities();
+    const capabilities = modelProvider.getCapabilities();
     for (const capability of capabilities) {
-      this.registry.registerCapability(model.id, capability.id);
+      this.capabilityRegistry.registerCapability(
+        modelProvider.id,
+        capability.id
+      );
 
       // Check if this capability already has a default model
       // If not, set this model as the default for this capability
-      if (!this.registry.getDefaultModelForCapability(capability.id)) {
-        this.registry.setDefaultModelForCapability(capability.id, model.id);
+      if (
+        !this.capabilityRegistry.getDefaultModelForCapability(capability.id)
+      ) {
+        this.capabilityRegistry.setDefaultModelForCapability(
+          capability.id,
+          modelProvider.id
+        );
         MonitorManager.publishEvent({
-          type: "model.capability.default",
-          message: "Set default model for capability",
-          logLevel: "debug",
-          metadata: {
-            capability: capability.id,
-            model: model.id
-          }
+          type: "default.model.capability.set",
+          message: `set model provider ${modelProvider.id} as default for capability "${capability.id}"`,
+          logLevel: "debug"
         });
       }
     }
 
     MonitorManager.publishEvent({
-      type: "model.instance.registered",
-      message: "Registered model instance",
-      logLevel: "debug",
-      metadata: { modelId: model.id }
+      type: "model.provider.registered",
+      message: `model provider "${modelProvider.id}" registered successfully`,
+      logLevel: "debug"
     });
+  }
+
+  public async init(): Promise<void> {
+    await Promise.all(
+      Array.from(this.models.values()).map(async (modelProvider) => {
+        try {
+          await modelProvider.init();
+          MonitorManager.publishEvent({
+            type: "model.provider.initialization.success",
+            message: `model provider initialized successfully for "${modelProvider.id}"`,
+            logLevel: "debug"
+          });
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          MonitorManager.publishEvent({
+            type: "model.provider.initialization.failed",
+            message: `model provider initialization failed for "${modelProvider.id}"`,
+            logLevel: "error",
+            metadata: { error: error.message }
+          });
+        }
+      })
+    );
   }
 
   /**
    * Register a capability alias
    */
   public registerCapabilityAlias(alias: string, canonicalId: string): void {
-    if (!this.registry.hasCapability(canonicalId)) {
+    if (!this.capabilityRegistry.hasCapability(canonicalId)) {
       throw new Error(`Capability ${canonicalId} not found`);
     }
     this.capabilityAliases.set(alias, canonicalId);
     MonitorManager.publishEvent({
       type: "model.capability.alias.registered",
-      message: "Registered capability alias",
+      message: `registered capability alias "${alias}" for "${canonicalId}"`,
       logLevel: "debug",
       metadata: { alias, canonicalId }
     });
@@ -89,7 +115,7 @@ export class ModelManager {
     // Get the effective model to use
     const effectiveModelId =
       modelId ||
-      this.registry.getDefaultModelForCapability(
+      this.capabilityRegistry.getDefaultModelForCapability(
         resolvedCapabilityId as string
       );
 
@@ -129,7 +155,7 @@ export class ModelManager {
    * Get all available capabilities
    */
   public getAvailableCapabilities(): string[] {
-    return this.registry.getAllCapabilities();
+    return this.capabilityRegistry.getAllCapabilities();
   }
 
   /**
@@ -137,7 +163,7 @@ export class ModelManager {
    */
   public getModelsWithCapability(capabilityId: string): string[] {
     const resolvedId = this.capabilityAliases.get(capabilityId) || capabilityId;
-    return this.registry.getModelsWithCapability(resolvedId);
+    return this.capabilityRegistry.getModelsWithCapability(resolvedId);
   }
 
   /**
@@ -148,7 +174,7 @@ export class ModelManager {
     modelId: string
   ): void {
     const resolvedId = this.capabilityAliases.get(capabilityId) || capabilityId;
-    this.registry.setDefaultModelForCapability(resolvedId, modelId);
+    this.capabilityRegistry.setDefaultModelForCapability(resolvedId, modelId);
   }
 
   /**
@@ -156,6 +182,33 @@ export class ModelManager {
    */
   public hasCapability(capabilityId: string): boolean {
     const resolvedId = this.capabilityAliases.get(capabilityId) || capabilityId;
-    return this.registry.hasCapability(resolvedId);
+    return this.capabilityRegistry.hasCapability(resolvedId);
+  }
+
+  public async checkHealth(): Promise<void> {
+    await Promise.all(
+      Array.from(this.models.values()).map(async (model) => {
+        try {
+          await model.checkHealth();
+          MonitorManager.publishEvent({
+            type: "model.healthcheck.passed",
+            message: `health check for model provider ${model.id} passed`,
+            logLevel: "debug"
+          });
+        } catch (err: unknown) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          MonitorManager.publishEvent({
+            type: "model.healthcheck.failed",
+            message: `health check for model provider ${model.id} failed`,
+            logLevel: "error",
+            metadata: {
+              error: error.message
+            }
+          });
+
+          throw error;
+        }
+      })
+    );
   }
 }

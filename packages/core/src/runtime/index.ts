@@ -332,7 +332,7 @@ export class Runtime {
 
     // Initialize the global monitor service with monitor providers
     try {
-      MonitorManager.init(monitorProviders);
+      MonitorManager.init(...monitorProviders);
       await MonitorManager.checkHealth();
 
       MonitorManager.publishEvent({

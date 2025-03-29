@@ -30,7 +30,7 @@ export class MonitorManager {
    * Initialize the monitor service with providers
    * This should be called during runtime creation
    */
-  public static init(providers: MonitorProvider[]): void {
+  public static init(...providers: MonitorProvider[]): void {
     const instance = MonitorManager.getInstance();
     instance.providers = providers;
   }

@@ -8,21 +8,35 @@
  * The runtime can use multiple monitors simultaneously, allowing different
  * visualization or tracking mechanisms to operate in parallel.
  */
-export interface MonitorProvider {
+export abstract class MonitorProvider {
   /** Unique identifier for this monitor provider */
-  readonly id: string;
+  public readonly id: string;
 
   /** Human-readable name of this monitor */
-  readonly name: string;
+  public readonly name: string;
 
   /** Description of what this monitor does */
-  readonly description: string;
+  public readonly description: string;
+
+  constructor({
+    id,
+    name,
+    description
+  }: {
+    id: string;
+    name: string;
+    description: string;
+  }) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+  }
 
   /**
    * Initialize the monitor with any necessary setup.
    * Called when the runtime starts.
    */
-  init?(): Promise<void>;
+  public abstract init(): Promise<void>;
 
   /**
    * Publish a specific event in the monitoring system.
@@ -30,7 +44,7 @@ export interface MonitorProvider {
    *
    * @param event Event details including type, message, and metadata
    */
-  publishEvent(event: {
+  public abstract publishEvent(event: {
     /** Category or type of event */
     type: string;
 
@@ -49,5 +63,5 @@ export interface MonitorProvider {
    * Used to verify the monitor is operational.
    * Should resolve successfully if healthy, or throw an error if not.
    */
-  checkHealth(): Promise<void>;
+  public abstract checkHealth(): Promise<void>;
 }

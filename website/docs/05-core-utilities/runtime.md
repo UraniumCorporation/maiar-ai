@@ -40,9 +40,9 @@ await runtime.registerPlugin(new MyCustomPlugin());
 const plugins = runtime.getPlugins();
 ```
 
-### 2. Model Service
+### 2. Model Manager
 
-The runtime maintinas a registry of all configured models and their capabilities:
+The runtime maintains a registry of all configured models and their capabilities:
 
 ```typescript
 // Capabilities are accessed through the runtime.operations
@@ -53,12 +53,12 @@ const output = this.runtime.operations.executeCapability<string, string>(
 );
 ```
 
-### 3. Memory Service
+### 3. Memory Manager
 
-The runtime includes a memory service for persistent storage:
+The runtime includes a memory sermanagervice for persistent storage:
 
 ```typescript
-// Access memory service in plugins
+// Access memory manager in plugins
 const memory = runtime.memory;
 await memory.storeUserInteraction(user, platform, message);
 await memory.getRecentConversationHistory(user, platform);

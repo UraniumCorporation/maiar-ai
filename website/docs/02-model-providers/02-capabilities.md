@@ -109,14 +109,14 @@ private async validatePluginCapabilities(plugin: Plugin): Promise<void> {
   for (const capability of plugin.capabilities) {
     if (
       capability.required &&
-      !this.modelService.hasCapability(capability.id)
+      !this.modelManager.hasCapability(capability.id)
     ) {
       throw new Error(
         `Plugin ${plugin.id} requires capability ${capability.id} but it is not available`
       );
     } else if (
       !capability.required &&
-      !this.modelService.hasCapability(capability.id)
+      !this.modelManager.hasCapability(capability.id)
     ) {
       log.warn(
         `Plugin ${plugin.id} specified an optional capability ${capability.id} that is not available`

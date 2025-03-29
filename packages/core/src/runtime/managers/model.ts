@@ -5,7 +5,7 @@ import { CapabilityRegistry } from "./capability";
 import { MonitorManager } from "./monitor";
 
 /**
- * Service for managing operations on models
+ * ModelManager is responsible for managing model instances and their capabilities
  */
 export class ModelManager {
   private models: Map<string, ModelProvider>;

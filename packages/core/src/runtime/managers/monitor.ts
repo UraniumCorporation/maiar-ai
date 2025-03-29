@@ -8,7 +8,7 @@ export interface MonitorEvent {
 }
 
 /**
- * Global monitor service that can be accessed by any component
+ * Global monitor manager that can be accessed by any component
  */
 export class MonitorManager {
   private static instance: MonitorManager;
@@ -17,7 +17,7 @@ export class MonitorManager {
   private constructor() {}
 
   /**
-   * Get the singleton instance of the monitor service
+   * Get the singleton instance of the monitor manager
    */
   public static getInstance(): MonitorManager {
     if (!MonitorManager.instance) {
@@ -27,7 +27,7 @@ export class MonitorManager {
   }
 
   /**
-   * Initialize the monitor service with providers
+   * Initialize the monitor manager with providers
    * This should be called during runtime creation
    */
   public static init(...providers: MonitorProvider[]): void {

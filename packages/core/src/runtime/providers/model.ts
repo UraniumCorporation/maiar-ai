@@ -43,7 +43,7 @@ export abstract class ModelProvider {
   }
 
   /**
-   * Get access to the monitor service
+   * Get access to the monitor manager
    */
   protected get monitor() {
     return MonitorManager;

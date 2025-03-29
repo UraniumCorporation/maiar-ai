@@ -9,7 +9,7 @@ import {
 import { MonitorManager } from "./monitor";
 
 /**
- * Service for managing memory operations
+ * MemoryManager is responsbile delegating memory operations to the MemoryProvider
  */
 export class MemoryManager {
   private provider: MemoryProvider;

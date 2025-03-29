@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import { TEXT_GENERATION_CAPABILITY } from "./managers";
 import { MemoryManager } from "./managers/memory";
 import { ModelManager } from "./managers/model";
+import { TEXT_GENERATION_CAPABILITY } from "./managers/model/capability/constants";
 import { ICapabilities } from "./managers/model/capability/types";
 import { MonitorManager } from "./managers/monitor";
 import { PluginRegistry } from "./managers/plugin";
@@ -127,7 +127,7 @@ export async function getObject<T extends z.ZodType>(
  * Runtime class that manages the execution of plugins and agent state
  */
 export class Runtime {
-  public readonly operations; // Operations that can be used by plugins
+  public readonly operations; // operations that can be used by plugins
 
   private modelManager: ModelManager;
   private memoryManager: MemoryManager;
@@ -323,69 +323,18 @@ export class Runtime {
     plugins: Plugin[],
     capabilityAliases: string[][]
   ): Promise<Runtime> {
-    const modelManager = new ModelManager(...modelProviders);
-    const memoryManager = new MemoryManager(memoryProvider);
+    await MonitorManager.init(...monitorProviders);
+    await MonitorManager.checkHealth();
     const monitorManager = MonitorManager.getInstance();
-    const pluginRegistry = new PluginRegistry();
 
-    // Initialize the global monitor manager with monitor providers
-    try {
-      MonitorManager.init(...monitorProviders);
-      await MonitorManager.checkHealth();
+    const modelManager = new ModelManager(...modelProviders);
+    await modelManager.init();
+    await modelManager.checkHealth();
 
-      MonitorManager.publishEvent({
-        type: "monitor.healthcheck.passed",
-        message: "Monitor manager healthcheck passed"
-      });
-    } catch (err: unknown) {
-      const error = err as Error;
-      MonitorManager.publishEvent({
-        type: "runtime.monitor.healthcheck.failed",
-        message: "Monitor manager healthcheck failed",
-        logLevel: "error",
-        metadata: { error }
-      });
-      throw error;
-    }
+    const memoryManager = new MemoryManager(memoryProvider);
+    const pluginRegistry = new PluginRegistry(...plugins);
 
-    for (const modelProvider of modelProviders) {
-      try {
-        await modelProvider.init?.();
-        MonitorManager.publishEvent({
-          type: "runtime.model.initialized",
-          message: "Model initialized successfully!",
-          logLevel: "debug"
-        });
-      } catch (err: unknown) {
-        const error = err as Error;
-        MonitorManager.publishEvent({
-          type: "runtime.model.initialization.failed",
-          message: "Model failed to initialize",
-          logLevel: "error",
-          metadata: { error }
-        });
-        throw error;
-      }
-
-      try {
-        await modelProvider.checkHealth?.();
-        MonitorManager.publishEvent({
-          type: "runtime.model.healthcheck.passed",
-          message: "Model healthcheck passed!",
-          logLevel: "debug"
-        });
-      } catch (err: unknown) {
-        const error = err as Error;
-        MonitorManager.publishEvent({
-          type: "runtime.model.healthcheck.failed",
-          message: "Model healthcheck failed",
-          logLevel: "error",
-          metadata: { error }
-        });
-        throw error;
-      }
-    }
-
+    // Add capability aliases to the model manager
     for (const aliasGroup of capabilityAliases) {
       const canonicalId =
         aliasGroup.find((id) => modelManager.hasCapability(id)) ??
@@ -399,11 +348,72 @@ export class Runtime {
       }
     }
 
+    // Check if model manager has at least 1 model provider with the required capabilities needed for the runtime
+    for (const capability of REQUIRED_CAPABILITIES) {
+      if (!modelManager.hasCapability(capability)) {
+        MonitorManager.publishEvent({
+          type: "runtime.required.capabilities.check.failed",
+          message: `${capability} capability by a model provider is required for core runtime operations`,
+          logLevel: "error"
+        });
+        throw new Error(
+          `${capability} capability by a model provider is required for core runtime operations`
+        );
+      }
+    }
+
+    MonitorManager.publishEvent({
+      type: "runtime.required.capabilities.check.success",
+      message:
+        "runtime's required capabilities by at least 1 model provider check passed successfully",
+      logLevel: "info"
+    });
+
+    // Validate all plugins have required capabilities implemented in the model manager
+    for (const plugin of pluginRegistry.getAllPlugins()) {
+      for (const capability of plugin.requiredCapabilities) {
+        if (!modelManager.hasCapability(capability)) {
+          MonitorManager.publishEvent({
+            type: "runtime.plugin.capability.missing",
+            message: `plugin ${plugin.id} specified a required capability ${capability} that is not available`,
+            logLevel: "warn"
+          });
+
+          throw new Error(
+            `Plugin ${plugin.id} requires capability ${capability} but it is not available`
+          );
+        }
+      }
+    }
+
+    MonitorManager.publishEvent({
+      type: "plugins.required.capabilities.check.success",
+      message:
+        "runtime has all model providers with required capabilities by plugins",
+      logLevel: "info"
+    });
+
     MonitorManager.publishEvent({
       type: "runtime.init",
-      message: "Runtime initialized",
+      message: "runtime initialized succesfully",
       metadata: {
-        plugins: plugins.map((p) => p.id)
+        modelProviders: modelProviders.map((p) => p.id),
+        capabilities: modelManager.getAvailableCapabilities(),
+        memoryProvider: memoryProvider.id,
+        monitorProviders: monitorProviders.map((p) => p.id),
+        plugins: plugins.map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          requiredCapabilities: p.requiredCapabilities,
+          triggers: p.triggers.map((t) => ({
+            id: t.id
+          })),
+          execuctors: p.executors.map((e) => ({
+            name: e.name,
+            description: e.description
+          }))
+        }))
       }
     });
 
@@ -436,48 +446,6 @@ export class Runtime {
     return this.currentContext;
   }
 
-  private async validatePluginCapabilities(plugin: Plugin): Promise<void> {
-    for (const capability of plugin.requiredCapabilities) {
-      if (!this.modelManager.hasCapability(capability)) {
-        MonitorManager.publishEvent({
-          type: "runtime.plugin.capability.missing",
-          message: `Plugin ${plugin.id} specified an optional capability ${capability} that is not available`,
-          logLevel: "warn"
-        });
-
-        throw new Error(
-          `Plugin ${plugin.id} requires capability ${capability} but it is not available`
-        );
-      }
-    }
-  }
-
-  /**
-   * Register a plugin with the runtime
-   */
-  public async registerPlugin(plugin: Plugin): Promise<void> {
-    this.pluginRegistry.register(plugin);
-    plugin.init(this);
-
-    for (const trigger of plugin.triggers) {
-      const initContext: UserInputContext = {
-        id: `${plugin.id}-trigger-${Date.now()}`,
-        pluginId: plugin.id,
-        action: "trigger_init",
-        type: "user_input",
-        content: "", // Empty content for system trigger
-        timestamp: Date.now(),
-        rawMessage: "",
-        user: "system"
-      };
-
-      trigger.start({
-        eventQueue: this.queueInterface,
-        contextChain: [initContext]
-      });
-    }
-  }
-
   /**
    * Start the runtime
    */
@@ -486,68 +454,62 @@ export class Runtime {
       return;
     }
 
-    // validate required capabilities exist for core runtime operations
-    for (const capability of REQUIRED_CAPABILITIES) {
-      if (!this.modelManager.hasCapability(capability)) {
-        throw new Error(
-          `${capability} capability is required for core runtime operations`
-        );
-      }
-    }
-
-    MonitorManager.publishEvent({
-      type: "runtime.capabilities.validated",
-      message: "Runtime validated required capabilities",
-      logLevel: "info",
-      metadata: {
-        capabilities: this.modelManager.getAvailableCapabilities()
-      }
-    });
-
-    // Initialize plugins
-    for (const plugin of this.pluginRegistry.getAllPlugins()) {
-      await this.registerPlugin(plugin);
-    }
-
-    // Validate all plugins have required capabilities implemented in the model manager
-    for (const plugin of this.pluginRegistry.getAllPlugins()) {
-      await this.validatePluginCapabilities(plugin);
-    }
-
-    // Print registered plugins after they're all registered
-    MonitorManager.publishEvent({
-      type: "runtime.plugins.initialized",
-      message: "Initialized runtime with plugins",
-      logLevel: "info",
-      metadata: {
-        plugins: this.pluginRegistry.getAllPlugins().map((p) => p.id)
-      }
-    });
-
     this.isRunning = true;
 
-    // Log start event
     MonitorManager.publishEvent({
       type: "runtime.start",
-      message: "Runtime started",
-      metadata: {
-        plugins: this.pluginRegistry.getAllPlugins().map((p) => p.id)
-      }
+      message: "runtime started",
+      logLevel: "info"
     });
 
-    this.runEvaluationLoop().catch((error) => {
-      console.error("Error in evaluation loop:", error);
+    for (const plugin of this.pluginRegistry.getAllPlugins()) {
+      plugin.init(this);
+
+      for (const trigger of plugin.triggers) {
+        MonitorManager.publishEvent({
+          type: "runtime.plugin.trigger.start",
+          message: `plugin id "${plugin.id}" trigger "${trigger.id}" starting...`,
+          logLevel: "info",
+          metadata: {
+            trigger: trigger.id,
+            plugin: plugin.id
+          }
+        });
+
+        const initContext: UserInputContext = {
+          id: `${plugin.id}-trigger-${Date.now()}`,
+          pluginId: plugin.id,
+          action: "trigger_init",
+          type: "user_input",
+          content: "", // Empty content for system trigger
+          timestamp: Date.now(),
+          rawMessage: "",
+          user: "system"
+        };
+
+        trigger.start({
+          eventQueue: this.queueInterface,
+          contextChain: [initContext]
+        });
+      }
+    }
+
+    try {
+      await this.runEvaluationLoop();
+    } catch (err: unknown) {
       this.isRunning = false;
-    });
+
+      const error = err as Error;
+      console.error("Error in evaluation loop:", error);
+      throw error;
+    }
   }
 
   /**
    * Stop the runtime
    */
   public async stop(): Promise<void> {
-    if (!this.isRunning) {
-      throw new Error("Runtime is not running");
-    }
+    if (!this.isRunning) throw new Error("Runtime is not running");
 
     this.isRunning = false;
 

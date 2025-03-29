@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ICapabilities } from "../config";
-import { MemoryService } from "./managers/memory";
+import { MemoryManager } from "./managers/memory";
 import { ModelService } from "./managers/model";
 import { MonitorManager } from "./managers/monitor";
 import { PluginRegistry } from "./managers/plugin";
@@ -129,7 +129,7 @@ export class Runtime {
   public readonly operations; // Operations that can be used by plugins
 
   private modelService: ModelService;
-  private memoryService: MemoryService;
+  private memoryService: MemoryManager;
   private monitorService: MonitorManager;
   private pluginRegistry: PluginRegistry;
 
@@ -140,7 +140,7 @@ export class Runtime {
 
   private constructor(
     modelService: ModelService,
-    memoryService: MemoryService,
+    memoryService: MemoryManager,
     monitorService: MonitorManager,
     pluginRegistry: PluginRegistry
   ) {
@@ -323,7 +323,7 @@ export class Runtime {
     capabilityAliases: string[][]
   ): Promise<Runtime> {
     const modelService = new ModelService(...modelProviders);
-    const memoryService = new MemoryService(memoryProvider);
+    const memoryService = new MemoryManager(memoryProvider);
     const monitorService = MonitorManager.getInstance();
     const pluginRegistry = new PluginRegistry();
 
@@ -417,7 +417,7 @@ export class Runtime {
   /**
    * Access to the memory service for plugins
    */
-  public get memory(): MemoryService {
+  public get memory(): MemoryManager {
     return this.memoryService;
   }
 

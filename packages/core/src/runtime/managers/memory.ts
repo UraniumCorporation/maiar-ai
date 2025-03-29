@@ -11,13 +11,13 @@ import { MonitorManager } from "./monitor";
 /**
  * Service for managing memory operations
  */
-export class MemoryService {
+export class MemoryManager {
   private provider: MemoryProvider;
 
   constructor(provider: MemoryProvider) {
     this.provider = provider;
     MonitorManager.publishEvent({
-      type: "memory.service.initialized",
+      type: "memory.manager.initialized",
       message: `Initialized memory service with provider: ${provider.id}`,
       logLevel: "info",
       metadata: { providerId: provider.id }
@@ -210,8 +210,8 @@ export class MemoryService {
 
   async storeMessage(message: Message, conversationId: string): Promise<void> {
     MonitorManager.publishEvent({
-      type: "memory.service.store_message.called",
-      message: "MemoryService.storeMessage called",
+      type: "memory.manager.store_message.called",
+      message: "MemoryManager.storeMessage called",
       logLevel: "info",
       metadata: { conversationId, message }
     });
@@ -220,8 +220,8 @@ export class MemoryService {
 
   async storeContext(context: Context, conversationId: string): Promise<void> {
     MonitorManager.publishEvent({
-      type: "memory.service.store_context.called",
-      message: "MemoryService.storeContext called",
+      type: "memory.manager.store_context.called",
+      message: "MemoryManager.storeContext called",
       logLevel: "info",
       metadata: { conversationId, context }
     });
@@ -230,8 +230,8 @@ export class MemoryService {
 
   async getMessages(options: MemoryQueryOptions): Promise<Message[]> {
     MonitorManager.publishEvent({
-      type: "memory.service.get_messages.called",
-      message: "MemoryService.getMessages called",
+      type: "memory.manager.get_messages.called",
+      message: "MemoryManager.getMessages called",
       logLevel: "info",
       metadata: { options }
     });
@@ -240,8 +240,8 @@ export class MemoryService {
 
   async getContexts(conversationId: string): Promise<Context[]> {
     MonitorManager.publishEvent({
-      type: "memory.service.get_contexts.called",
-      message: "MemoryService.getContexts called",
+      type: "memory.manager.get_contexts.called",
+      message: "MemoryManager.getContexts called",
       logLevel: "info",
       metadata: { conversationId }
     });
@@ -250,8 +250,8 @@ export class MemoryService {
 
   async getConversation(conversationId: string): Promise<Conversation> {
     MonitorManager.publishEvent({
-      type: "memory.service.get_conversation.called",
-      message: "MemoryService.getConversation called",
+      type: "memory.manager.get_conversation.called",
+      message: "MemoryManager.getConversation called",
       logLevel: "info",
       metadata: { conversationId }
     });
@@ -264,8 +264,8 @@ export class MemoryService {
     metadata?: Record<string, any>;
   }): Promise<string> {
     MonitorManager.publishEvent({
-      type: "memory.service.create_conversation.called",
-      message: "MemoryService.createConversation called",
+      type: "memory.manager.create_conversation.called",
+      message: "MemoryManager.createConversation called",
       logLevel: "info",
       metadata: { options }
     });

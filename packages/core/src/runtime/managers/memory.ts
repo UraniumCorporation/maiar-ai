@@ -16,12 +16,6 @@ export class MemoryManager {
 
   constructor(provider: MemoryProvider) {
     this.provider = provider;
-    MonitorManager.publishEvent({
-      type: "memory.manager.initialized",
-      message: `Initialized memory service with provider: ${provider.id}`,
-      logLevel: "info",
-      metadata: { providerId: provider.id }
-    });
   }
 
   /**
@@ -34,7 +28,7 @@ export class MemoryManager {
   /**
    * Store a user interaction in memory
    */
-  async storeUserInteraction(
+  public async storeUserInteraction(
     user: string,
     platform: string,
     message: string,
@@ -103,7 +97,7 @@ export class MemoryManager {
   /**
    * Store an assistant interaction and its context in memory
    */
-  async storeAssistantInteraction(
+  public async storeAssistantInteraction(
     user: string,
     platform: string,
     response: string,
@@ -208,7 +202,10 @@ export class MemoryManager {
     }
   }
 
-  async storeMessage(message: Message, conversationId: string): Promise<void> {
+  public async storeMessage(
+    message: Message,
+    conversationId: string
+  ): Promise<void> {
     MonitorManager.publishEvent({
       type: "memory.manager.store_message.called",
       message: "MemoryManager.storeMessage called",
@@ -218,7 +215,10 @@ export class MemoryManager {
     return this.provider.storeMessage(message, conversationId);
   }
 
-  async storeContext(context: Context, conversationId: string): Promise<void> {
+  public async storeContext(
+    context: Context,
+    conversationId: string
+  ): Promise<void> {
     MonitorManager.publishEvent({
       type: "memory.manager.store_context.called",
       message: "MemoryManager.storeContext called",
@@ -228,7 +228,7 @@ export class MemoryManager {
     return this.provider.storeContext(context, conversationId);
   }
 
-  async getMessages(options: MemoryQueryOptions): Promise<Message[]> {
+  public async getMessages(options: MemoryQueryOptions): Promise<Message[]> {
     MonitorManager.publishEvent({
       type: "memory.manager.get_messages.called",
       message: "MemoryManager.getMessages called",
@@ -238,7 +238,7 @@ export class MemoryManager {
     return this.provider.getMessages(options);
   }
 
-  async getContexts(conversationId: string): Promise<Context[]> {
+  public async getContexts(conversationId: string): Promise<Context[]> {
     MonitorManager.publishEvent({
       type: "memory.manager.get_contexts.called",
       message: "MemoryManager.getContexts called",
@@ -248,7 +248,7 @@ export class MemoryManager {
     return this.provider.getContexts(conversationId);
   }
 
-  async getConversation(conversationId: string): Promise<Conversation> {
+  public async getConversation(conversationId: string): Promise<Conversation> {
     MonitorManager.publishEvent({
       type: "memory.manager.get_conversation.called",
       message: "MemoryManager.getConversation called",
@@ -258,7 +258,7 @@ export class MemoryManager {
     return this.provider.getConversation(conversationId);
   }
 
-  async createConversation(options?: {
+  public async createConversation(options?: {
     id?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>;
@@ -272,14 +272,14 @@ export class MemoryManager {
     return this.provider.createConversation(options);
   }
 
-  async deleteConversation(conversationId: string): Promise<void> {
+  public async deleteConversation(conversationId: string): Promise<void> {
     return this.provider.deleteConversation(conversationId);
   }
 
   /**
    * Get or create a conversation for a user on a platform
    */
-  async getOrCreateConversation(
+  public async getOrCreateConversation(
     user: string,
     platform: string
   ): Promise<string> {
@@ -297,7 +297,7 @@ export class MemoryManager {
   /**
    * Get recent conversation history for a user/platform
    */
-  async getRecentConversationHistory(
+  public async getRecentConversationHistory(
     user: string,
     platform: string,
     limit: number = 100

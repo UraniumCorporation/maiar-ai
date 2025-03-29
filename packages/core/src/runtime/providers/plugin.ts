@@ -1,5 +1,5 @@
 import { Runtime } from "../";
-import { ICapabilities } from "../../config";
+import { ICapabilities } from "../managers/model/capability/types";
 import { AgentContext } from "../pipeline/agent";
 
 /**

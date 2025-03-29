@@ -1,8 +1,8 @@
-import { ICapabilities } from "../../config";
-import { OperationConfig } from "../pipeline/operations";
-import { LoggingModelDecorator, ModelProvider } from "../providers/model";
+import { OperationConfig } from "../../pipeline/operations";
+import { LoggingModelDecorator, ModelProvider } from "../../providers/model";
+import { MonitorManager } from "../monitor";
 import { CapabilityRegistry } from "./capability";
-import { MonitorManager } from "./monitor";
+import { ICapabilities } from "./capability/types";
 
 /**
  * ModelManager is responsible for managing model instances and their capabilities

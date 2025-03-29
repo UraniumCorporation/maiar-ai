@@ -1,4 +1,4 @@
-import { TEXT_GENERATION_CAPABILITY } from "../constants";
+import { TEXT_GENERATION_CAPABILITY } from "./constants";
 
 /**
  * The base interface for all capabilities
@@ -7,7 +7,7 @@ import { TEXT_GENERATION_CAPABILITY } from "../constants";
  * Plugin developers can extend this interface to declare required capabilities for their plugins
  */
 export interface ICapabilities {
-  // By default, the runtime provides the "text-generation" capability because it requires from a ModelProvder
+  // By default, the runtime provides the "text-generation" capability because it requires it from at least 1 ModelProvider
   [TEXT_GENERATION_CAPABILITY]: {
     input: string;
     output: string;

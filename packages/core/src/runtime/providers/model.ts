@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ICapabilities } from "../../config";
+import { ICapabilities } from "../managers/model/capability/types";
 import { MonitorManager } from "../managers/monitor";
 import { OperationConfig } from "../pipeline/operations";
 

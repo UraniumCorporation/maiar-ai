@@ -137,17 +137,14 @@ MAIAR uses TypeScript's module augmentation to provide type-safe capabilities. H
 1. The core package defines the base interface:
 
 ```typescript
-// In @maiar-ai/core
-export interface ICapabilities {}
+const TEXT_GENERATION_CAPABILITY = "text-generation";
 
-// Core runtime declares required capabilities
-declare module "../models/types" {
-  interface ICapabilities {
-    "text-generation": {
-      input: string;
-      output: string;
-    };
-  }
+export interface ICapabilities {
+  // By default, the runtime provides the "text-generation" capability because it requires it from at least 1 ModelProvider
+  [TEXT_GENERATION_CAPABILITY]: {
+    input: string;
+    output: string;
+  };
 }
 ```
 

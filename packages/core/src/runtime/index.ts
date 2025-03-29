@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-import { ICapabilities } from "../config";
+import { TEXT_GENERATION_CAPABILITY } from "./managers";
 import { MemoryManager } from "./managers/memory";
 import { ModelManager } from "./managers/model";
+import { ICapabilities } from "./managers/model/capability/types";
 import { MonitorManager } from "./managers/monitor";
 import { PluginRegistry } from "./managers/plugin";
 import {
@@ -38,7 +39,7 @@ import { ModelProvider, ModelRequestConfig } from "./providers/model";
 import { MonitorProvider } from "./providers/monitor";
 import { Plugin } from "./providers/plugin";
 
-const REQUIRED_CAPABILITIES = ["text-generation"];
+const REQUIRED_CAPABILITIES = [TEXT_GENERATION_CAPABILITY];
 
 export async function getObject<T extends z.ZodType>(
   modelManager: ModelManager,
@@ -1204,5 +1205,3 @@ export class Runtime {
     return this.modelManager.executeCapability(capabilityId, input, config);
   }
 }
-
-export * from "./pipeline/types";

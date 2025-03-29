@@ -8,7 +8,7 @@ export class CapabilityRegistry {
   /**
    * Register a capability for a model
    */
-  registerCapability(modelId: string, capabilityId: string): void {
+  public registerCapability(modelId: string, capabilityId: string): void {
     if (!this.capabilities.has(capabilityId)) {
       this.capabilities.set(capabilityId, new Set([modelId]));
     }
@@ -17,7 +17,10 @@ export class CapabilityRegistry {
   /**
    * Set the default model for a capability
    */
-  setDefaultModelForCapability(capabilityId: string, modelId: string): void {
+  public setDefaultModelForCapability(
+    capabilityId: string,
+    modelId: string
+  ): void {
     if (
       !this.capabilities.has(capabilityId) ||
       !this.capabilities.get(capabilityId)!.has(modelId)
@@ -32,28 +35,30 @@ export class CapabilityRegistry {
   /**
    * Get the default model for a capability
    */
-  getDefaultModelForCapability(capabilityId: string): string | undefined {
+  public getDefaultModelForCapability(
+    capabilityId: string
+  ): string | undefined {
     return this.defaultModels.get(capabilityId);
   }
 
   /**
    * Get all models that support a capability
    */
-  getModelsWithCapability(capabilityId: string): string[] {
+  public getModelsWithCapability(capabilityId: string): string[] {
     return Array.from(this.capabilities.get(capabilityId) || new Set());
   }
 
   /**
    * Get all registered capabilities
    */
-  getAllCapabilities(): string[] {
+  public getAllCapabilities(): string[] {
     return Array.from(this.capabilities.keys());
   }
 
   /**
    * Check if any model supports a capability
    */
-  hasCapability(capabilityId: string): boolean {
+  public hasCapability(capabilityId: string): boolean {
     return (
       this.capabilities.has(capabilityId) &&
       this.capabilities.get(capabilityId)!.size > 0

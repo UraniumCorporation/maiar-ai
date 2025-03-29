@@ -7,27 +7,29 @@ import { MonitorManager } from "./monitor";
 export class PluginRegistry {
   private plugins: Map<string, Plugin>;
 
-  constructor() {
+  constructor(...plugins: Plugin[]) {
     this.plugins = new Map<string, Plugin>();
+
+    for (const plugin of plugins) {
+      this.registerPlugin(plugin);
+    }
   }
 
   /**
    * Register a new plugin
    */
-  public register(plugin: Plugin): void {
-    if (!plugin) {
+  public registerPlugin(plugin: Plugin): void {
+    if (!plugin.id) {
       MonitorManager.publishEvent({
-        type: "registry.plugin.registration.failed",
-        message: "Plugin registration failed",
+        type: "registry.plugin.validation.failed",
+        message: "Plugin ID validation failed",
         logLevel: "error",
         metadata: {
-          error: "Plugin is null or undefined"
+          error: "ID cannot be empty"
         }
       });
-      throw new Error("Cannot register null or undefined plugin");
+      throw new Error("Plugin ID cannot be empty");
     }
-
-    this.validatePluginId(plugin.id);
 
     if (this.plugins.has(plugin.id)) {
       const existing = Array.from(this.plugins.keys());
@@ -40,6 +42,7 @@ export class PluginRegistry {
           existingPlugins: existing
         }
       });
+
       throw new Error(
         `Plugin ID collision: ${plugin.id} is already registered.\n` +
           `Currently registered plugins: ${existing.join(", ")}`
@@ -73,35 +76,5 @@ export class PluginRegistry {
    */
   public getAllPlugins(): Plugin[] {
     return Array.from(this.plugins.values());
-  }
-
-  /**
-   * Validate plugin ID format
-   */
-  private validatePluginId(id: string): void {
-    if (!id) {
-      MonitorManager.publishEvent({
-        type: "registry.plugin.validation.failed",
-        message: "Plugin ID validation failed",
-        logLevel: "error",
-        metadata: {
-          error: "ID cannot be empty"
-        }
-      });
-      throw new Error("Plugin ID cannot be empty");
-    }
-
-    if (!id.startsWith("plugin-")) {
-      MonitorManager.publishEvent({
-        type: "registry.plugin.validation.failed",
-        message: "Plugin ID validation failed",
-        logLevel: "error",
-        metadata: {
-          error: 'ID must start with "plugin-"',
-          id
-        }
-      });
-      throw new Error('Plugin ID must start with "plugin-"');
-    }
   }
 }

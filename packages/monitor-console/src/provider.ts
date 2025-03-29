@@ -1,39 +1,53 @@
 import { MonitorProvider } from "@maiar-ai/core";
 
-// ANSI escape codes for neon green
-const NEON_GREEN = "\x1b[38;2;0;255;0m"; // RGB(0, 255, 0)
+// ANSI escape codes for neon colors
+
+const neonGreen = "\x1b[38;2;0;255;0m"; // neon green
+const brightYellow = "\x1b[38;2;255;255;0m"; // bright yellow
+const brightGreen = "\x1b[38;2;0;255;128m"; // bright green
+const brightCyan = "\x1b[38;2;0;255;255m"; // bright cyan
+const lightMagenta = "\x1b[38;2;255;153;255m"; // light magenta
+const white = "\x1b[38;2;255;255;255m"; // white
+
 const RESET = "\x1b[0m";
 
-// Helper to wrap text in neon green
-const neonGreen = (text: string) => `${NEON_GREEN}${text}${RESET}`;
+// helper to wrap text in a color
+const colorize = (text: string, color: string) => `${color}${text}${RESET}`;
 
 /**
  * A monitor provider that logs agent state and events to the console.
  *
  * This provider uses ANSI color codes to highlight monitoring information
- * in neon green, making it easy to distinguish from other console output.
+ * in colors, making it easy to distinguish from other console output.
  *
  * It's useful for:
  * - Local development and debugging
  * - Server-side deployments where console logs are captured
  * - Simple monitoring without additional infrastructure
  */
-export class ConsoleMonitorProvider implements MonitorProvider {
-  /** Unique identifier for this monitor */
-  readonly id = "console";
-
-  /** Human-readable name of this monitor */
-  readonly name = "Console Monitor";
-
-  /** Description of what this monitor does */
-  readonly description = "Monitors agent state through console logging";
+export class ConsoleMonitorProvider extends MonitorProvider {
+  constructor() {
+    super({
+      id: "monitor-console",
+      name: "Console Monitor",
+      description: "Logs agent state and events to the console with neon colors"
+    });
+  }
 
   /**
    * Initializes the console monitor.
    * Outputs a message to the console indicating the monitor is ready.
    */
-  async init(): Promise<void> {
-    console.log(neonGreen("[Monitor] Console monitor initialized"));
+  public async init(): Promise<void> {
+    // Nothing to implement here
+  }
+
+  /**
+   * Checks the health of the console monitor.
+   * The console logger is always considered healthy.
+   */
+  public async checkHealth(): Promise<void> {
+    // Nothing to implement here
   }
 
   /**
@@ -41,32 +55,38 @@ export class ConsoleMonitorProvider implements MonitorProvider {
    *
    * @param event - Event details to publish
    */
-  async publishEvent(event: {
+  async publishEvent({
+    type,
+    message,
+    timestamp,
+    metadata
+  }: {
     type: string;
     message: string;
     timestamp: number;
     metadata?: Record<string, unknown>;
   }): Promise<void> {
-    console.log(
-      neonGreen(
-        `[Monitor] Event: ${event.type} | ${event.message} | ${new Date(
-          event.timestamp
-        ).toISOString()}`
-      )
-    );
+    const meta = metadata
+      ? `${Object.entries(metadata)
+          .map(([key, value]) => {
+            if (typeof value === "object" && value !== null) {
+              return `${colorize(`${key}=`, brightCyan)}${colorize(`${JSON.stringify(value)}`, white)}`;
+            }
+            return `${colorize(`${key}=`, brightCyan)}${colorize(`"${value}"`, white)}`;
+          })
+          .join(" ")}`
+      : "";
 
-    // Log metadata if present
-    if (event.metadata && Object.keys(event.metadata).length > 0) {
-      console.log(neonGreen("[Monitor] Event Metadata:"), event.metadata);
-    }
-  }
+    const logParts = [
+      colorize("[Monitor]", neonGreen),
+      colorize(new Date(timestamp).toISOString(), brightYellow),
+      colorize(type, brightGreen),
+      colorize(message, lightMagenta)
+    ];
 
-  /**
-   * Checks the health of the console monitor.
-   * The console logger is always considered healthy.
-   */
-  async checkHealth(): Promise<void> {
-    // Console logger is always healthy
-    return Promise.resolve();
+    if (meta) logParts.push(meta);
+    const coloredLog = logParts.join(" | ");
+
+    console.log(coloredLog);
   }
 }

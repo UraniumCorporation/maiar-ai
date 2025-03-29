@@ -46,11 +46,13 @@ const commitlintConfig: UserConfig = {
         "thank-you", // Thank you CI related changes
         "other", // Other changes
         "core", // core package
-        "memory-filesystem", // memory-filesystem plugin
-        "memory-postgres", // memory-postgres plugin
-        "memory-sqlite", // memory-sqlite plugin
-        "model-ollama", // model-ollama plugin
-        "model-openai", // model-openai plugin
+        "memory-filesystem", // memory-filesystem memory provider
+        "memory-postgres", // memory-postgres memory provider
+        "memory-sqlite", // memory-sqlite memory provider
+        "model-ollama", // model-ollama model provider
+        "model-openai", // model-openai model provider
+        "monitor-console", // monitor-console monitor provider
+        "monitor-websocket", // monitor-websocket monitor provider
         "plugin-character", // plugin-character plugin
         "plugin-discord", // plugin-discord plugin
         "plugin-express", // plugin-express plugin

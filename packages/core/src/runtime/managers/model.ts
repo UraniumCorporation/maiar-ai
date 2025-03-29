@@ -7,7 +7,7 @@ import { MonitorManager } from "./monitor";
 /**
  * Service for managing operations on models
  */
-export class ModelService {
+export class ModelManager {
   private models: Map<string, ModelProvider>;
   private registry: CapabilityRegistry;
   private capabilityAliases: Map<string, string>;

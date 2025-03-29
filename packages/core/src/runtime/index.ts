@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { ICapabilities } from "../config";
 import { MemoryManager } from "./managers/memory";
-import { ModelService } from "./managers/model";
+import { ModelManager } from "./managers/model";
 import { MonitorManager } from "./managers/monitor";
 import { PluginRegistry } from "./managers/plugin";
 import {
@@ -41,7 +41,7 @@ import { Plugin } from "./providers/plugin";
 const REQUIRED_CAPABILITIES = ["text-generation"];
 
 export async function getObject<T extends z.ZodType>(
-  service: ModelService,
+  service: ModelManager,
   schema: T,
   prompt: string,
   config?: GetObjectConfig
@@ -128,7 +128,7 @@ export async function getObject<T extends z.ZodType>(
 export class Runtime {
   public readonly operations; // Operations that can be used by plugins
 
-  private modelService: ModelService;
+  private modelService: ModelManager;
   private memoryService: MemoryManager;
   private monitorService: MonitorManager;
   private pluginRegistry: PluginRegistry;
@@ -139,7 +139,7 @@ export class Runtime {
   private currentContext: AgentContext | undefined;
 
   private constructor(
-    modelService: ModelService,
+    modelService: ModelManager,
     memoryService: MemoryManager,
     monitorService: MonitorManager,
     pluginRegistry: PluginRegistry
@@ -322,7 +322,7 @@ export class Runtime {
     plugins: Plugin[],
     capabilityAliases: string[][]
   ): Promise<Runtime> {
-    const modelService = new ModelService(...modelProviders);
+    const modelService = new ModelManager(...modelProviders);
     const memoryService = new MemoryManager(memoryProvider);
     const monitorService = MonitorManager.getInstance();
     const pluginRegistry = new PluginRegistry();

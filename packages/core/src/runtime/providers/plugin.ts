@@ -1,4 +1,5 @@
 import { Runtime } from "../";
+import { MonitorManager } from "../managers";
 import { ICapabilities } from "../managers/model/capability/types";
 import { AgentContext } from "../pipeline/agent";
 
@@ -89,6 +90,11 @@ export abstract class Plugin {
       };
     }
     return executor.execute(context);
+  }
+
+  public get monitor(): typeof MonitorManager {
+    if (!this._runtime) throw new Error("Runtime is not initialized yet");
+    return this._runtime.monitor;
   }
 
   public get runtime(): Runtime {

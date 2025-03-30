@@ -131,7 +131,7 @@ export class Runtime {
 
   private modelManager: ModelManager;
   private memoryManager: MemoryManager;
-  private monitorManager: MonitorManager;
+  private monitorManager: typeof MonitorManager;
   private pluginRegistry: PluginRegistry;
 
   private isRunning: boolean;
@@ -142,7 +142,7 @@ export class Runtime {
   private constructor(
     modelManager: ModelManager,
     memoryManager: MemoryManager,
-    monitorManager: MonitorManager,
+    monitorManager: typeof MonitorManager,
     pluginRegistry: PluginRegistry
   ) {
     this.operations = {
@@ -171,7 +171,7 @@ export class Runtime {
         const userInput = getUserInput(context);
 
         // Pre-event logging and store user message
-        MonitorManager.publishEvent({
+        this.monitor.publishEvent({
           type: "runtime.context.pre_event",
           message: "Pre-event context chain state",
           logLevel: "info",
@@ -214,7 +214,7 @@ export class Runtime {
         try {
           // Store user message in memory
           if (userInput) {
-            MonitorManager.publishEvent({
+            this.monitor.publishEvent({
               type: "runtime.memory.user_message.storing",
               message: "Storing user message in memory",
               logLevel: "info",
@@ -240,7 +240,7 @@ export class Runtime {
             fullContext.platformContext.responseHandler = async (response) => {
               try {
                 // Pre-response logging
-                MonitorManager.publishEvent({
+                this.monitor.publishEvent({
                   type: "runtime.context.pre_response",
                   message: "Pre-response context chain state",
                   logLevel: "info",
@@ -257,7 +257,7 @@ export class Runtime {
                 await originalHandler(response);
 
                 // Post-response logging
-                MonitorManager.publishEvent({
+                this.monitor.publishEvent({
                   type: "runtime.context.post_response",
                   message: "Post-response context chain state",
                   logLevel: "info",
@@ -270,7 +270,7 @@ export class Runtime {
                   }
                 });
               } catch (error) {
-                MonitorManager.publishEvent({
+                this.monitor.publishEvent({
                   type: "runtime.response.storing.failed",
                   message: "Error storing assistant response",
                   logLevel: "error",
@@ -287,7 +287,7 @@ export class Runtime {
           }
 
           this.eventQueue.push(fullContext);
-          MonitorManager.publishEvent({
+          this.monitor.publishEvent({
             type: "runtime.queue.updated",
             message: "Queue updated",
             logLevel: "debug",
@@ -325,7 +325,7 @@ export class Runtime {
   ): Promise<Runtime> {
     await MonitorManager.init(...monitorProviders);
     await MonitorManager.checkHealth();
-    const monitorManager = MonitorManager.getInstance();
+    const monitorManager = MonitorManager;
 
     const modelManager = new ModelManager(...modelProviders);
     await modelManager.init();
@@ -435,7 +435,7 @@ export class Runtime {
   /**
    * Access to the monitor manager for plugins
    */
-  public get monitor(): MonitorManager {
+  public get monitor(): typeof MonitorManager {
     return this.monitorManager;
   }
 

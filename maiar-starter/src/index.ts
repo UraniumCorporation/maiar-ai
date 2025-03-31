@@ -53,7 +53,7 @@ config({
 });
 
 async function main() {
-  const models: ModelProvider[] = [
+  const modelProviders: ModelProvider[] = [
     new OpenAIModelProvider({
       models: [
         OpenAITextGenerationModel.GPT4O,
@@ -63,11 +63,11 @@ async function main() {
     })
   ];
 
-  const memory: MemoryProvider = new SQLiteProvider({
+  const memoryProvider: MemoryProvider = new SQLiteProvider({
     dbPath: join(process.cwd(), "data", "conversations.db")
   });
 
-  const monitor: MonitorProvider[] = [
+  const monitorProviders: MonitorProvider[] = [
     new ConsoleMonitorProvider(),
     new WebSocketMonitorProvider({
       port: 3001,
@@ -116,13 +116,13 @@ async function main() {
     ["text-generation", "text-creation"]
   ];
 
-  const agent = await Runtime.init(
-    models,
-    memory,
-    monitor,
+  const agent = await Runtime.init({
+    modelProviders,
+    memoryProvider,
+    monitorProviders,
     plugins,
     capabilityAliases
-  );
+  });
 
   // Handle shutdown gracefully
   process.on("SIGINT", async () => {

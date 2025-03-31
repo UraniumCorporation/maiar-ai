@@ -316,13 +316,19 @@ export class Runtime {
     this.currentContext = undefined;
   }
 
-  public static async init(
-    modelProviders: ModelProvider[],
-    memoryProvider: MemoryProvider,
-    monitorProviders: MonitorProvider[],
-    plugins: Plugin[],
-    capabilityAliases: string[][]
-  ): Promise<Runtime> {
+  public static async init({
+    modelProviders,
+    memoryProvider,
+    monitorProviders,
+    plugins,
+    capabilityAliases
+  }: {
+    modelProviders: ModelProvider[];
+    memoryProvider: MemoryProvider;
+    monitorProviders: MonitorProvider[];
+    plugins: Plugin[];
+    capabilityAliases: string[][];
+  }): Promise<Runtime> {
     await MonitorManager.init(...monitorProviders);
     await MonitorManager.checkHealth();
     const monitorManager = MonitorManager;

@@ -13,7 +13,7 @@ import {
 import { FileSystemMemoryPlugin } from "./plugin";
 import { FileSystemConfig } from "./types";
 
-export class FileSystemProvider extends MemoryProvider {
+export class FileSystemMemoryProvider extends MemoryProvider {
   private basePath: string;
   private plugin: FileSystemMemoryPlugin;
 

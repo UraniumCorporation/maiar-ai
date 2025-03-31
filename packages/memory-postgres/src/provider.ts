@@ -21,7 +21,7 @@ type JSONValue =
   | JSONValue[]
   | { [key: string]: JSONValue };
 
-export class PostgresProvider extends MemoryProvider {
+export class PostgresMemoryProvider extends MemoryProvider {
   private pool: Pool;
   private plugin: PostgresMemoryPlugin;
 

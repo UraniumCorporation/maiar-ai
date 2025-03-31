@@ -1,1 +1,1 @@
-export { SQLiteProvider } from "./provider";
+export * from "./provider";

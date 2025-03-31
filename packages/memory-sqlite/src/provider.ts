@@ -23,7 +23,7 @@ type JSONValue =
   | JSONValue[]
   | { [key: string]: JSONValue };
 
-export class SQLiteProvider extends MemoryProvider {
+export class SQLiteMemoryProvider extends MemoryProvider {
   private db: Database.Database;
   private plugin: SQLiteMemoryPlugin;
 

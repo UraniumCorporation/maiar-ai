@@ -1,1 +1,1 @@
-export { FileSystemProvider } from "./provider";
+export * from "./provider";

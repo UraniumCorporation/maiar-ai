@@ -31,7 +31,7 @@ const PROVIDER_ID = "deepseek";
 const PROVIDER_NAME = "Deepseek";
 const PROVIDER_DESCRIPTION = "Deepseek models running through Ollama";
 
-export class DeepseekProvider extends ModelProvider {
+export class DeepseekModelProvider extends ModelProvider {
   private baseUrl: string;
   private model: string;
 

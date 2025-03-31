@@ -18,7 +18,7 @@ import {
   OpenAITextGenerationModel
 } from "@maiar-ai/model-openai";
 
-import { SQLiteProvider } from "@maiar-ai/memory-sqlite";
+import { SQLiteMemoryProvider } from "@maiar-ai/memory-sqlite";
 
 import { ConsoleMonitorProvider } from "@maiar-ai/monitor-console";
 import { WebSocketMonitorProvider } from "@maiar-ai/monitor-websocket";
@@ -63,7 +63,7 @@ async function main() {
     })
   ];
 
-  const memoryProvider: MemoryProvider = new SQLiteProvider({
+  const memoryProvider: MemoryProvider = new SQLiteMemoryProvider({
     dbPath: join(process.cwd(), "data", "conversations.db")
   });
 

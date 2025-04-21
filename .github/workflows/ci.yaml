@@ -9,6 +9,7 @@ on:
 env:
   CI: ${{ vars.CI }}
   HUSKY: ${{ vars.HUSKY }}
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
 jobs:
   commit-lint:

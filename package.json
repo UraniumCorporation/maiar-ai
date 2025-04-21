@@ -37,6 +37,7 @@
     "commitlint": "commitlint --edit",
     "prettier": "prettier --write .",
     "whitepaper": "mkdir -p tmp_latex && pdflatex -output-directory=tmp_latex -interaction=nonstopmode -halt-on-error maiar.tex > /dev/null 2>&1 && pdflatex -output-directory=tmp_latex -interaction=nonstopmode -halt-on-error maiar.tex > /dev/null 2>&1 && mv tmp_latex/maiar.pdf . && rm -rf tmp_latex",
+    "nx:login": "nx login",
     "nx:reset": "nx reset",
     "nx:graph": "nx graph",
     "nx:release": "nx release --skip-publish --verbose",

@@ -6,70 +6,39 @@
       "outputs": ["{projectRoot}/dist/**", "{projectRoot}/build/**"],
       "cache": true
     },
-    "typecheck": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    }
+    "typecheck": { "cache": true },
+    "lint": { "cache": true }
   },
   "parallel": 20,
   "plugins": [
     {
       "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "eslint:lint"
-      }
+      "options": { "targetName": "eslint:lint" }
     },
-    {
-      "plugin": "@nx/js/typescript"
-    }
+    { "plugin": "@nx/js/typescript" }
   ],
   "release": {
     "projects": ["packages/*"],
     "conventionalCommits": {
       "types": {
-        "docs": {
-          "semverBump": "none"
-        },
-        "style": {
-          "semverBump": "none"
-        },
-        "refactor": {
-          "semverBump": "none"
-        },
-        "perf": {
-          "semverBump": "none"
-        },
-        "test": {
-          "semverBump": "none"
-        },
-        "build": {
-          "semverBump": "none"
-        },
-        "ci": {
-          "semverBump": "none"
-        },
+        "docs": { "semverBump": "none" },
+        "style": { "semverBump": "none" },
+        "refactor": { "semverBump": "none" },
+        "perf": { "semverBump": "none" },
+        "test": { "semverBump": "none" },
+        "build": { "semverBump": "none" },
+        "ci": { "semverBump": "none" },
         "cd": {
           "semverBump": "none",
-          "changelog": {
-            "title": "🚚 CD",
-            "hidden": false
-          }
+          "changelog": { "title": "🚚 CD", "hidden": false }
         },
-        "chore": {
-          "semverBump": "none"
-        },
-        "revert": {
-          "semverBump": "none"
-        }
+        "chore": { "semverBump": "none" },
+        "revert": { "semverBump": "none" }
       }
     },
     "version": {
       "conventionalCommits": true,
-      "generatorOptions": {
-        "preserveLocalDependencyProtocols": true
-      }
+      "generatorOptions": { "preserveLocalDependencyProtocols": true }
     },
     "changelog": {
       "workspaceChangelog": {
@@ -89,5 +58,6 @@
       "tag": true,
       "push": true
     }
-  }
+  },
+  "nxCloudId": "680680b4fd4eb5799867a98a"
 }

@@ -72,7 +72,8 @@ const commitlintConfig: UserConfig = {
         "client", // maiar client app
         "starter", // maiar starter app
         "website", // maiar docs website app
-        "nx" // nx related changes
+        "nx", // nx related changes
+        "docker" // docker related changes
       ]
     ],
     "header-max-length": [0],

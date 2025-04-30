@@ -1,0 +1,6 @@
+**/.nx
+**/dist
+**/node_modules
+**/logs
+**/.env
+**/README.md

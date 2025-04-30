@@ -45,7 +45,14 @@
     "nx:reset": "nx reset",
     "nx:graph": "nx graph",
     "nx:release": "nx release --verbose",
-    "nx:publish": "nx release publish --verbose"
+    "nx:publish": "nx release publish --verbose",
+    "docker:build": "docker build -t maiar-agent -f Dockerfile .",
+    "docker:run": "docker container run -d --name maiar-agent -e NODE_ENV=development --env-file apps/starter/.env -v ./apps/starter/data:/app/apps/starter/data -p 3000:3000 maiar-agent",
+    "docker:clean": "docker container stop maiar-agent 2>/dev/null || true && docker container rm maiar-agent 2>/dev/null || true && docker image rm maiar-agent:latest 2>/dev/null || true && docker image prune -f && echo '✨ Cleanup complete'",
+    "docker:logs": "docker logs maiar-agent -f",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:clogs": "docker compose logs -f"
   },
   "devDependencies": {
     "@commitlint/cli": "19.6.1",

@@ -1,0 +1,24 @@
+---
+services:
+  maiar-agent:
+    image: maiar-agent
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maiar-agent
+    ports:
+      - "3000:3000"
+    env_file:
+      - apps/starter/.env
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    volumes:
+      - ./apps/starter/data:/app/apps/starter/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

@@ -11,13 +11,12 @@ on:
         options:
           - latest
           - next
-
-  push:
-    tags:
-      - "v*.*.*" # stable
-      - "v*.*.*-alpha.*" # alpha prerelease
-      - "v*.*.*-beta.*" # beta prerelease
-      - "v*.*.*-rc.*" # rc prerelease
+  # push:
+  #   tags:
+  #     - "v*.*.*" # stable
+  #     - "v*.*.*-alpha.*" # alpha prerelease
+  #     - "v*.*.*-beta.*" # beta prerelease
+  #     - "v*.*.*-rc.*" # rc prerelease
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -1,19 +1,19 @@
 // @ts-expect-error hyperfy is not typed
-import { createEmoteFactory } from "hyperfy/src/core/extras/createEmoteFactory";
-// @ts-expect-error hyperfy is not typed
-import { createNode } from "hyperfy/src/core/extras/createNode";
-// @ts-expect-error hyperfy is not typed
-import { createVRMFactory } from "hyperfy/src/core/extras/createVRMFactory";
-// @ts-expect-error hyperfy is not typed
-import { glbToNodes } from "hyperfy/src/core/extras/glbToNodes";
-// @ts-expect-error hyperfy is not typed
-import { GLTFLoader } from "hyperfy/src/core/libs/gltfloader/GLTFLoader";
-// @ts-expect-error hyperfy is not typed (Node is likely their base class for scene objects)
-import { Node as HyperfyNodeActual } from "hyperfy/src/core/nodes/Node";
-// @ts-expect-error hyperfy is not typed
-import { System } from "hyperfy/src/core/systems/System";
 import * as THREE from "three";
 
+import { createEmoteFactory } from "../hyperfy/core/extras/createEmoteFactory";
+// @ts-expect-error hyperfy is not typed
+import { createNode } from "../hyperfy/core/extras/createNode";
+// @ts-expect-error hyperfy is not typed
+import { createVRMFactory } from "../hyperfy/core/extras/createVRMFactory";
+// @ts-expect-error hyperfy is not typed
+import { glbToNodes } from "../hyperfy/core/extras/glbToNodes.js";
+// @ts-expect-error hyperfy is not typed
+import { GLTFLoader } from "../hyperfy/core/libs/gltfloader/GLTFLoader.js";
+// @ts-expect-error hyperfy is not typed (Node is likely their base class for scene objects)
+import { Node as HyperfyNodeActual } from "../hyperfy/core/nodes/Node.js";
+// @ts-expect-error hyperfy is not typed
+import { System } from "../hyperfy/core/systems/System.js";
 import { AgentAvatar, AvatarFactory } from "./avatar";
 
 // import { VRMLoaderPlugin } from "@pixiv/three-vrm";

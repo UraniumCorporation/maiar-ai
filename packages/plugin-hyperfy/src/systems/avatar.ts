@@ -1,7 +1,8 @@
 // @ts-expect-error hyperfy is not typed
-import { Node } from "hyperfy/src/core/nodes/Node";
 import { isString } from "lodash-es";
 import * as THREE from "three";
+
+import { Node } from "../hyperfy/core/nodes/Node";
 
 const defaults = {
   src: null as string | null,

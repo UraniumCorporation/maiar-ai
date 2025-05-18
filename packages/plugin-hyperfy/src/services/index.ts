@@ -1,13 +1,13 @@
 // Main service for interacting with Hyperfy worlds
 // @ts-expect-error hyperfy is not typed
-import { loadPhysX } from "hyperfy/src/core/loadPhysX.js";
-// @ts-expect-error hyperfy is not typed
-import { createNodeClientWorld } from "hyperfy/src/node-client/index.js";
 import { Quaternion, Vector3 } from "three";
 
 import { PluginResult, Runtime } from "@maiar-ai/core";
 import { Logger as MaiarLogger } from "@maiar-ai/core/dist/logger";
 
+import { loadPhysX } from "../hyperfy/core/loadPhysX.js";
+// @ts-expect-error hyperfy is not typed
+import { createNodeClientWorld } from "../hyperfy/index.js";
 // --- Managers ---
 import { BehaviorManager } from "../managers/behavior-manager";
 import { EmoteManager } from "../managers/emote-manager";

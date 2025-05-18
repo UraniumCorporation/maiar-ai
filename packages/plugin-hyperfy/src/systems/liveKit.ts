@@ -10,11 +10,11 @@ import {
   TrackPublishOptions,
   TrackSource
 } from "@livekit/rtc-node";
-// @ts-expect-error hyperfy is not typed
-import { System } from "hyperfy/src/core/systems/System";
 import { spawn } from "node:child_process";
 import EventEmitter from "node:events";
 
+// @ts-expect-error hyperfy is not typed
+import { System } from "../hyperfy/core/systems/System.js";
 import { HyperfySDKWorld } from "../types";
 
 export interface LiveKitInitOptions {

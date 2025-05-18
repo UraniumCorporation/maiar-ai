@@ -1,10 +1,10 @@
 import { logger } from "@elizaos/core";
-// @ts-expect-error hyperfy is not typed
-import { Vector3Enhanced } from "hyperfy/src/core/extras/Vector3Enhanced";
-// @ts-expect-error hyperfy is not typed
-import { System } from "hyperfy/src/core/systems/System";
 import * as THREE from "three";
 
+// @ts-expect-error hyperfy is not typed
+import { Vector3Enhanced } from "../hyperfy/core/extras/Vector3Enhanced.js";
+// @ts-expect-error hyperfy is not typed
+import { System } from "../hyperfy/core/systems/System.js";
 import { HyperfySDKWorld } from "../types";
 
 const FORWARD = new THREE.Vector3(0, 0, -1);

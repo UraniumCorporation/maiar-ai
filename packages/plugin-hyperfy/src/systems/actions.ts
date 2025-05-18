@@ -1,7 +1,7 @@
 // @ts-expect-error hyperfy is not typed
-import { System } from "hyperfy/src/core/systems/System";
 import * as THREE from "three";
 
+import { System } from "../hyperfy/core/systems/System.js";
 import { HyperfySDKWorld } from "../types";
 
 // Define a more specific type for the controls property within this file's world context

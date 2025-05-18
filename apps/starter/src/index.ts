@@ -39,6 +39,17 @@ import { TextGenerationPlugin } from "@maiar-ai/plugin-text";
 import { TimePlugin } from "@maiar-ai/plugin-time";
 
 import { CharacterPlugin } from "../../../packages/plugin-character/dist";
+import {
+  gotoCoordinatesExecutor,
+  gotoEntityExecutor,
+  hyperfyChatMessageTrigger,
+  HyperfyPlugin,
+  playEmoteExecutor,
+  sendChatMessageExecutor,
+  stopActionExecutor,
+  useItemExecutor,
+  walkRandomlyExecutor
+} from "../../../packages/plugin-hyperfy";
 
 // Suppress deprecation warnings
 process.removeAllListeners("warning");
@@ -91,6 +102,20 @@ async function main() {
     }),
     new CharacterPlugin({
       character: readFileSync(join(process.cwd(), "character.xml"), "utf-8")
+    }),
+    new HyperfyPlugin({
+      wsUrl: process.env.HYPERFY_WS_URL || "wss://chill.hyperfy.xyz/ws",
+      defaultPlayerName: "MaiarAgent",
+      executorFactories: [
+        sendChatMessageExecutor,
+        gotoEntityExecutor,
+        walkRandomlyExecutor,
+        playEmoteExecutor,
+        useItemExecutor,
+        stopActionExecutor,
+        gotoCoordinatesExecutor
+      ],
+      triggerFactories: [hyperfyChatMessageTrigger]
     })
   ];
 

@@ -37,43 +37,55 @@ export class HyperfyPlugin extends Plugin {
   }
 
   public async init(): Promise<void> {
-    if (!this.runtime || !this.logger) {
-      console.error(
-        "HyperfyPlugin: Runtime or Logger not available during init. Ensure base Plugin sets these properties."
-      );
-      throw new Error("Runtime or Logger not initialized for HyperfyPlugin.");
-    }
-    const logger = this.logger as MaiarLogger;
+    (async () => {
+      // while this.runtime is not set, we can't do anything
+      while (true) {
+        let hasRuntime = false;
+        try {
+          hasRuntime = !!this.runtime;
+        } catch (error) {
+          console.error("Error checking runtime:", error);
+        }
 
-    this.hyperfyService = new HyperfyService(
-      {
-        wsUrl: this.pluginConfig.wsUrl,
-        authToken: this.pluginConfig.authToken,
-        defaultAvatarUrl: this.pluginConfig.defaultAvatarUrl,
-        defaultPlayerName: this.pluginConfig.defaultPlayerName,
-        agentId: this.pluginConfig.agentId,
-        pluginId: this.id // this.id from base Plugin class
-      },
-      this.runtime // Pass runtime as the second argument
-    );
+        if (hasRuntime) {
+          break;
+        }
 
-    try {
-      logger.info("Initializing Hyperfy plugin logic...");
-      if (!this.hyperfyService.isConnected()) {
-        await this.hyperfyService.connect();
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      logger.info("Hyperfy plugin service connected.");
 
-      this.registerExecutors();
-      this.registerTriggers();
-      logger.info("Hyperfy plugin fully initialized.");
-    } catch (error) {
-      logger.error(
-        "Error during Hyperfy plugin specific initialization:",
-        error
+      const logger = this.logger as MaiarLogger;
+
+      this.hyperfyService = new HyperfyService(
+        {
+          wsUrl: this.pluginConfig.wsUrl,
+          authToken: this.pluginConfig.authToken,
+          defaultAvatarUrl: this.pluginConfig.defaultAvatarUrl,
+          defaultPlayerName: this.pluginConfig.defaultPlayerName,
+          agentId: this.pluginConfig.agentId,
+          pluginId: this.id // this.id from base Plugin class
+        },
+        this.runtime // Pass runtime as the second argument
       );
-      throw error;
-    }
+
+      try {
+        logger.info("Initializing Hyperfy plugin logic...");
+        if (!this.hyperfyService.isConnected()) {
+          await this.hyperfyService.connect();
+        }
+        logger.info("Hyperfy plugin service connected.");
+
+        this.registerExecutors();
+        this.registerTriggers();
+        logger.info("Hyperfy plugin fully initialized.");
+      } catch (error) {
+        logger.error(
+          "Error during Hyperfy plugin specific initialization:",
+          error
+        );
+        throw error;
+      }
+    })();
   }
 
   public async shutdown(): Promise<void> {

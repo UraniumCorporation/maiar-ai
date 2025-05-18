@@ -33,7 +33,7 @@ class LocalStorage {
 
 class NodeStorage {
   constructor() {
-    const dirname = path.dirname(fileURLToPath(import.meta.url));
+    const dirname = __dirname;
     const rootDir = path.join(dirname, "../");
     this.file = path.join(rootDir, "localstorage.json");
     try {
@@ -73,18 +73,6 @@ class NodeStorage {
   }
 }
 
-const isBrowser = typeof window !== "undefined";
-const isNode =
-  typeof process !== "undefined" && process.versions && process.versions.node;
-
-let storage;
-
-if (isBrowser) {
-  storage = new LocalStorage(); // todo: some browser environments (eg safari incognito) have no local storage so we need a MemoryStorage fallback
-} else if (isNode) {
-  storage = new NodeStorage();
-} else {
-  console.warn("no storage");
-}
+let storage = new NodeStorage();
 
 export { storage };

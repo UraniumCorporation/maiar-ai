@@ -56,7 +56,10 @@ export class OpenAIModelProvider extends ModelProvider {
       name: PROVIDER_NAME,
       description: PROVIDER_DESCRIPTION
     });
-    this.client = new OpenAI({ apiKey: config.apiKey });
+    this.client = new OpenAI({
+      apiKey: config.apiKey,
+      dangerouslyAllowBrowser: true
+    });
     this.models = config.models;
 
     if (this.models.some((m) => TEXT_MODELS.has(m))) {

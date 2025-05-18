@@ -1,10 +1,10 @@
 // Main service for interacting with Hyperfy worlds
-// @ts-expect-error hyperfy is not typed
 import { Quaternion, Vector3 } from "three";
 
 import { PluginResult, Runtime } from "@maiar-ai/core";
 import { Logger as MaiarLogger } from "@maiar-ai/core/dist/logger";
 
+// @ts-expect-error hyperfy is not typed
 import { loadPhysX } from "../hyperfy/core/loadPhysX.js";
 // @ts-expect-error hyperfy is not typed
 import { createNodeClientWorld } from "../hyperfy/index.js";
@@ -923,6 +923,7 @@ ${entityLines.join("\n")}`;
           isInteractable?: boolean;
         };
       }; // Assuming SDK exposes current player this way
+
       if (sdkPlayer && this._agentMaiarState && this._agentPlayerIdFromSDK) {
         const sdkPos = sdkPlayer.base?.position;
         const sdkRot = sdkPlayer.base?.quaternion;

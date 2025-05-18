@@ -4612,15 +4612,9 @@ var PhysX = (() => {
 
     // include: runtime_exceptions.js
     // end include: runtime_exceptions.js
-    var wasmBinaryFile;
-    if (Module["locateFile"]) {
-      wasmBinaryFile = "physx-js-webidl.wasm";
-      if (!isDataURI(wasmBinaryFile)) {
-        wasmBinaryFile = locateFile(wasmBinaryFile);
-      }
-    } else {
-      // Use bundler-friendly `new URL(..., import.meta.url)` pattern; works in browsers too.
-      wasmBinaryFile = new URL("physx-js-webidl.wasm", import.meta.url).href;
+    var wasmBinaryFile = "physx-js-webidl.wasm";
+    if (!isDataURI(wasmBinaryFile)) {
+      wasmBinaryFile = locateFile(wasmBinaryFile);
     }
 
     function getBinarySync(file) {

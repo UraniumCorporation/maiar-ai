@@ -1,6 +1,6 @@
-// @ts-expect-error hyperfy is not typed
 import * as THREE from "three";
 
+// @ts-expect-error hyperfy is not typed
 import { createEmoteFactory } from "../hyperfy/core/extras/createEmoteFactory";
 // @ts-expect-error hyperfy is not typed
 import { createNode } from "../hyperfy/core/extras/createNode";

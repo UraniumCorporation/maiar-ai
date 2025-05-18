@@ -1,10 +1,10 @@
-// @ts-expect-error hyperfy is not typed
 import { Euler, Quaternion, Vector3 } from "three";
 import { z } from "zod";
 
 import { Executor, PluginResult, Runtime, Trigger } from "@maiar-ai/core";
 import { Logger as MaiarLogger } from "@maiar-ai/core/dist/logger";
 
+// @ts-expect-error hyperfy is not typed
 import { System } from "./hyperfy/core/systems/System.js";
 import { HyperfyService } from "./services";
 

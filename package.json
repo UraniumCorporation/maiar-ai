@@ -25,7 +25,6 @@
     "prepare": "husky",
     "prepublishOnly": "pnpm build",
     "start": "nx start apps/starter --verbose",
-    "start:hyperfy": "nx start apps/hyperfy-agent --verbose",
     "dev": "pnpm run build && date +%s > .build-complete && chokidar 'packages/**/*.ts' --ignore 'packages/**/dist/**' -c 'pnpm run build && date +%s > .build-complete'",
     "dev:client": "cd apps/client && pnpm run dev",
     "dev:starter": "cd apps/starter && pnpm run dev",

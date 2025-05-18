@@ -39,7 +39,7 @@
   "scripts": {
     "dev": "tsup --config ../../tsup.config.base.ts --watch",
     "typecheck": "tsc --project tsconfig.json --noEmit",
-    "build": "tsup --config ../../tsup.config.base.ts",
+    "build": "tsup --config ../../tsup.config.base.ts && cp src/physx/physx-js-webidl.wasm dist/physx-js-webidl.wasm",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },

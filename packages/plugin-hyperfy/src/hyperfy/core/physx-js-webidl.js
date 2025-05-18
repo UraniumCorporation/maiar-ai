@@ -1,5 +1,5 @@
 var PhysX = (() => {
-  var _scriptDir = import.meta.url;
+  var _scriptDir = __dirname;
 
   return async function (moduleArg = {}) {
     // include: shell.js
@@ -3866,28 +3866,10 @@ var PhysX = (() => {
         );
       }
 
-      // `require()` is no-op in an ESM module, use `createRequire()` to construct
-      // the require()` function.  This is only necessary for multi-environment
-      // builds, `-sENVIRONMENT=node` emits a static import declaration instead.
-      // TODO: Swap all `require()`'s with `import()`'s?
-      const { createRequire } = await import("module");
-      /** @suppress{duplicate} */
-      var require = createRequire(import.meta.url);
-      // These modules will usually be used on Node.js. Load them eagerly to avoid
-      // the complexity of lazy-loading.
-      var fs = require("fs");
-      var nodePath = require("path");
+      const fs = (await import("fs")).default;
+      const nodePath = (await import("path")).default;
 
-      if (ENVIRONMENT_IS_WORKER) {
-        scriptDirectory = nodePath.dirname(scriptDirectory) + "/";
-      } else {
-        // EXPORT_ES6 + ENVIRONMENT_IS_NODE always requires use of import.meta.url,
-        // since there's no way getting the current absolute path of the module when
-        // support for that is not available.
-        scriptDirectory = require("url").fileURLToPath(
-          new URL("./", import.meta.url)
-        ); // includes trailing slash
-      }
+      scriptDirectory = nodePath.dirname(scriptDirectory) + "/";
 
       // include: node_shell_read.js
       read_ = (filename, binary) => {
@@ -4610,17 +4592,16 @@ var PhysX = (() => {
       };
     }
 
-    // include: runtime_exceptions.js
-    // end include: runtime_exceptions.js
-    var wasmBinaryFile;
-    if (Module["locateFile"]) {
-      wasmBinaryFile = "physx-js-webidl.wasm";
-      if (!isDataURI(wasmBinaryFile)) {
-        wasmBinaryFile = locateFile(wasmBinaryFile);
-      }
-    } else {
-      // Use bundler-friendly `new URL(..., import.meta.url)` pattern; works in browsers too.
-      wasmBinaryFile = new URL("physx-js-webidl.wasm", import.meta.url).href;
+    var wasmBinaryFile = __dirname + "/physx-js-webidl.wasm";
+    if (!isDataURI(wasmBinaryFile)) {
+      wasmBinaryFile = locateFile(wasmBinaryFile);
+    }
+
+    console.log("wasmBinaryFile", wasmBinaryFile);
+
+    // if wasmBinaryFile starts with ./, remove it
+    if (wasmBinaryFile.startsWith("./")) {
+      wasmBinaryFile = wasmBinaryFile.slice(2);
     }
 
     function getBinarySync(file) {

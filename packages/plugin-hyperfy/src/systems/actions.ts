@@ -1,6 +1,6 @@
-// @ts-expect-error hyperfy is not typed
 import * as THREE from "three";
 
+// @ts-expect-error hyperfy is not typed
 import { System } from "../hyperfy/core/systems/System.js";
 import { HyperfySDKWorld } from "../types";
 

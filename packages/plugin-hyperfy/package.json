@@ -1,0 +1,65 @@
+{
+  "name": "@maiar-ai/plugin-hyperfy",
+  "version": "0.24.0-alpha.0",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Maiar: A Composable, Plugin-Based AI Agent Framework",
+  "keywords": [
+    "ai",
+    "agent",
+    "framework",
+    "plugin",
+    "hyperfy"
+  ],
+  "author": "UraniumCorporation <contact@maiar.dev> (https://maiar.dev)",
+  "license": "MIT",
+  "homepage": "https://maiar.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UraniumCorporation/maiar-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/UraniumCorporation/maiar-ai/issues"
+  },
+  "scripts": {
+    "dev": "tsup --config ../../tsup.config.base.ts --watch",
+    "typecheck": "tsc --project tsconfig.json --noEmit false",
+    "build": "tsup --config ../../tsup.config.base.ts",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "@livekit/rtc-node": "^0.13.13",
+    "@maiar-ai/core": "workspace:*",
+    "@types/lodash-es": "^4.17.12",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
+    "hyperfy": "github:hyperfy-xyz/hyperfy#dev",
+    "lodash-es": "^4.17.21",
+    "three": "^0.176.0",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.2",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.1",
+    "@types/three": "^0.176.0",
+    "tsup": "8.3.6",
+    "typescript": "5.7.3"
+  }
+}

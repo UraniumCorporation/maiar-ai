@@ -3,7 +3,7 @@ import { ZodError, ZodSchema } from "zod";
 import { AgentTask, Executor, PluginResult, Runtime } from "@maiar-ai/core";
 import * as maiarLogger from "@maiar-ai/core/dist/logger";
 
-import { generateHyperfyTargetEntitySelectionTemplate } from "./templates";
+import { generateHyperfyTargetEntitySelectionTemplate } from "./templates.js";
 import {
   HyperfyChatSchema,
   HyperfyEmoteSchema,
@@ -15,7 +15,7 @@ import {
   HyperfyUseItemSchema,
   HyperfyWalkRandomlySchema,
   IHyperfyService
-} from "./types";
+} from "./types.js";
 
 /**
  * Helper to create a Hyperfy executor with name, description, input schema, and execute function.
@@ -32,9 +32,8 @@ export function hyperfyExecutorFactory(
     params: unknown | null
   ) => Promise<PluginResult>
 ): HyperfyExecutorFactory {
-  const logger = maiarLogger.default.child({
-    scope: `plugin-hyperfy`
-  });
+  // @ts-expect-error error
+  const logger = console;
 
   return (service: IHyperfyService, getRuntime: () => Runtime): Executor => ({
     name,
@@ -120,7 +119,13 @@ export function hyperfyExecutorFactory(
       }
 
       try {
-        return await execute(task, service, runtime, logger, params);
+        return await execute(
+          task,
+          service,
+          runtime,
+          logger as unknown as maiarLogger.Logger,
+          params
+        );
       } catch (executionError) {
         const errorMessage =
           executionError instanceof Error
@@ -165,7 +170,9 @@ export const sendChatMessageExecutor = hyperfyExecutorFactory(
         `Executing hyperfy_send_chat_message with message: "${typedParams.message}"`,
         { params: typedParams }
       );
-      await service.sendChat(typedParams.message);
+      if (service.sendChat) {
+        await service.sendChat(typedParams.message);
+      }
       return {
         success: true,
         data: { message: typedParams.message, status: "sent" }
@@ -198,9 +205,14 @@ export const gotoEntityExecutor = hyperfyExecutorFactory(
 
         const allEntities = await service.getAllKnownEntities();
         const availableEntitiesString = allEntities
-          .filter((e) => e.id !== agentState?.id)
+          .filter((e: { id: string }) => e.id !== agentState?.id)
           .map(
-            (e) =>
+            (e: {
+              name?: string;
+              id: string;
+              type?: string;
+              position?: { x: number; y: number; z: number };
+            }) =>
               `- ${e.name || "Unnamed Entity"} (ID: ${e.id}, Type: ${e.type || "unknown"})${e.position ? `, Pos: (${e.position.x.toFixed(1)}, ${e.position.y.toFixed(1)}, ${e.position.z.toFixed(1)})` : ""}`
           )
           .join("\n");

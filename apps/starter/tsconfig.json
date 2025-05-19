@@ -3,9 +3,10 @@
     /* Visit https://aka.ms/tsconfig to read more about this file */
     /* Using Typescript 5.7.3 (tsc --init) default configurations */
     /* Language and Environment */
-    "target": "ES2016" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "target": "ES2022" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
     /* Modules */
-    "module": "CommonJS" /* Specify what module code is generated. */,
+    "module": "NodeNext" /* Specify what module code is generated. */,
+    "moduleResolution": "NodeNext" /* Specify how TypeScript looks up files from modules. */,
     /* Emit */
     "sourceMap": true /* Create source map files for emitted JavaScript files. */,
     "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */,

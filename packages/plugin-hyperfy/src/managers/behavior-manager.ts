@@ -1,28 +1,26 @@
-import { Runtime } from "@maiar-ai/core";
+import { Context, Runtime, Space } from "@maiar-ai/core";
 import { Logger as MaiarLogger } from "@maiar-ai/core/dist/logger";
 
-import { generateHyperfyAutoTemplate } from "../templates";
+import { generateHyperfyAutoTemplate } from "../templates.js";
 import {
   HYPERFY_EMOTE_NAMES,
   HYPERFY_EXECUTOR_ACTION_NAMES,
   HyperfyActionDecisionSchema,
   HyperfyPluginConfig,
   IHyperfyService
-} from "../types";
-import { agentActivityLock } from "./guards";
+} from "../types.js";
+import { agentActivityLock } from "./guards.js";
+
+// Assuming createUniqueId is a utility you have or can import if needed for room IDs
+// For now, we'll construct a room ID based on world ID.
+// import { createUniqueId } from '@maiar-ai/core/utils'; // Example import path
 
 const TIME_INTERVAL_MIN = 15000; // 15 seconds
 const TIME_INTERVAL_MAX = 30000; // 30 seconds
 
-// Define a more specific type for the payload if its structure is known
-// For now, using Record<string, unknown> for generic object payloads
 type TaskPayload = Record<string, unknown>;
 
-// Basic EventEmitter interface for runtime.emit typing
-interface BasicEventEmitter {
-  emit(eventName: string, ...args: unknown[]): boolean; // Use unknown[] for args
-  // Define other common methods like on, off, once if runtime is expected to have them
-}
+// BasicEventEmitter interface removed as it's not the correct approach
 
 export class BehaviorManager {
   private isRunning: boolean = false;
@@ -40,9 +38,8 @@ export class BehaviorManager {
     this.service = hyperfyService;
     this.runtime = runtime;
     this.pluginConfig = pluginConfig;
-    this.logger = runtime.logger.child({
-      scope: "BehaviorManager"
-    }) as MaiarLogger;
+    // @ts-expect-error console
+    this.logger = console;
   }
 
   public start(): void {
@@ -114,7 +111,28 @@ export class BehaviorManager {
       const agentName =
         agentState?.name || this.pluginConfig.defaultPlayerName || "Agent";
 
-      const recentMessagesString = "[]";
+      let recentMessagesString = "[]"; // Default to empty
+      const currentWorldId = this.service.getCurrentWorldId();
+      if (currentWorldId && this.service.getMessageManager()) {
+        try {
+          // Construct a simple room ID based on world ID for fetching messages.
+          // This might need to align with how room IDs are handled in MessageManager.handleMessage
+          const roomId = `hyperfy-world-${currentWorldId}`;
+          recentMessagesString =
+            (await this.service
+              .getMessageManager()
+              .getRecentMessages(roomId)) || "[]";
+        } catch (msgError) {
+          this.logger.warn(
+            "[BehaviorManager] Could not fetch recent messages:",
+            msgError
+          );
+        }
+      } else {
+        this.logger.warn(
+          "[BehaviorManager] Cannot fetch recent messages: currentWorldId or MessageManager is unavailable."
+        );
+      }
 
       const worldStateResult = await this.service.getFormattedWorldState();
       const emoteListResult = await this.service.getFormattedEmoteList();
@@ -152,102 +170,82 @@ ${recentMessagesString}
       }
       this.logger.info("[BehaviorManager] LLM Autonomous Decision:", decision);
 
-      const agentIdToUse =
-        this.pluginConfig.pluginId ||
-        this.pluginConfig.agentId ||
-        "unknown_agent";
+      // const agentIdToUse = // Not used in direct service calls
+      //   this.pluginConfig.pluginId ||
+      //   this.pluginConfig.agentId ||
+      //   "unknown_agent";
 
-      const runtimeEmitter = this.runtime as unknown as BasicEventEmitter;
+      // runtimeEmitter removed
+      const RANDOM_WALK_DEFAULT_INTERVAL = 4000; // ms
+      const RANDOM_WALK_DEFAULT_MAX_DISTANCE = 30; // meters
 
       if (decision.actions && decision.actions.length > 0) {
         for (const actionName of decision.actions) {
-          const payload: TaskPayload = {}; // Use defined TaskPayload type
-          const taskEventObject = {
-            type: "task",
-            agentId: agentIdToUse,
-            executorName: actionName, // Will be updated in switch
-            payload: payload, // Initialize with empty payload
-            trigger: {
-              name: "behavior_manager_decision",
-              content: decision
-            }
-          };
+          // const payload: TaskPayload = {}; // Payload construction might differ per action
 
           switch (actionName) {
             case "REPLY":
-              if (decision.text) {
-                taskEventObject.executorName = "hyperfy_send_chat_message";
-                taskEventObject.payload = { message: decision.text };
-                this.logger.info(
-                  `[BehaviorManager] Preparing task for ${taskEventObject.executorName} with text: "${decision.text}"`
-                );
-              } else {
-                this.logger.warn(
-                  "[BehaviorManager] 'REPLY' action chosen but no text provided. Skipping task."
-                );
-                continue;
-              }
-              break;
             case "hyperfy_send_chat_message":
               if (decision.text) {
-                taskEventObject.payload = { message: decision.text };
                 this.logger.info(
-                  `[BehaviorManager] Preparing task for ${actionName} with text: "${decision.text}"`
+                  `[BehaviorManager] Executing action ${actionName} with text: "${decision.text}"`
                 );
+                await this.service
+                  .getMessageManager()
+                  .sendMessage(decision.text);
               } else {
                 this.logger.warn(
-                  `[BehaviorManager] Action '${actionName}' chosen but no text provided. Skipping task.`
+                  `[BehaviorManager] Action '${actionName}' chosen but no text provided. Skipping.`
                 );
-                continue;
               }
               break;
             case "hyperfy_walk_randomly":
-              taskEventObject.payload = { command: "start" }; // This matches HyperfyWalkRandomlySchema
               this.logger.info(
-                `[BehaviorManager] Preparing task for ${actionName} with command 'start'.`
+                `[BehaviorManager] Executing action ${actionName}.`
+              );
+              // Default interval and distance from original action definition might be needed
+              // These values are from original.md -> actions/walk_randomly.ts
+              this.service.startRandomWalk(
+                RANDOM_WALK_DEFAULT_INTERVAL,
+                RANDOM_WALK_DEFAULT_MAX_DISTANCE
               );
               break;
             case "hyperfy_goto_entity":
-              this.logger.info(
-                `[BehaviorManager] Preparing task for ${actionName}. Executor will select target entity.`
+              this.logger.warn(
+                `[BehaviorManager] Action '${actionName}' requires a target. The current decision schema does not provide one. This action should be invoked via a Maiar runtime mechanism that calls the registered action handler in 'actions/goto.ts', which includes logic for target selection.`
               );
-              // Payload remains empty as per executor logic
-              taskEventObject.payload = {}; // Matches HyperfyGotoEntitySchema (optional entityId)
+              // Placeholder: Ideally, trigger the registered Maiar action.
+              // Example: await this.runtime.executeAction(actionName, { decision });
+              // For now, we can't directly call controls.goto(x,z) without x,z.
+              // If the decision object were to contain entityId or target coordinates:
+              // if (decision.targetEntityId) {
+              //   const pos = this.service.getEntityPosition(decision.targetEntityId);
+              //   if (pos) this.service.getWorld()?.controls?.goto(pos.x, pos.z);
+              // } else if (decision.targetCoordinates) {
+              //   this.service.getWorld()?.controls?.goto(decision.targetCoordinates.x, decision.targetCoordinates.z);
+              // }
               break;
             case "IGNORE":
               this.logger.info(
-                "[BehaviorManager] Autonomous action: IGNORE. No task dispatched."
+                "[BehaviorManager] Autonomous action: IGNORE. No action taken."
               );
-              continue;
+              continue; // Explicitly continue to next action or finish
             default:
               if (
-                !(HYPERFY_EXECUTOR_ACTION_NAMES as readonly string[]).includes(
+                (HYPERFY_EXECUTOR_ACTION_NAMES as readonly string[]).includes(
                   actionName
                 )
               ) {
                 this.logger.warn(
-                  `[BehaviorManager] LLM decided on an unknown or unhandled action in switch: ${actionName}. Skipping task.`
+                  `[BehaviorManager] Action '${actionName}' is a known executor action but not handled directly here. It should be invoked via a Maiar runtime mechanism that calls its registered action handler.`
                 );
-                continue;
+                // Placeholder: await this.runtime.executeAction(actionName, { decision });
+              } else {
+                this.logger.warn(
+                  `[BehaviorManager] LLM decided on an unknown or unhandled action: ${actionName}. Skipping.`
+                );
               }
-              taskEventObject.executorName = actionName;
-              // Generic payload, specific executors might expect certain fields if not covered by their schemas
-              taskEventObject.payload = {};
-              this.logger.info(
-                `[BehaviorManager] Preparing generic task for action ${actionName}.`
-              );
               break;
-          }
-          // Ensure runtime.emit exists and is correctly typed if possible, or use 'as any' as a last resort.
-          if (typeof runtimeEmitter.emit === "function") {
-            await runtimeEmitter.emit("createTask", taskEventObject);
-            this.logger.info(
-              `[BehaviorManager] Dispatched task for ${taskEventObject.executorName}`
-            );
-          } else {
-            this.logger.error(
-              "[BehaviorManager] runtime.emit is not a function. Cannot dispatch task."
-            );
           }
         }
       }
@@ -256,27 +254,43 @@ ${recentMessagesString}
         decision.emote &&
         (HYPERFY_EMOTE_NAMES as readonly string[]).includes(decision.emote)
       ) {
-        const emoteTaskEventObject = {
-          type: "task",
-          agentId: agentIdToUse,
-          executorName: "hyperfy_play_emote",
-          payload: { emoteName: decision.emote } as TaskPayload, // Cast to TaskPayload
-          trigger: {
-            name: "behavior_manager_decision",
-            content: decision
+        this.logger.info(
+          `[BehaviorManager] Requesting to play emote via runtime: "${decision.emote}"`
+        );
+        // Create an AgentTask for the hyperfy_play_emote executor
+        const triggerContext: Context = {
+          id: `behavior-emote-${Date.now()}`,
+          pluginId: this.pluginConfig.pluginId || "plugin-hyperfy",
+          content: `Agent decision: Play emote '${decision.emote}'`, // Simple string for content
+          timestamp: Date.now(),
+          helpfulInstruction: "Autonomous agent decision to play an emote.",
+          metadata: {
+            source: "behavior-manager",
+            action: "hyperfy_play_emote",
+            params: { emoteName: decision.emote } // <<< Parameters moved to metadata.params
+          }
+        } satisfies Context;
+
+        // Define a space, e.g., related to the agent or world
+        const spaceId = `hyperfy-agent-${this.service.getAgentPlayerId() || "unknown"}-action`;
+        const space: Space = {
+          id: spaceId,
+          relatedSpaces: {
+            prefix: `hyperfy-world-${this.service.getCurrentWorldId()}`
           }
         };
-        this.logger.info(
-          `[BehaviorManager] Preparing task for hyperfy_play_emote: "${decision.emote}"`
-        );
-        if (typeof runtimeEmitter.emit === "function") {
-          await runtimeEmitter.emit("createTask", emoteTaskEventObject);
+
+        try {
+          // Use createEvent to let the runtime dispatch to the correct executor
+          // We assume the hyperfy_play_emote executor is registered and will be matched.
+          await this.runtime.createEvent(triggerContext, space);
           this.logger.info(
-            `[BehaviorManager] Dispatched task for hyperfy_play_emote`
+            `[BehaviorManager] Event created for emote: "${decision.emote}"`
           );
-        } else {
+        } catch (e) {
           this.logger.error(
-            "[BehaviorManager] runtime.emit is not a function. Cannot dispatch emote task."
+            `[BehaviorManager] Error creating event for emote: "${decision.emote}"`,
+            e
           );
         }
       } else if (decision.emote) {

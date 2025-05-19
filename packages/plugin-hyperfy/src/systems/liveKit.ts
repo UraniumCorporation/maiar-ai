@@ -14,8 +14,8 @@ import { spawn } from "node:child_process";
 import EventEmitter from "node:events";
 
 // @ts-expect-error hyperfy is not typed
-import { System } from "../hyperfy/core/systems/System.js";
-import { HyperfySDKWorld } from "../types";
+import { System } from "../../hyperfy/src/core/systems/System.js";
+import { HyperfyWorld } from "../types.js";
 
 export interface LiveKitInitOptions {
   wsUrl: string;
@@ -26,9 +26,9 @@ export class AgentLiveKit extends System {
   private room: Room | null = null;
   private audioSource: AudioSource | null = null;
   private localTrack: LocalAudioTrack | null = null;
-  public world: HyperfySDKWorld; // Added world property
+  public world: HyperfyWorld; // Added world property
 
-  constructor(world: HyperfySDKWorld) {
+  constructor(world: HyperfyWorld) {
     super(world);
     this.world = world; // Initialize world
   }

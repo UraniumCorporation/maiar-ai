@@ -2,12 +2,12 @@ import { Plugin } from "@maiar-ai/core";
 import { Logger as MaiarLogger } from "@maiar-ai/core/dist/logger";
 
 // Specific path for Logger
-import { HyperfyService } from "./services";
+import { HyperfyService } from "./services/index.js";
 import {
   HyperfyExecutorFactory,
   HyperfyPluginConfig,
   HyperfyTriggerFactory
-} from "./types";
+} from "./types.js";
 
 export class HyperfyPlugin extends Plugin {
   private pluginConfig: HyperfyPluginConfig;
@@ -106,7 +106,12 @@ export class HyperfyPlugin extends Plugin {
     const logger = this.logger as MaiarLogger;
     for (const executorFactory of this.executorFactories) {
       this.executors.push(
-        executorFactory(this.hyperfyService, () => this.runtime)
+        executorFactory(
+          this.hyperfyService,
+          () => this.runtime,
+          this.pluginConfig,
+          this.logger
+        )
       );
     }
     logger.info(`Registered ${this.executors.length} Hyperfy executors.`);

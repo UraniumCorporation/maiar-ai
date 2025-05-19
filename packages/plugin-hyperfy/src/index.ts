@@ -1,65 +1,158 @@
-// Corrected logger import path
+import "ses";
 
-export * from "./executors";
-export * from "./plugin";
-export * from "./services";
-export * from "./templates";
-export * from "./triggers";
-export * from "./types";
+import { Plugin } from "@maiar-ai/core";
 
-export { HyperfyPlugin } from "./plugin";
-export {
-  // Emote names constant if useful externally
-  HYPERFY_EMOTE_NAMES,
-  HYPERFY_EXECUTOR_ACTION_NAMES,
-  // Decision and Intent schemas for understanding LLM interaction
-  HyperfyActionDecisionSchema,
-  // Core action schemas that might be useful for external tools or understanding parameters
-  HyperfyChatSchema,
-  HyperfyEmoteSchema,
-  // Factory types for advanced customization if needed
+// Assuming Executor and Trigger types are correctly imported or defined in types or globally by Maiar
+
+import { HyperfyService } from "./services/index.js";
+// Import individual trigger and executor creation functions
+import {
   HyperfyExecutorFactory,
-  HyperfyGotoEntitySchema,
-  HyperfyGotoSchema,
-  HyperfyMessageIntentSchema,
   HyperfyPluginConfig,
-  HyperfyPluginConfigSchema,
-  HyperfyStopActionSchema,
   HyperfyTriggerFactory,
-  HyperfyUseItemSchema,
-  HyperfyWalkRandomlySchema,
-  // Add the previously problematic types here, sourced from types.ts
-  AgentWorldState,
-  HyperfyEntityInfo,
-  HyperfyMessage
-} from "./types";
+  IHyperfyService
+} from "./types.js";
 
-export {
-  gotoCoordinatesExecutor,
-  gotoEntityExecutor,
-  playEmoteExecutor,
-  sendChatMessageExecutor,
-  stopActionExecutor,
-  useItemExecutor,
-  walkRandomlyExecutor
-} from "./executors";
+// Assuming executors are exported from an index
 
-export { hyperfyChatMessageTrigger } from "./triggers";
+export class HyperfyPlugin extends Plugin {
+  private hyperfyService: IHyperfyService;
+  private config: HyperfyPluginConfig;
+  private executorFactories: HyperfyExecutorFactory[];
+  private triggerFactories: HyperfyTriggerFactory[];
 
-// Service and its related types might be useful if other systems interact with the service directly
-// or need to understand its data structures. However, direct service interaction from outside the plugin
-// is less common for typical plugin usage.
-export { HyperfyService } from "./services"; // Only HyperfyService from here
+  constructor(config: HyperfyPluginConfig) {
+    super({
+      id: config.pluginId || "plugin-hyperfy",
+      name: "Hyperfy",
+      description: "Enables agent to interact with Hyperfy worlds.",
+      requiredCapabilities: []
+    });
+    this.config = config;
+    this.executorFactories =
+      (config.executorFactories as HyperfyExecutorFactory[]) || [];
+    this.triggerFactories =
+      (config.triggerFactories as HyperfyTriggerFactory[]) || [];
 
-// Templates are generally internal to the plugin for prompting LLMs.
-// export * from "./templates";
+    // Instantiate the service but do not pass runtime yet
+    // @ts-expect-error error
+    this.hyperfyService = new HyperfyService(this.config);
+  }
 
-// Managers are internal to the plugin and service.
-// export * from "./managers/behavior-manager";
-// export * from "./managers/emote-manager";
-// export * from "./managers/message-manager";
-// export * from "./managers/voice-manager";
-// export * from "./managers/guards";
+  public async init(): Promise<void> {
+    // Defer the core initialization logic to the next event loop cycle
+    // This is a workaround if this.runtime is not available synchronously
+    // when init() is first called by the Maiar Core.
+    setTimeout(async () => {
+      if (!this.runtime) {
+        // If runtime is still not available even after deferring, log using console
+        // as this.logger would also fail.
+        console.error(
+          "[HyperfyPlugin] CRITICAL: Runtime is not available even after setTimeout(0). Aborting init."
+        );
+        // Optionally, you could emit a global error or use a specific error handling mechanism
+        // if the plugin has one that doesn't depend on this.runtime.
+        return; // Cannot proceed
+      }
+      this.logger.info(
+        "HyperfyPlugin.init() [deferred] called. Runtime is available."
+      );
 
-// Constants might be useful if they define things like action names or emote names used in schemas
-export { EMOTES_LIST } from "./constants";
+      // Now that runtime is available, set it in the service
+      // @ts-expect-error error
+      this.hyperfyService._setRuntime(this.runtime!);
+      this.logger.info("HyperfyService runtime has been set.");
+
+      try {
+        await this.hyperfyService.connect({
+          wsUrl: this.config.wsUrl,
+          authToken: this.config.authToken,
+          worldId: this.config.worldId || "default"
+        });
+        this.logger.info("HyperfyService connected successfully.");
+
+        this.registerExecutors();
+        this.registerTriggers();
+
+        // @ts-expect-error error
+        this.hyperfyService.activateSdkEventSubscriptions();
+        this.logger.info("Hyperfy SDK event subscriptions activated.");
+      } catch (error) {
+        this.logger.error(
+          "Failed to initialize or connect HyperfyPlugin [deferred]",
+          {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          }
+        );
+        // Consider how to propagate this error if init() itself has already returned
+      }
+    }, 0); // setTimeout with 0ms delay
+  }
+
+  private registerExecutors(): void {
+    if (!this.runtime) {
+      this.logger.error("Cannot register executors: Runtime is not available.");
+      return;
+    }
+    for (const factory of this.executorFactories as HyperfyExecutorFactory[]) {
+      const executor = factory(this.hyperfyService, () => this.runtime!);
+      this.executors.push(executor);
+      this.logger.info(`Registered Hyperfy executor: ${executor.name}`);
+    }
+  }
+
+  private registerTriggers(): void {
+    if (!this.runtime) {
+      this.logger.error("Cannot register triggers: Runtime is not available.");
+      return;
+    }
+    for (const factory of this.triggerFactories as HyperfyTriggerFactory[]) {
+      const trigger = factory(
+        this.hyperfyService,
+        () => this.runtime!,
+        this.config
+      );
+      this.triggers.push(trigger);
+      this.logger.info(`Registered Hyperfy trigger: ${trigger.name}`);
+      // Explicitly start the trigger if it has a start method
+      if (trigger.start && typeof trigger.start === "function") {
+        try {
+          trigger.start(); // Assuming start is synchronous or we don't need to await it here
+          this.logger.info(`Explicitly started trigger: ${trigger.name}`);
+        } catch (e) {
+          this.logger.error(
+            `Error explicitly starting trigger ${trigger.name}`,
+            e
+          );
+        }
+      } else {
+        this.logger.warn(
+          `Trigger ${trigger.name} does not have a start method or it is not a function.`
+        );
+      }
+    }
+  }
+
+  public async shutdown(): Promise<void> {
+    this.logger.info("Shutting down HyperfyPlugin...");
+    if (
+      this.hyperfyService &&
+      typeof this.hyperfyService.disconnect === "function"
+    ) {
+      await this.hyperfyService.disconnect();
+    }
+    this.logger.info("HyperfyPlugin shutdown complete.");
+  }
+
+  // Expose the service if needed by other parts of the system, though typically not public
+  public getService(): IHyperfyService {
+    return this.hyperfyService;
+  }
+}
+
+// Re-export crucial types and factories for easy import by the starter app
+export * from "./executors.js";
+export * from "./services/index.js";
+export * from "./triggers.js";
+export * from "./types.js";

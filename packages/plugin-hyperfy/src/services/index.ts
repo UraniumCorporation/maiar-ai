@@ -5,31 +5,32 @@ import { PluginResult, Runtime } from "@maiar-ai/core";
 import { Logger as MaiarLogger } from "@maiar-ai/core/dist/logger";
 
 // @ts-expect-error hyperfy is not typed
-import { loadPhysX } from "../hyperfy/core/loadPhysX.js";
+import { createNodeClientWorld } from "../../hyperfy/src/core/createNodeClientWorld.js";
 // @ts-expect-error hyperfy is not typed
-import { createNodeClientWorld } from "../hyperfy/index.js";
+import { loadPhysX } from "../../hyperfy/src/core/loadPhysX.js";
 // --- Managers ---
-import { BehaviorManager } from "../managers/behavior-manager";
-import { EmoteManager } from "../managers/emote-manager";
-import { MessageManager } from "../managers/message-manager";
+import { BehaviorManager } from "../managers/behavior-manager.js";
+import { EmoteManager } from "../managers/emote-manager.js";
+import { MessageManager } from "../managers/message-manager.js";
 // import { VoiceManager } from "../managers/voice-manager";
 // --- Local Systems (from the './systems' directory, if they are to be used) ---
-import { AgentActions } from "../systems/actions";
-import { AgentControls } from "../systems/controls";
-import { AgentLiveKit } from "../systems/liveKit";
+import { AgentActions } from "../systems/actions.js";
+import { AgentControls } from "../systems/controls.js";
+import { AgentLiveKit } from "../systems/liveKit.js";
 // Actual import from your systems directory
-import { AgentLoader } from "../systems/loader";
+import { AgentLoader } from "../systems/loader.js";
 // --- Maiar Hyperfy Plugin Specific Types ---
 import {
   AgentWorldState,
-  BasicEventEmitter,
+  // Import for playEmote
+  HyperfyEmoteName,
   HyperfyEntityInfo,
   HyperfyMessage,
   HyperfyPluginConfig,
-  HyperfySDKWorld,
+  HyperfyWorld,
   IHyperfyService,
   SDKEntity
-} from "../types";
+} from "../types.js";
 
 // Simplified MockElement
 type MockElement = {
@@ -49,14 +50,17 @@ const HYPERFY_ENTITY_UPDATE_INTERVAL = 1000;
 
 export class HyperfyService implements IHyperfyService {
   private config: HyperfyPluginConfig;
-  private runtime: Runtime;
+  private runtime: Runtime | undefined; // Make runtime optional and private
   public logger: MaiarLogger;
+  public pluginId: string | undefined;
 
   private messageHandlers: ((message: HyperfyMessage) => Promise<void>)[] = [];
   private _isConnected: boolean = false;
   private _isProcessingMessage: boolean = false;
+  private _isWorldInitialized: boolean = false; // New flag for SDK world readiness
+  private _isAgentReady: boolean = false; // New flag for SDK agent player readiness
 
-  private world: HyperfySDKWorld | null = null;
+  private world: HyperfyWorld | null = null;
   private controls: AgentControls | null = null;
   private loader: AgentLoader | null = null;
   private livekit: AgentLiveKit | null = null;
@@ -73,63 +77,232 @@ export class HyperfyService implements IHyperfyService {
   private _connectionTime: number | null = null;
   private processedMsgIds: Set<string> = new Set(); // From original ElizaOS service for chat
 
-  public readonly pluginId: string;
+  private sdkSubscriptionsActive: boolean = false; // New flag
 
-  private emoteManager: EmoteManager;
-  private messageManager: MessageManager;
-  private behaviorManager: BehaviorManager;
-  // private voiceManager: VoiceManager;
+  // Managers - declare them, but instantiate in _setRuntime
+  private emoteManager!: EmoteManager;
+  private messageManager!: MessageManager;
+  private behaviorManager!: BehaviorManager;
+  // private voiceManager!: VoiceManager;
 
-  constructor(config: HyperfyPluginConfig, runtime: Runtime) {
+  constructor(config: HyperfyPluginConfig, runtime?: Runtime) {
     this.config = config;
-    this.runtime = runtime;
     this.pluginId = config.pluginId || "plugin-hyperfy";
-    this.logger = runtime.logger.child({
-      scope: "hyperfy.service"
-    }) as MaiarLogger;
 
-    this.emoteManager = new EmoteManager(this, this.runtime);
-    this.messageManager = new MessageManager(this, this.runtime, this.config);
-    this.behaviorManager = new BehaviorManager(this, this.runtime, this.config);
-    // this.voiceManager = new VoiceManager(this, this.runtime, this.config);
-
-    this.logger.info("HyperfyService instantiated (for SDK integration).");
+    if (runtime) {
+      this.runtime = runtime;
+      this.logger = runtime.logger.child({
+        scope: "HyperfyService"
+      }) as MaiarLogger;
+      // Defer manager instantiation to _setRuntime or a dedicated init method for the service
+    } else {
+      // @ts-expect-error error
+      this.logger = console;
+      this.logger.warn(
+        "HyperfyService constructor: Initialized without a runtime. Managers will be set up later."
+      );
+    }
+    this.logger.info("HyperfyService instantiated.");
+  }
+  [key: string]: unknown;
+  sendChatMessage?(text: string): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  subscribeToChat?(handler: (message: HyperfyMessage) => Promise<void>): void {
+    throw new Error("Method not implemented.");
   }
 
-  public async connect(): Promise<void> {
-    if (this._isConnected && this.world) {
-      this.logger.warn(
-        "Service already connected via SDK. Disconnecting first to ensure clean state."
+  public _setRuntime(runtime: Runtime): void {
+    if (!runtime) {
+      this.logger.error(
+        "HyperfyService._setRuntime called with undefined runtime."
       );
+      throw new Error(
+        "Runtime cannot be undefined for HyperfyService initialization."
+      );
+    }
+    this.runtime = runtime; // Now this.runtime is guaranteed to be set for subsequent calls
+    this.logger = this.runtime.logger.child({
+      scope: "HyperfyService"
+    }) as MaiarLogger;
+    this.logger.info(
+      "HyperfyService runtime has been set and logger re-initialized."
+    );
+
+    // Instantiate managers now that we have a valid runtime
+    this.emoteManager = new EmoteManager(this as any, this.runtime);
+    this.messageManager = new MessageManager(
+      this as any,
+      this.runtime,
+      this.config
+    );
+    this.behaviorManager = new BehaviorManager(
+      this as any,
+      this.runtime,
+      this.config
+    );
+    // if (this.config.enableVoice) { // Example condition
+    //    this.voiceManager = new VoiceManager(this as any, this.runtime, this.config);
+    // }
+    this.logger.info(
+      "HyperfyService managers (emote, message, behavior) instantiated."
+    );
+  }
+
+  // Helper to check full readiness
+  private isFullyReady(): boolean {
+    console.log(
+      "isFullyReady: ",
+      this._isConnected,
+      this._isWorldInitialized,
+      this._isAgentReady
+    );
+    return this._isConnected && this._isWorldInitialized && this._isAgentReady;
+  }
+
+  private async waitForSDKPlayer(timeoutMs = 10000): Promise<boolean> {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeoutMs) {
+      if (this.world?.entities?.player?.data?.id) {
+        this._agentPlayerIdFromSDK =
+          this.world.entities.player.data.id.toString();
+        this.logger.info(
+          `[HyperfyService] SDK Player ${this._agentPlayerIdFromSDK} detected.`
+        );
+        return true;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250)); // Check every 250ms
+    }
+    this.logger.error(
+      "[HyperfyService] Timeout waiting for SDK player entity to be ready."
+    );
+    return false;
+  }
+
+  private async setupAgentStateAndAppearance(): Promise<void> {
+    if (
+      !this.world ||
+      !this.world.entities?.player ||
+      !this._agentPlayerIdFromSDK
+    ) {
+      this.logger.error(
+        "[HyperfyService] Cannot setup agent state/appearance: SDK player or its ID not ready."
+      );
+      this._isAgentReady = false;
+      return;
+    }
+
+    const agentPlayerSDK = this.world.entities.player as any; // SDK's representation
+    const agentName =
+      this.config.defaultPlayerName ||
+      agentPlayerSDK.data?.name ||
+      "MaiarAgent";
+    const avatarUrl = this.config.defaultAvatarUrl || "asset://avatar.vrm";
+
+    // Initialize Maiar-side agent state (_agentMaiarState)
+    const maiarAgentId = this.config.agentId || this._agentPlayerIdFromSDK;
+    this._agentMaiarState = {
+      id: maiarAgentId,
+      name: agentName,
+      type: "player",
+      position: agentPlayerSDK.base?.position
+        ? new Vector3().copy(agentPlayerSDK.base.position)
+        : new Vector3(0, 0, 0),
+      rotation: agentPlayerSDK.base?.quaternion
+        ? new Quaternion().copy(agentPlayerSDK.base.quaternion)
+        : new Quaternion(0, 0, 0, 1),
+      currentAction: "idle"
+    };
+    this._knownMaiarEntities.set(maiarAgentId, { ...this._agentMaiarState });
+    if (this._agentPlayerIdFromSDK !== maiarAgentId) {
+      // If SDK has a different ID we also track that
+      this._knownMaiarEntities.set(this._agentPlayerIdFromSDK, {
+        ...this._agentMaiarState,
+        id: this._agentPlayerIdFromSDK
+      });
+    }
+    this._playerNamesMap.set(this._agentPlayerIdFromSDK, agentName);
+
+    // Set Name in SDK
+    if (agentPlayerSDK.data && agentPlayerSDK.data.name !== agentName) {
+      this.logger.info(
+        `[HyperfyService] Setting agent name in SDK to: ${agentName}`
+      );
+      if (typeof agentPlayerSDK.modify === "function") {
+        agentPlayerSDK.modify({ name: agentName });
+      } else {
+        agentPlayerSDK.data.name = agentName;
+      } // Fallback direct assignment
+      if (this.world.network?.send) {
+        this.world.network.send("entityModified", {
+          id: this._agentPlayerIdFromSDK,
+          name: agentName
+        });
+      }
+    }
+
+    // Set Avatar in SDK
+    this.logger.info(
+      `[HyperfyService] Setting agent avatar in SDK to: ${avatarUrl}`
+    );
+    if (typeof agentPlayerSDK.setSessionAvatar === "function") {
+      agentPlayerSDK.setSessionAvatar(avatarUrl);
+      if (this.world.network?.send) {
+        this.world.network.send("playerSessionAvatar", { avatar: avatarUrl });
+      }
+    } else {
+      this.logger.warn(
+        "[HyperfyService] SDK player object does not have setSessionAvatar method."
+      );
+    }
+    (this._agentMaiarState as any).avatarUrl = avatarUrl; // Store for reference
+
+    await this.emoteManager.registerEmotes();
+    this._isAgentReady = true; // Mark agent as fully ready
+    this.logger.info(
+      "[HyperfyService] Agent state, appearance, and emotes setup complete."
+    );
+  }
+
+  public async connect(connectConfig: {
+    wsUrl: string;
+    authToken?: string;
+    worldId: string;
+  }): Promise<void> {
+    if (!this.runtime) {
+      this.logger.error(
+        "HyperfyService.connect: Runtime not set. Call _setRuntime first."
+      );
+      throw new Error("HyperfyService cannot connect without a runtime.");
+    }
+    if (this._isConnected) {
+      this.logger.warn("Already connected. Disconnecting first.");
       await this.disconnect();
     }
+    this._isWorldInitialized = false;
+    this._isAgentReady = false;
+    this.sdkSubscriptionsActive = false;
     this.logger.info(
-      `Connecting to Hyperfy world via SDK at ${this.config.wsUrl}...`
+      `Connecting to Hyperfy world via SDK at ${connectConfig.wsUrl}...`
     );
 
     try {
-      this.world = createNodeClientWorld() as HyperfySDKWorld;
-      if (!this.world)
-        throw new Error(
-          "createNodeClientWorld() failed to return a world instance."
-        );
+      this.world = createNodeClientWorld() as HyperfyWorld;
+      if (!this.world) throw new Error("createNodeClientWorld() failed.");
 
-      // Setup playerNamesMap on world if SDK uses it like in ElizaOS example
-      (this.world as HyperfySDKWorld).playerNamesMap = this._playerNamesMap;
+      (this.world as any).playerNamesMap = this._playerNamesMap;
 
-      this.livekit = new AgentLiveKit(this.world as HyperfySDKWorld);
+      this.livekit = new AgentLiveKit(this.world as any);
       this.actions = new AgentActions(this.world);
       this.controls = new AgentControls(this.world);
-      this.loader = new AgentLoader(this.world as HyperfySDKWorld);
+      this.loader = new AgentLoader(this.world as any);
 
-      this.world.systems.push(
-        this.livekit,
-        this.actions,
-        this.controls,
-        this.loader
-      );
+      (this.world as any).controls = this.controls;
+      (this.world as any).loader = this.loader;
 
-      const mockElement: MockElement = {
+      this.world.systems.push(this.livekit, this.actions);
+
+      const mockElement = {
         appendChild: (el: unknown) => {
           this.logger.debug("mockElement.appendChild");
           return el;
@@ -141,10 +314,10 @@ export class HyperfyService implements IHyperfyService {
         offsetWidth: 1920,
         offsetHeight: 1080,
         addEventListener: (_event: string) => {
-          console.log("Added event listener for: ", _event);
+          console.log("MockEventListener ADD for: ", _event);
         },
         removeEventListener: (_event: string) => {
-          console.log("Removed event listener for: ", _event);
+          console.log("MockEventListener REMOVE for: ", _event);
         },
         style: { backgroundColor: "blue" },
         getContext: (_contextId: string) => {
@@ -153,150 +326,88 @@ export class HyperfyService implements IHyperfyService {
         }
       };
 
-      const hyperfySdkConfig: Record<string, unknown> = {
-        wsUrl: this.config.wsUrl,
+      const hyperfySdkConfig = {
+        wsUrl: connectConfig.wsUrl,
         viewport: mockElement,
         ui: mockElement,
-        initialAuthToken: this.config.authToken,
-        loadPhysX: loadPhysX,
-        agentName: this.config.defaultPlayerName,
-        avatarUrl: this.config.defaultAvatarUrl
+        initialAuthToken: connectConfig.authToken,
+        loadPhysX: loadPhysX
       };
 
-      if (typeof this.world.init !== "function") {
+      if (typeof this.world.init !== "function")
+        throw new Error("SDK world.init is not a function.");
+      await this.world.init(hyperfySdkConfig);
+      this.logger.info("Hyperfy SDK NodeClientWorld initialized.");
+      this._isWorldInitialized = true;
+      this._isConnected = true;
+
+      const sdkPlayerReady = await this.waitForSDKPlayer();
+      if (!sdkPlayerReady) {
         throw new Error(
-          "Hyperfy SDK world instance does not have an init method."
+          "SDK Player entity did not become available after connection."
         );
       }
-      await this.world.init(hyperfySdkConfig);
-      this.logger.info("Hyperfy SDK's NodeClientWorld initialized.");
 
-      this._isConnected = true;
-      this._agentPlayerIdFromSDK =
-        this.world.entities?.player?.data?.id?.toString() ||
-        this.config.agentId ||
-        `sdk-agent-${Date.now()}`;
-      this._currentWorldIdFromSDK = this.config.wsUrl; // Or a world ID from SDK if available
+      this._currentWorldIdFromSDK = connectConfig.worldId;
       this._connectionTime = Date.now();
 
-      const maiarAgentId =
-        this.config.agentId ||
-        this._agentPlayerIdFromSDK ||
-        `maiar-agent-${Date.now()}`;
-      const agentName =
-        this.config.defaultPlayerName ||
-        this.world.entities?.player?.data?.name ||
-        "MaiarAgent";
-      this._agentMaiarState = {
-        id: maiarAgentId,
-        name: agentName,
-        type: "player",
-        position: new Vector3(0, 0, 0),
-        rotation: new Quaternion(0, 0, 0, 1),
-        currentAction: "idle"
-      };
-      if (this._agentMaiarState.id) {
-        // Ensure id is defined before setting
-        this._knownMaiarEntities.set(this._agentMaiarState.id, {
-          ...this._agentMaiarState
-        });
-      }
-      if (
-        this._agentPlayerIdFromSDK &&
-        this._agentPlayerIdFromSDK !== maiarAgentId
-      ) {
-        this._knownMaiarEntities.set(this._agentPlayerIdFromSDK, {
-          ...this._agentMaiarState,
-          id: this._agentPlayerIdFromSDK
-        });
-      }
-      if (this._agentPlayerIdFromSDK && agentName) {
-        this._playerNamesMap.set(this._agentPlayerIdFromSDK, agentName);
+      await this.setupAgentStateAndAppearance();
+      if (!this._isAgentReady) {
+        throw new Error("Agent state and appearance setup failed.");
       }
 
-      this.logger.info("HyperfyService connected and SDK world initialized.", {
-        agentMaiarId: this._agentMaiarState.id,
-        agentSdkId: this._agentPlayerIdFromSDK,
-        worldId: this._currentWorldIdFromSDK
-      });
+      this.logger.info(
+        "HyperfyService connected and agent ready. SDK Event subscriptions will be activated by plugin.",
+        {
+          agentSdkId: this._agentPlayerIdFromSDK,
+          worldId: this._currentWorldIdFromSDK
+        }
+      );
 
-      this.subscribeToSdkWorldEvents();
       this.startSdkSimulationTick();
       this.startEntityStateUpdateLoop();
 
-      await this.emoteManager.registerEmotes();
-      this.behaviorManager.start();
-
-      // Initialize LiveKit if the world and token are available from SDK
-      if (
-        this.livekit &&
-        this.world.network?.livekitWsUrl &&
-        this.world.network?.livekitToken
-      ) {
-        this.logger.info("Initializing LiveKit with SDK provided details...");
-        try {
-          await this.livekit.deserialize({
-            wsUrl: this.world.network.livekitWsUrl,
-            token: this.world.network.livekitToken
-          });
-          const livekitEmitter = this.livekit as unknown as BasicEventEmitter; // L1004
-          if (typeof livekitEmitter.on === "function") {
-            livekitEmitter.on("audio", (data: unknown) => {
-              const audioEvent = data as {
-                participant: string;
-                buffer: Buffer;
-              };
-              console.warn(
-                "Audio event received, but voice manager not yet implemented: ",
-                audioEvent
-              );
-              // if (audioEvent.participant !== this._agentPlayerIdFromSDK) {
-              //   this.voiceManager.handleIncomingUserAudio(audioEvent.participant, audioEvent.buffer);
-              // }
-            });
-          } else {
-            this.logger.warn("livekit.on is not a function after cast.");
-          }
-        } catch (lkError) {
-          this.logger.error("Failed to initialize LiveKit:", lkError);
-        }
-      } else {
+      if (this._isAgentReady && this.behaviorManager) {
+        this.behaviorManager.start();
+      } else if (this._isAgentReady) {
         this.logger.warn(
-          "LiveKit details not available from SDK world.network, or livekit system not present. Voice chat may not function."
+          "HyperfyService.connect: Agent is ready, but BehaviorManager is not yet initialized. Cannot start behaviors."
         );
       }
     } catch (error) {
-      this.logger.error(
-        "Failed to connect or initialize Hyperfy SDK's world:",
-        { error }
-      );
+      this.logger.error("Failed to connect or initialize Hyperfy SDK world:", {
+        error
+      });
       await this.handleSdkDisconnect();
-      this._isConnected = false;
       throw error;
     }
   }
 
-  public async disconnect(): Promise<void> {
-    this.logger.info(
-      "Disconnecting HyperfyService (SDK integration). Attempting graceful SDK disconnect first."
-    );
+  public activateSdkEventSubscriptions(): void {
     if (
-      this.world &&
-      this.world.network &&
-      typeof this.world.network.disconnect === "function"
+      !this._isConnected ||
+      !this._isWorldInitialized ||
+      !this._isAgentReady
     ) {
-      try {
-        await this.world.network.disconnect();
-        this.logger.info("Hyperfy SDK world.network.disconnect() called.");
-      } catch (e) {
-        this.logger.error("Error during SDK world.network.disconnect():", e);
-      }
-    } else if (this.world) {
       this.logger.warn(
-        "SDK world instance does not have a network.disconnect method. Proceeding to general cleanup."
+        "activateSdkEventSubscriptions called but service is not fully ready. Aborting subscription."
       );
+      return;
     }
-    await this.handleSdkDisconnect(); // General cleanup
+    if (this.sdkSubscriptionsActive) {
+      this.logger.info("SDK event subscriptions are already active.");
+      return;
+    }
+    this.logger.info(
+      "activateSdkEventSubscriptions(): Activating SDK event subscriptions now."
+    );
+    this.subscribeToSdkWorldEvents(); // This contains the world.chat.subscribe logic
+    this.sdkSubscriptionsActive = true;
+  }
+
+  public async disconnect(): Promise<void> {
+    this.logger.info("Disconnecting HyperfyService (SDK integration).");
+    await this.handleSdkDisconnect();
   }
 
   // This method is called by internal processes (like VoiceManager after transcription)
@@ -304,23 +415,31 @@ export class HyperfyService implements IHyperfyService {
   public async internalOnMessageReceived(
     message: HyperfyMessage
   ): Promise<void> {
-    this.logger.debug("Internal message received, dispatching to handlers:", {
-      message
-    });
-    for (const handler of this.messageHandlers) {
-      try {
-        await handler(message);
-      } catch (error) {
-        this.logger.error("Error in internal message handler execution", {
-          error,
-          messageId: message.id
-        });
-      }
+    if (!this.messageHandlers || this.messageHandlers.length === 0) {
+      this.logger.warn(
+        "No message handlers registered, skipping message dispatch."
+      );
+      return;
     }
+    this.logger.debug(
+      "Internal message received, dispatching to handlers:",
+      JSON.stringify(message)
+    );
+    // Create a promise array to await all handlers if necessary, or just iterate
+    const handlerPromises = this.messageHandlers.map((handler) =>
+      handler(message).catch((error) =>
+        this.logger.error("Error in message handler execution", {
+          error,
+          messageId: message.id,
+          handlerName: handler.name || "anonymous"
+        })
+      )
+    );
+    await Promise.all(handlerPromises); // Optional: if you need to wait for all handlers
   }
 
   public isConnected(): boolean {
-    return this._isConnected;
+    return this.isFullyReady();
   }
 
   public registerMessageHandler(
@@ -328,7 +447,14 @@ export class HyperfyService implements IHyperfyService {
   ): void {
     if (!this.messageHandlers.includes(handler)) {
       this.messageHandlers.push(handler);
-      this.logger.debug("Message handler registered.");
+      this.logger.info("[HyperfyService] Message handler registered.", {
+        handlerName: handler.name || "anonymous"
+      });
+    } else {
+      this.logger.debug(
+        "[HyperfyService] Message handler already registered.",
+        { handlerName: handler.name || "anonymous" }
+      );
     }
   }
 
@@ -340,7 +466,7 @@ export class HyperfyService implements IHyperfyService {
   }
 
   public getAgentPlayerId(): string | undefined {
-    return this._agentMaiarState?.id;
+    return this._agentPlayerIdFromSDK;
   }
   public getAgentState(): AgentWorldState | null {
     if (this._agentPlayerIdFromSDK && this._agentMaiarState) {
@@ -437,9 +563,10 @@ ${entityLines.join("\n")}`;
       };
     }
     try {
-      const { EMOTES_LIST } = await import("../constants");
+      const { EMOTES_LIST } = await import("../constants.js");
       const emoteDescriptions = EMOTES_LIST.map(
-        (e) => `- ${e.name}: ${e.description}`
+        (e: { name: string; description: string }) =>
+          `- ${e.name}: ${e.description}`
       ).join("\n");
       const formattedText = `# Available Emotes\n${emoteDescriptions}`;
 
@@ -473,182 +600,210 @@ ${entityLines.join("\n")}`;
 
   // --- Action Methods (Interacting with the Hyperfy SDK World) ---
   public async sendChat(messageText: string): Promise<void> {
-    if (!this.isConnected() || !this.world?.chat?.add) {
+    if (!this.isFullyReady() || !this.world?.chat?.add) {
       this.logger.error(
-        "SendChat: SDK not connected or world.chat.add system unavailable."
+        "SendChat: Not fully ready or chat system unavailable."
       );
-      throw new Error("SDK: Not connected or chat system unavailable.");
+      throw new Error("SDK: Not fully ready or chat system unavailable.");
     }
     this.logger.info(`Attempting to send chat via SDK: "${messageText}"`);
 
-    // this.world.chat.add({
-    //   body: messageText,
-    //   fromId: agentIdForSdkChat,
-    //   from: agentNameForSdkChat,
-    //   // createdAt: new Date().toISOString() // SDK might handle timestamp internally
-    // }, true /* broadcast */);
-    this.logger.info(
-      `Chat message "${messageText}" conceptually sent to SDK chat system.`
+    const agentName =
+      this._agentMaiarState?.name || this.config.defaultPlayerName || "Agent";
+    const agentIdForSdk = this._agentPlayerIdFromSDK;
+    if (!agentIdForSdk) {
+      this.logger.error(
+        "SendChat: Cannot send message, agent SDK ID is unknown."
+      );
+      throw new Error("Agent SDK ID is unknown, cannot send chat.");
+    }
+    (this.world.chat as any).add(
+      { body: messageText, fromId: agentIdForSdk, from: agentName },
+      true
     );
   }
 
   public async gotoEntity(entityId: string): Promise<void> {
-    if (
-      !this.isConnected() ||
-      !this.controls ||
-      !this.world?.entities?.items?.get
-    ) {
+    if (!this.isFullyReady() || !this.controls) {
       this.logger.error(
-        "GotoEntity: SDK not connected or required systems/methods unavailable."
+        "GotoEntity: SDK not fully ready or controls unavailable."
       );
-      throw new Error(
-        "SDK: Not connected or systems unavailable for gotoEntity."
-      );
+      throw new Error("SDK: Not fully ready or controls unavailable.");
     }
     this.logger.info(
       `Attempting to navigate to entity via SDK controls: ${entityId}`
     );
-    // const targetEntity = this.world.entities.items.get(entityId);
-    // if (targetEntity && targetEntity.base?.position && typeof targetEntity.base.position.x === 'number') { // Basic check for position
-    //   this.controls.goto(targetEntity.base.position.x, targetEntity.base.position.z);
-    //   this.logger.info(`gotoEntity SDK command for ${entityId} sent.`);
-    // } else {
-    //   this.logger.error(`SDK: Cannot gotoEntity. Entity ${entityId} not found or has no valid position.`);
-    //   throw new Error(`SDK: Entity ${entityId} not found or has no valid position.`);
-    // }
-    this.logger.info(
-      `Conceptual gotoEntity for ${entityId} passed to controls.`
-    );
+    const targetPosition = this.getEntityPosition(entityId);
+    if (targetPosition) {
+      this.controls.goto(targetPosition.x, targetPosition.z);
+    } else {
+      this.logger.error(
+        `SDK: Cannot gotoEntity. Entity ${entityId} not found/no position.`
+      );
+      throw new Error(`SDK: Entity ${entityId} not found/no position.`);
+    }
   }
 
   public async startRandomWalk(
     interval?: number,
     maxDistance?: number
   ): Promise<void> {
-    if (!this.isConnected() || !this.controls) {
+    if (!this.isFullyReady() || !this.controls) {
       this.logger.error(
-        "StartRandomWalk: SDK not connected or controls unavailable."
+        "StartRandomWalk: SDK not fully ready or controls unavailable."
       );
-      throw new Error("SDK: Not connected or controls unavailable.");
+      throw new Error("SDK: Not fully ready or controls unavailable.");
     }
     this.logger.info("Attempting to start random walk via SDK controls.", {
       interval,
       maxDistance
     });
-    // this.controls.startRandomWalk(interval ? interval * 1000 : undefined, maxDistance); // Convert seconds to ms if SDK expects ms
+    (this.controls as any).startRandomWalk(
+      interval ? interval * 1000 : undefined,
+      maxDistance
+    );
     this.logger.info("Conceptual startRandomWalk passed to controls.");
   }
 
   public async stopRandomWalk(): Promise<void> {
-    if (!this.isConnected() || !this.controls) {
+    if (!this.isFullyReady() || !this.controls) {
       this.logger.error(
-        "StopRandomWalk: SDK not connected or controls unavailable."
+        "StopRandomWalk: SDK not fully ready or controls unavailable."
       );
-      throw new Error("SDK: Not connected or controls unavailable.");
+      throw new Error("SDK: Not fully ready or controls unavailable.");
     }
     this.logger.info("Attempting to stop random walk via SDK controls.");
-    // this.controls.stopRandomWalk();
-    // Alternatively, if stopNavigation is more general:
-    // this.controls.stopNavigation("random_walk_stopped_by_agent");
+    (this.controls as any).stopRandomWalk();
     this.logger.info("Conceptual stopRandomWalk passed to controls.");
   }
 
-  public async playEmote(emoteIdentifier: string): Promise<void> {
-    // Parameter could be name or SDK-specific URL/ID
-    if (!this.isConnected() || !this.world?.entities?.player?.data) {
+  public async playEmote(emoteIdentifier: HyperfyEmoteName): Promise<void> {
+    if (!this.isFullyReady() || !this.world?.entities?.player?.data) {
       this.logger.error(
-        "PlayEmote: SDK not connected or player entity/data unavailable."
+        "PlayEmote: Service not fully ready or SDK player entity/data unavailable."
       );
       throw new Error(
-        "SDK: Not connected or player entity unavailable for playEmote."
+        "SDK: Service not fully ready or player entity unavailable for playEmote."
       );
     }
-    this.logger.info(`Attempting to play emote via SDK: ${emoteIdentifier}`);
+    const agentPlayer = this.world.entities.player as any;
+    const resolvedEmoteIdentifier = (
+      this.emoteManager as any
+    ).resolveEmoteIdentifier(emoteIdentifier);
 
-    // const agentPlayer = this.world.entities.player;
-    // // EmoteManager.getEmoteUrl should resolve the name to an SDK-compatible path/URL
-    // const resolvedEmoteIdentifier = this.emoteManager.getEmoteUrl(emoteIdentifier) || emoteIdentifier;
+    if (!resolvedEmoteIdentifier) {
+      this.logger.error(
+        `PlayEmote: Could not resolve emote name: ${emoteIdentifier}`
+      );
+      throw new Error(`Could not resolve emote name: ${emoteIdentifier}`);
+    }
 
-    // if (agentPlayer.data.effect) { // Assuming Hyperfy player object has a data.effect property
-    //    agentPlayer.data.effect.emote = resolvedEmoteIdentifier;
-    //    this.logger.info(`Play emote ${emoteIdentifier} (as ${resolvedEmoteIdentifier}) command conceptually applied to SDK player data.`);
-    //    // EmoteManager already handles timeout via its own playEmote method if called from BehaviorManager.
-    //    // If service.playEmote is called directly by an executor, this service method might need its own timer
-    //    // or rely on the SDK to auto-stop emotes, or expect a subsequent stop_action.
-    // } else {
-    //    this.logger.warn("SDK: Player data.effect not available to set emote for " + emoteIdentifier);
-    // }
     this.logger.info(
-      "Conceptual playEmote for " + emoteIdentifier + " handled."
+      `[HyperfyService] Setting player effect for emote: ${resolvedEmoteIdentifier}`
     );
+    if (agentPlayer.data) {
+      if (!agentPlayer.data.effect) {
+        // Initialize effect if it doesn't exist
+        agentPlayer.data.effect = {};
+        this.logger.debug(
+          "[HyperfyService] PlayEmote: Initialized agentPlayer.data.effect as it was undefined."
+        );
+      }
+      agentPlayer.data.effect.emote = resolvedEmoteIdentifier;
+    } else {
+      this.logger.error(
+        "[HyperfyService] PlayEmote: agentPlayer.data is undefined. Cannot set emote."
+      );
+      throw new Error(
+        "SDK: Player data object is undefined, cannot set emote."
+      );
+    }
   }
 
   public async useItem(entityId?: string): Promise<void> {
-    if (!this.isConnected() || !this.actions) {
+    if (!this.isFullyReady() || !this.actions) {
       this.logger.error(
-        "UseItem: SDK not connected or actions system unavailable."
+        "UseItem: SDK not fully ready or actions system unavailable."
       );
       throw new Error(
-        "SDK: Not connected or actions system unavailable for useItem."
+        "SDK: Not fully ready or actions system unavailable for useItem."
       );
     }
     this.logger.info(
       `Attempting to use item/entity via SDK actions: ${entityId || "nearby interactive"}`
     );
-    // this.actions.performAction(entityId); // Assumes performAction can take an optional entityId
-    this.logger.info(
-      "Conceptual useItem for " +
-        (entityId || "nearby") +
-        " passed to actions system."
-    );
+    (this.actions as any).performAction(entityId);
   }
 
   public async stopCurrentAction(reason?: string): Promise<void> {
-    if (!this.isConnected()) {
-      this.logger.error("StopCurrentAction: SDK not connected.");
-      throw new Error("SDK: Not connected.");
+    if (!this.isFullyReady()) {
+      this.logger.warn("stopCurrentAction: Not fully ready, skipping.");
+      return;
     }
-    this.logger.info("Attempting to stop current action/interaction via SDK.", {
+    this.logger.info("[HyperfyService] Attempting to stop current action.", {
       reason
     });
-    // // This is generic. More specific calls might be needed based on what action is active.
-    // if (this.actions) { // For item interactions
-    //     // this.actions.releaseAction();
-    // }
-    // if (this.controls) { // For movement
-    //     // this.controls.stopNavigation(reason || "action_stopped_by_agent");
-    // }
-    // // For emotes, they might stop on their own after duration, or need an explicit clear.
-    // // if (this.world?.entities?.player?.data?.effect) this.world.entities.player.data.effect.emote = null;
-    this.logger.info("Conceptual stopCurrentAction handled.");
+    if (this.actions) {
+      (this.actions as any).releaseAction();
+    }
+    if (this.controls) {
+      (this.controls as any).stopNavigation(
+        reason || "action_stopped_by_agent"
+      );
+    }
+
+    // Safely attempt to clear emote
+    if (this.world?.entities?.player?.data) {
+      const playerData = (this.world.entities.player as any).data;
+      if (playerData.effect) {
+        // Check if effect object exists
+        playerData.effect.emote = null;
+        this.logger.debug("[HyperfyService] Cleared player emote effect.");
+      } else {
+        this.logger.debug(
+          "[HyperfyService] No player effect object to clear emote from."
+        );
+      }
+    } else {
+      this.logger.warn(
+        "[HyperfyService] stopCurrentAction: Player data not available to clear emote effect."
+      );
+    }
   }
 
   public async gotoCoordinates(x: number, y: number, z: number): Promise<void> {
-    if (!this.isConnected() || !this.controls) {
+    if (!this.isFullyReady() || !this.controls) {
       this.logger.error(
-        "GotoCoordinates: SDK not connected or controls unavailable."
+        "GotoCoordinates: SDK not fully ready or controls unavailable."
       );
-      throw new Error(
-        "SDK: Not connected or controls unavailable for gotoCoordinates."
-      );
+      throw new Error("SDK: Not fully ready or controls unavailable.");
     }
     this.logger.info(
       `Attempting to navigate to coordinates via SDK controls: X=${x}, Y=${y}, Z=${z}`
     );
-    // this.controls.goto(x, z); // Note: y (height) is often handled by physics or ground clamping in SDKs, or might be part of a 3D goto.
-    this.logger.info(
-      `Conceptual gotoCoordinates (${x},${y},${z}) passed to controls.`
-    );
+    (this.controls as any).goto(x, z);
   }
 
   // --- SDK specific accessors (if needed by other parts of the plugin) ---
   public getEmoteManager(): EmoteManager {
+    if (!this.emoteManager)
+      throw new Error(
+        "EmoteManager not initialized. Ensure runtime is set on service."
+      );
     return this.emoteManager;
   }
   public getMessageManager(): MessageManager {
+    if (!this.messageManager)
+      throw new Error(
+        "MessageManager not initialized. Ensure runtime is set on service."
+      );
     return this.messageManager;
   }
   public getBehaviorManager(): BehaviorManager {
+    if (!this.behaviorManager)
+      throw new Error(
+        "BehaviorManager not initialized. Ensure runtime is set on service."
+      );
     return this.behaviorManager;
   }
   // public getVoiceManager(): VoiceManager {
@@ -666,28 +821,31 @@ ${entityLines.join("\n")}`;
       !this.world.entities
     ) {
       this.logger.warn(
-        "Hyperfy SDK world instance or its event emitters (events, chat, entities) not available for subscription. Event-driven updates will not function."
+        "Hyperfy SDK world instance or its event emitters not available for subscription."
       );
       return;
     }
 
-    // Disconnect Event
-    this.world.events.on("disconnect", (...args: unknown[]) => {
+    (this.world.events as any).off("disconnect"); // Clear previous, if any
+    (this.world.events as any).on("disconnect", (...args: unknown[]) => {
       const reason = args[0] as string | undefined;
       this.logger.warn(`Hyperfy SDK world disconnected: ${String(reason)}`);
-      this.handleSdkDisconnect(); // Perform cleanup and state changes
-      // Optionally, notify Maiar runtime or plugin about critical disconnect if needed
+      // this.runtime?.emitEvent("WORLD_LEFT" as any, { /* payload */ }); // Temporarily comment out if emitEvent is an issue
+      this.logger.info(
+        "WORLD_LEFT event would be emitted here if runtime.emitEvent was available and verified."
+      );
+      this.handleSdkDisconnect();
     });
 
-    // Chat Messages
-    // Assuming this.world.chat.subscribe exists and works like the ElizaOS example
-    if (typeof this.world.chat.subscribe === "function") {
-      this.world.chat.subscribe((sdkMessages: unknown[]) => {
+    if (typeof (this.world.chat as any)?.subscribe === "function") {
+      (this.world.chat as any).subscribe((sdkMessages: unknown[]) => {
+        this.logger.info("!!! SDK CHAT CALLBACK INVOKED by Hyperfy SDK !!!", {
+          messageCount: sdkMessages.length
+        });
         if (!this._connectionTime) {
           this.logger.debug(
-            "Chat subscription called but service connectionTime not set, skipping message processing."
+            "Chat subscription called but service connectionTime not set, skipping initial batch processing potentially."
           );
-          return;
         }
         sdkMessages.forEach((sdkMsgUnknown: unknown) => {
           const sdkMsg = sdkMsgUnknown as Partial<
@@ -699,97 +857,112 @@ ${entityLines.join("\n")}`;
             }
           >;
           const sdkMsgId = sdkMsg.id?.toString();
-          if (!sdkMsgId || this.processedMsgIds.has(sdkMsgId)) return;
           const messageTimestamp = sdkMsg.createdAt
             ? new Date(sdkMsg.createdAt).getTime()
             : Date.now();
-          if (messageTimestamp <= this._connectionTime!) return;
-          this.processedMsgIds.add(sdkMsgId);
-          const maiarMsg: HyperfyMessage = {
-            id: sdkMsgId,
-            text: sdkMsg.body,
-            senderId: sdkMsg.fromId?.toString(),
-            senderName:
-              this._playerNamesMap.get(sdkMsg.fromId?.toString() || "") ||
-              sdkMsg.from ||
-              "UnknownUser",
-            timestamp: messageTimestamp,
-            type: "chat",
-            payload: sdkMsg
-          };
-          this.internalOnMessageReceived(maiarMsg);
+          if (
+            sdkMsgId &&
+            !this.processedMsgIds.has(sdkMsgId) &&
+            (this._connectionTime === null ||
+              messageTimestamp > this._connectionTime)
+          ) {
+            this.processedMsgIds.add(sdkMsgId);
+            const maiarMsg: HyperfyMessage = {
+              id: sdkMsgId,
+              body: sdkMsg.body || "",
+              senderId: sdkMsg.fromId?.toString(),
+              senderName:
+                (this._playerNamesMap as any).get(
+                  sdkMsg.fromId?.toString() || ""
+                ) ||
+                sdkMsg.from ||
+                "UnknownUser",
+              timestamp: messageTimestamp,
+              type: "chat",
+              payload: sdkMsg
+            };
+            this.internalOnMessageReceived(maiarMsg);
+          } else if (sdkMsgId && !this.processedMsgIds.has(sdkMsgId)) {
+            this.processedMsgIds.add(sdkMsgId);
+            this.logger.debug(
+              `[Chat Sub] Marked old, unprocessed message as processed: ${sdkMsgId}`
+            );
+          }
         });
       });
-      this.logger.info("Subscribed to Hyperfy SDK chat messages.");
+      this.logger.info("Successfully subscribed to Hyperfy SDK chat messages.");
     } else {
       this.logger.warn(
-        "this.world.chat.subscribe is not a function. Cannot listen for chat messages from SDK."
+        "[HyperfyService] world.chat.subscribe not available for SDK event subscription."
       );
     }
 
-    // Entity Events
-    // Assuming this.world.entities.on exists and works like the ElizaOS example
-    if (typeof this.world.entities.on === "function") {
-      this.world.entities.on("entityAdded", (...args: unknown[]) => {
-        const sdkEntity = args[0] as SDKEntity;
-        this.handleSdkEntityChange(sdkEntity, "added");
-      });
-      this.world.entities.on("entityModified", (...args: unknown[]) => {
-        const sdkEntityId = args[0] as string;
-        // const _sdkChangedData = args[1] as unknown; // Usually not needed if full entity is available
-        const sdkFullEntity = args[2] as SDKEntity | undefined;
-        const entityToProcess =
-          sdkFullEntity ||
-          (this.world?.entities?.items?.get(sdkEntityId) as {
-            id: string;
-          });
-        if (entityToProcess)
-          this.handleSdkEntityChange(entityToProcess, "modified");
-      });
-      this.world.entities.on("entityRemoved", (...args: unknown[]) => {
-        const sdkEntityId = args[0] as string;
-        this.handleSdkEntityChange({ id: sdkEntityId } as SDKEntity, "removed");
-      });
-      this.logger.info(
-        "Subscribed to Hyperfy SDK entity events (added, modified, removed)."
+    if (typeof (this.world.entities as any)?.on === "function") {
+      (this.world.entities as any).off("entityAdded", this.entityAddedListener);
+      (this.world.entities as any).off(
+        "entityModified",
+        this.entityModifiedListener
       );
-    } else {
-      this.logger.warn(
-        "this.world.entities.on is not a function. Cannot listen for entity events from SDK."
+      (this.world.entities as any).off(
+        "entityRemoved",
+        this.entityRemovedListener
       );
-    }
 
-    // LiveKit audio events (if AgentLiveKit is part of the setup and emits 'audio')
-    if (
-      this.livekit &&
-      typeof (this.livekit as unknown as BasicEventEmitter).on === "function"
-    ) {
-      // Cast to any to bypass TS error for now
-      // STUB: (this.livekit as any).on('audio', (data: { participant: string; buffer: Buffer }) => {
-      //  if (data.participant !== this._agentPlayerIdFromSDK) {
-      //      this.logger.debug(\`Received audio event from LiveKit participant: \${data.participant}\`);
-      //      this.voiceManager.handleIncomingUserAudio(data.participant, data.buffer);
-      //  }
-      // });
-      this.logger.info(
-        "Conceptual subscription to AgentLiveKit 'audio' events stubbed due to AgentLiveKit.on typing issue."
+      (this.world.entities as any).on(
+        "entityAdded",
+        this.entityAddedListener.bind(this)
       );
+      (this.world.entities as any).on(
+        "entityModified",
+        this.entityModifiedListener.bind(this)
+      );
+      (this.world.entities as any).on(
+        "entityRemoved",
+        this.entityRemovedListener.bind(this)
+      );
+      this.logger.info("Successfully subscribed to Hyperfy SDK entity events.");
     } else {
       this.logger.warn(
-        "this.livekit.on is not a function or livekit not initialized. Cannot listen for voice audio from SDK."
+        "[HyperfyService] world.entities.on not available for SDK event subscription."
       );
     }
   }
 
+  // Add back entity listener stubs (ensure their full implementation exists or is added later)
+  private entityAddedListener = (entity: SDKEntity | undefined): void => {
+    if (entity) this.handleSdkEntityChange(entity, "added");
+  };
+
+  private entityModifiedListener = (
+    entityId: string,
+    changedData: any,
+    entity?: SDKEntity | undefined
+  ): void => {
+    const fullEntity = entity || this.world?.entities?.items?.get(entityId);
+    if (fullEntity) this.handleSdkEntityChange(fullEntity, "modified");
+    // else if (entityId && changedData) { // Handle partial update if full entity not available
+    //   const existing = this._knownMaiarEntities.get(entityId);
+    //   if (existing) {
+    //     const updatedPartial = { ...existing, ...changedData, id: entityId }; // Reconstruct with ID
+    //     this.handleSdkEntityChange(updatedPartial as SDKEntity, "modified");
+    //   }
+    // }
+  };
+
+  private entityRemovedListener = (entityId: string | undefined): void => {
+    if (entityId)
+      this.handleSdkEntityChange({ id: entityId } as SDKEntity, "removed");
+  };
+
+  // Ensure handleSdkEntityChange is also present in the class (it was in your eliza-hyperfy-plugin.md)
   private handleSdkEntityChange(
     sdkEntity: SDKEntity,
     changeType: "added" | "modified" | "removed"
   ): void {
     if (!sdkEntity || !sdkEntity.id) {
-      this.logger.warn(
-        "handleSdkEntityChange received invalid sdkEntity data",
-        { sdkEntity }
-      );
+      this.logger.warn("handleSdkEntityChange invalid sdkEntity", {
+        sdkEntity
+      });
       return;
     }
     const entityId = sdkEntity.id.toString();
@@ -827,7 +1000,7 @@ ${entityLines.join("\n")}`;
             )
           : undefined,
       isInteractable:
-        sdkEntity.data?.interactive || sdkEntity.data?.isInteractable // Check common properties
+        sdkEntity.data?.interactive || sdkEntity.data?.isInteractable
     };
     this._knownMaiarEntities.set(entityId, entityInfo);
 
@@ -835,7 +1008,6 @@ ${entityLines.join("\n")}`;
       this._playerNamesMap.set(entityId, entityInfo.name);
     }
 
-    // If it's our agent, update _agentMaiarState (which is also an HyperfyEntityInfo)
     if (
       this._agentPlayerIdFromSDK &&
       entityId === this._agentPlayerIdFromSDK &&
@@ -849,12 +1021,9 @@ ${entityLines.join("\n")}`;
         entityInfo.rotation || this._agentMaiarState.rotation;
       this._agentMaiarState.type =
         entityInfo.type || this._agentMaiarState.type;
-      // currentAction & heldItemId would likely come from agentStateUpdate messages or more specific SDK events
-      // Update the entry in _knownMaiarEntities for the agent as well to ensure consistency
-      this._knownMaiarEntities.set(this._agentPlayerIdFromSDK, {
+      this._knownMaiarEntities.set(this._agentMaiarState.id, {
         ...this._agentMaiarState
       });
-      // If SDK ID differs from Maiar main ID (this._agentMaiarState.id)
       if (this._agentPlayerIdFromSDK !== this._agentMaiarState.id) {
         this._knownMaiarEntities.set(this._agentPlayerIdFromSDK, {
           ...this._agentMaiarState,
@@ -911,18 +1080,7 @@ ${entityLines.join("\n")}`;
       );
 
       // Sync Agent State
-      const sdkPlayer = this.world.entities.player as {
-        base?: {
-          position?: { x: number; y: number; z: number };
-          quaternion?: { x: number; y: number; z: number; w: number };
-        };
-        data?: {
-          name?: string;
-          type?: string;
-          interactive?: boolean;
-          isInteractable?: boolean;
-        };
-      }; // Assuming SDK exposes current player this way
+      const sdkPlayer = this.world.entities.player as any;
 
       if (sdkPlayer && this._agentMaiarState && this._agentPlayerIdFromSDK) {
         const sdkPos = sdkPlayer.base?.position;
@@ -995,6 +1153,8 @@ ${entityLines.join("\n")}`;
       "Handling Hyperfy SDK disconnection and cleaning up service state..."
     );
     this._isConnected = false;
+    this._isWorldInitialized = false;
+    this._isAgentReady = false;
     if (this.tickIntervalId) {
       clearInterval(this.tickIntervalId);
       this.tickIntervalId = null;
@@ -1037,10 +1197,32 @@ ${entityLines.join("\n")}`;
     this.logger.info("Hyperfy SDK disconnected and service state cleaned up.");
   }
 
-  public getHyperfyWorld(): HyperfySDKWorld | null {
+  public getHyperfyWorld(): HyperfyWorld | null {
     return this.world;
   }
   public getAgentControls(): AgentControls | null {
     return this.controls;
+  }
+
+  public getWorld(): HyperfyWorld | null {
+    return this.world;
+  }
+
+  public getEntityPosition(
+    entityId: string
+  ): { x: number; y: number; z: number } | null {
+    const items = this.world?.entities?.items as
+      | { get: (id: string) => SDKEntity | undefined }
+      | undefined;
+    const entity = items?.get(entityId);
+    if (
+      entity?.base?.position &&
+      typeof entity.base.position.x === "number" &&
+      typeof entity.base.position.y === "number" &&
+      typeof entity.base.position.z === "number"
+    ) {
+      return entity.base.position as { x: number; y: number; z: number };
+    }
+    return null;
   }
 }

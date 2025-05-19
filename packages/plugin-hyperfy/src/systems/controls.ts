@@ -1,11 +1,10 @@
-import { logger } from "@elizaos/core";
 import * as THREE from "three";
 
 // @ts-expect-error hyperfy is not typed
-import { Vector3Enhanced } from "../hyperfy/core/extras/Vector3Enhanced.js";
+import { Vector3Enhanced } from "../../hyperfy/src/core/extras/Vector3Enhanced.js";
 // @ts-expect-error hyperfy is not typed
-import { System } from "../hyperfy/core/systems/System.js";
-import { HyperfySDKWorld } from "../types";
+import { System } from "../../hyperfy/src/core/systems/System.js";
+import { HyperfyWorld } from "../types.js";
 
 const FORWARD = new THREE.Vector3(0, 0, -1);
 const v1 = new THREE.Vector3();
@@ -50,7 +49,7 @@ export class AgentControls extends System {
   // Index signature allowing string keys for button states primarily
   [key: string]: ButtonState | unknown; // Allow ButtonState or other types like world, methods etc.
 
-  public world: HyperfySDKWorld;
+  public world: HyperfyWorld;
 
   // Define expected control properties directly on the instance
   scrollDelta = { value: 0 };
@@ -117,17 +116,17 @@ export class AgentControls extends System {
   private _currentWalkToken: NavigationToken | null = null;
   private _isRandomWalking: boolean = false;
 
-  constructor(world: HyperfySDKWorld) {
+  constructor(world: HyperfyWorld) {
     super(world);
     this.world = world;
-    this.camera = this.createCamera(this);
+    this.camera = this.createCamera();
   }
 
   setKey(keyName: string, isDown: boolean): void {
     const keyState = this[keyName] as ButtonState | undefined;
 
     if (!keyState || !keyState.$button) {
-      logger.warn(
+      console.warn(
         `[Controls] Attempted to set unknown or non-button key: ${keyName}.`
       );
       // Optionally initialize if it's a known dynamic key, but be cautious
@@ -168,7 +167,7 @@ export class AgentControls extends System {
   ): Promise<void> {
     this.stopRandomWalk();
     this._isRandomWalking = true;
-    logger.info("[Controls] Random walk started.");
+    console.info("[Controls] Random walk started.");
 
     const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
     const token = new NavigationToken();
@@ -184,7 +183,7 @@ export class AgentControls extends System {
         // Ensure player.base.position is valid before use
         const playerBase = this.world.entities.player.base;
         if (!playerBase || !playerBase.position) {
-          logger.warn(
+          console.warn(
             "[Random Walk] Player base or position not found. Skipping iteration."
           );
           await delay(interval); // Wait before retrying or breaking
@@ -200,7 +199,7 @@ export class AgentControls extends System {
           await this.startNavigation(targetX, targetZ, token);
         } catch (e) {
           const error = e instanceof Error ? e : new Error(String(e));
-          logger.warn("[Random Walk] Navigation error:", error);
+          console.warn("[Random Walk] Navigation error:", error);
         }
 
         await delay(interval);
@@ -224,7 +223,7 @@ export class AgentControls extends System {
 
   public stopNavigation(reason: string = "commanded"): void {
     if (this._isNavigating) {
-      logger.info(
+      console.info(
         `[Controls Navigation] Stopping navigation (${reason}). Reason stored.`
       );
 
@@ -242,10 +241,10 @@ export class AgentControls extends System {
         this.setKey("keyS", false);
         this.setKey("keyD", false);
         this.setKey("shiftLeft", false);
-        logger.debug("[Controls Navigation] Movement keys released.");
+        console.debug("[Controls Navigation] Movement keys released.");
       } catch (e) {
         const error = e instanceof Error ? e : new Error(String(e));
-        logger.error(
+        console.error(
           "[Controls Navigation] Error releasing keys on stop:",
           error
         );
@@ -330,24 +329,25 @@ export class AgentControls extends System {
   private _validatePlayerState(caller: string): boolean {
     const player = this.world?.entities?.player;
     if (!player?.base) {
-      logger.error(
+      console.error(
         `[Controls ${caller}] Cannot proceed: Player entity or base not found.`
       );
       this.stopNavigation(`validation_failed_in_${caller}`);
       return false;
     }
-    const pos = player.base.position;
-    const quat = player.base.quaternion;
+    let pos = player.base.position;
+    let quat = player.base.quaternion;
 
     if (!(pos instanceof THREE.Vector3) || !(pos instanceof Vector3Enhanced)) {
-      logger.error(
-        `[Controls ${caller}] Invalid state: player.base.position must be a THREE.Vector3 or Vector3Enhanced.`
-      );
+      player.base.position = new THREE.Vector3();
+      player.base.quaternion = new THREE.Quaternion();
+      pos = player.base.position;
+      quat = player.base.quaternion;
       this.stopNavigation(`validation_failed_in_${caller}`);
       return false;
     }
     if (isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z)) {
-      logger.error(
+      console.error(
         `[Controls ${caller}] Invalid state: player.base.position contains NaN values.`
       );
       this.stopNavigation(`validation_failed_in_${caller}`);
@@ -355,14 +355,14 @@ export class AgentControls extends System {
     }
 
     if (!(quat instanceof THREE.Quaternion)) {
-      logger.error(
+      console.error(
         `[Controls ${caller}] Invalid state: player.base.quaternion is not a THREE.Quaternion.`
       );
       this.stopNavigation(`validation_failed_in_${caller}`);
       return false;
     }
     if (isNaN(quat.x) || isNaN(quat.y) || isNaN(quat.z) || isNaN(quat.w)) {
-      logger.error(
+      console.error(
         `[Controls ${caller}] Invalid state: player.base.quaternion contains NaN values.`
       );
       this.stopNavigation(`validation_failed_in_${caller}`);
@@ -370,25 +370,25 @@ export class AgentControls extends System {
     }
     const quatLengthSq = quat.lengthSq();
     if (Math.abs(quatLengthSq - 1.0) > 0.01) {
-      logger.warn(
+      console.warn(
         `[Controls ${caller}] Player quaternion is not normalized (lengthSq: ${quatLengthSq.toFixed(4)}). Attempting normalization.`
       );
       quat.normalize();
     }
 
     if (!player.cam || typeof player.cam.rotation?.y !== "number") {
-      logger.error(
+      console.error(
         `[Controls ${caller}] Invalid state: player.cam.rotation.y is not valid.`
       );
       this.stopNavigation(`validation_failed_in_${caller}`);
       return false;
     }
 
-    logger.debug(`[Controls ${caller}] Player state validated successfully.`);
+    console.debug(`[Controls ${caller}] Player state validated successfully.`);
     return true;
   }
 
-  createCamera(self: AgentControls): AgentControls["camera"] {
+  createCamera(): AgentControls["camera"] {
     // Use lookup type for clarity
     function bindRotations(quaternion: THREE.Quaternion, euler: THREE.Euler) {
       euler._onChange(() => {
@@ -400,7 +400,7 @@ export class AgentControls extends System {
         euler.setFromQuaternion(quaternion, undefined, false);
       });
     }
-    const world = self.world;
+    const world = this.world;
     const position = new THREE.Vector3().copy(
       world.rig?.position || new THREE.Vector3()
     );

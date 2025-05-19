@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
 // @ts-expect-error hyperfy is not typed
-import { System } from "../hyperfy/core/systems/System.js";
-import { HyperfySDKWorld } from "../types";
+import { System } from "../../hyperfy/src/core/systems/System.js";
+import { HyperfyWorld } from "../types.js";
 
 // Define a more specific type for the controls property within this file's world context
 interface ActionSystemControls {
@@ -35,11 +35,11 @@ interface ActionNode extends THREE.Object3D {
 }
 
 export class AgentActions extends System {
-  public world: HyperfySDKWorld;
+  public world: HyperfyWorld;
   private nodes: ActionNode[] = [];
   private currentNode: ActionNode | null = null;
 
-  constructor(world: HyperfySDKWorld) {
+  constructor(world: HyperfyWorld) {
     super(world);
     this.world = world;
     this.nodes = [];

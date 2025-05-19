@@ -1,15 +1,15 @@
 import { Runtime } from "@maiar-ai/core";
 import { Logger as MaiarLogger } from "@maiar-ai/core/dist/logger";
 
-import { HyperfyService } from "../services";
-import { generateHyperfyMessageHandlerTemplate } from "../templates";
-// Using the Maiar-Hyperfy specific template
+import { generateHyperfyMessageHandlerTemplate } from "../templates.js";
 import {
   HyperfyActionDecision,
-  HyperfyActionDecisionSchema,
   HyperfyMessage,
-  HyperfyPluginConfig
-} from "../types";
+  HyperfyPluginConfig,
+  IHyperfyService
+} from "../types.js";
+// Using the Maiar-Hyperfy specific template
+import { HyperfyActionDecisionSchema } from "../types.js";
 
 // For config access if needed
 
@@ -18,56 +18,28 @@ import {
 
 export class MessageManager {
   private runtime: Runtime;
-  private service: HyperfyService;
+  private service: IHyperfyService;
   private logger: MaiarLogger;
   private pluginConfig: HyperfyPluginConfig;
 
   constructor(
-    hyperfyService: HyperfyService,
+    hyperfyService: IHyperfyService,
     runtime: Runtime,
     pluginConfig: HyperfyPluginConfig
   ) {
     this.service = hyperfyService;
     this.runtime = runtime;
     this.pluginConfig = pluginConfig;
-    this.logger = runtime.logger.child({
-      scope: "MessageManager"
-    }) as MaiarLogger;
+    // @ts-expect-error console
+    this.logger = console;
 
     // The old ElizaOS MessageManager set a template on runtime.character.templates.
     // In Maiar, templates are usually passed directly to runtime.getObject or runtime.executeCapability.
     // If a default message handling prompt is needed by an executor, it can import it.
   }
 
-  // This method is intended to be called by HyperfyService when it receives a parsed chat message.
-  public async handleIncomingHyperfyMessage(
-    message: HyperfyMessage
-  ): Promise<void> {
-    // The trigger (hyperfyChatMessageTrigger) now handles intent detection and event creation.
-    // This manager's role, if kept separate, would be to structure the LLM call for responding
-    // if an executor decides to use it, or if a more complex pre-processing of messages is needed
-    // before the trigger even fires.
-    // For now, let's assume the trigger handles getting the message to the runtime pipeline.
-    // This specific method might be more about *how* the agent *crafts a reply* once it decides to.
-
-    this.logger.info(
-      `[MessageManager] Processing incoming message for potential response: ${message.id}`
-    );
-
-    // This manager would be invoked by an EXECUTOR that decides to reply.
-    // It would not be directly processing raw messages from the service in the Maiar architecture,
-    // as the trigger (`hyperfyChatMessageTrigger`) does that.
-
-    // If an executor (e.g., "hyperfy_formulate_reply_executor") needs to generate a reply,
-    // it would call a method here, like `formulateReply(task: AgentTask): Promise<Content>`
-    // which would then use `generateHyperfyMessageHandlerTemplate` and `runtime.getObject`.
-
-    // The ElizaOS handleMessage also did a lot of entity/room/connection ensure steps.
-    // In Maiar, these are better handled by the trigger or dedicated setup within the service/plugin init.
-  }
-
   // This method is called by an executor when the agent needs to send a message to Hyperfy.
-  public async sendMessageToHyperfy(text: string): Promise<void> {
+  public async sendMessage(text: string): Promise<void> {
     if (!this.service.isConnected()) {
       this.logger.error(
         "MessageManager: Cannot send message. HyperfyService not connected."
@@ -77,7 +49,16 @@ export class MessageManager {
     this.logger.info(
       `[MessageManager] Sending message to Hyperfy via service: "${text}"`
     );
-    await this.service.sendChat(text); // Use HyperfyService's method
+    if (typeof this.service.sendChat === "function") {
+      await this.service.sendChat(text);
+    } else if (typeof this.service.sendChatMessage === "function") {
+      await this.service.sendChatMessage(text);
+    } else {
+      this.logger.error(
+        "[MessageManager] HyperfyService does not have a sendChat or sendChatMessage method."
+      );
+      throw new Error("Service cannot send chat messages.");
+    }
   }
 
   /**
@@ -93,10 +74,25 @@ export class MessageManager {
       triggerContent: taskTriggerContent
     });
     try {
-      const agentName = this.pluginConfig.defaultPlayerName || "Agent";
+      const agentName = (this.pluginConfig as any).defaultPlayerName || "Agent";
 
       const worldStateResult = await this.service.getFormattedWorldState();
       const emoteListResult = await this.service.getFormattedEmoteList();
+
+      let messagesForPrompt = recentMessagesString;
+      if (!messagesForPrompt) {
+        const currentWorldId = this.service.getCurrentWorldId();
+        if (currentWorldId) {
+          const roomId = `hyperfy-world-${currentWorldId}`;
+          messagesForPrompt = await this.getRecentMessages(roomId);
+        } else {
+          messagesForPrompt =
+            "Could not fetch recent messages: worldId unknown.";
+          this.logger.warn(
+            "[MessageManager] Cannot fetch recent messages for prompt: currentWorldId is null."
+          );
+        }
+      }
 
       const providersContext = `
 # World State
@@ -106,7 +102,7 @@ ${worldStateResult.data?.llm_readable_summary || (worldStateResult.success ? "Wo
 ${emoteListResult.data?.llm_readable_summary || (emoteListResult.success ? "Emote list data available but no summary text." : "Emote list unavailable.")}
 
 # Recent Messages (if any)
-${recentMessagesString || "No recent messages provided for this reply."}
+${messagesForPrompt}
 
 # Current User Message (for context)
 ${typeof taskTriggerContent === "string" ? taskTriggerContent : JSON.stringify(taskTriggerContent)}
@@ -114,7 +110,6 @@ ${typeof taskTriggerContent === "string" ? taskTriggerContent : JSON.stringify(t
 
       let prompt = generateHyperfyMessageHandlerTemplate(agentName);
       prompt = prompt.replace("{{providers}}", providersContext);
-      // The user's actual message is now part of providersContext to simplify the main template
 
       this.logger.debug(
         "[MessageManager] Prompt for LLM reply formulation (first 500 chars):",
@@ -147,7 +142,40 @@ ${typeof taskTriggerContent === "string" ? taskTriggerContent : JSON.stringify(t
     }
   }
 
-  // getRecentMessages from ElizaOS is more of a utility.
-  // In Maiar, an executor or service would typically call runtime.memory.queryMemory directly.
-  // If this specific formatting is still needed, it could be a static helper or part of a memory utility class.
+  /**
+   * Fetches recent messages for a given room ID and formats them as a JSON string.
+   * In Maiar, an executor or service would typically call runtime.memory.queryMemory directly.
+   * This method provides the specific formatting previously used by Eliza's formatMessages.
+   */
+  public async getRecentMessages(roomId: string, count = 10): Promise<string> {
+    this.logger.debug(
+      `[MessageManager] Fetching recent messages for roomId: ${roomId}`
+    );
+    try {
+      const memories = await this.runtime.memory.queryMemory({
+        spaceId: roomId,
+        limit: count
+      });
+
+      if (memories && memories.length > 0) {
+        return JSON.stringify(
+          memories.map((m) => ({
+            content: JSON.parse(m.trigger)?.content || m.trigger,
+            timestamp: m.createdAt,
+            metadata: m.metadata
+          })),
+          null,
+          2
+        );
+      } else {
+        return "[]";
+      }
+    } catch (error) {
+      this.logger.error(
+        `[MessageManager] Error fetching recent messages for roomId ${roomId}:`,
+        error
+      );
+      return "[]";
+    }
+  }
 }

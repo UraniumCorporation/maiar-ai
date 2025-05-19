@@ -1,20 +1,20 @@
 import * as THREE from "three";
 
 // @ts-expect-error hyperfy is not typed
-import { createEmoteFactory } from "../hyperfy/core/extras/createEmoteFactory";
+import { createEmoteFactory } from "../../hyperfy/src/core/extras/createEmoteFactory";
 // @ts-expect-error hyperfy is not typed
-import { createNode } from "../hyperfy/core/extras/createNode";
+import { createNode } from "../../hyperfy/src/core/extras/createNode";
 // @ts-expect-error hyperfy is not typed
-import { createVRMFactory } from "../hyperfy/core/extras/createVRMFactory";
+import { createVRMFactory } from "../../hyperfy/src/core/extras/createVRMFactory";
 // @ts-expect-error hyperfy is not typed
-import { glbToNodes } from "../hyperfy/core/extras/glbToNodes.js";
+import { glbToNodes } from "../../hyperfy/src/core/extras/glbToNodes.js";
 // @ts-expect-error hyperfy is not typed
-import { GLTFLoader } from "../hyperfy/core/libs/gltfloader/GLTFLoader.js";
+import { GLTFLoader } from "../../hyperfy/src/core/libs/gltfloader/GLTFLoader.js";
 // @ts-expect-error hyperfy is not typed (Node is likely their base class for scene objects)
-import { Node as HyperfyNodeActual } from "../hyperfy/core/nodes/Node.js";
+import { Node as HyperfyNodeActual } from "../../hyperfy/src/core/nodes/Node.js";
 // @ts-expect-error hyperfy is not typed
-import { System } from "../hyperfy/core/systems/System.js";
-import { AgentAvatar, AvatarFactory } from "./avatar";
+import { System } from "../../hyperfy/src/core/systems/System.js";
+import { AgentAvatar, AvatarFactory } from "./avatar.js";
 
 // import { VRMLoaderPlugin } from "@pixiv/three-vrm";
 // --- Mock Browser Environment for Loaders ---
@@ -24,7 +24,8 @@ if (typeof globalThis !== "undefined") {
   // globalThis.URL = URL; // Usually available in modern Node
 
   // Mock self if needed by any dependency
-  // globalThis.self = globalThis;
+  // @ts-expect-error any
+  (globalThis as any).self = globalThis;
 
   // Mock window minimally
   globalThis.window = globalThis.window || globalThis;

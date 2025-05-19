@@ -1,8 +1,9 @@
 import { Runtime } from "@maiar-ai/core";
 import { Logger as MaiarLogger } from "@maiar-ai/core/dist/logger";
 
-import { EMOTES_LIST } from "../constants";
-import { HyperfyService } from "../services";
+import { EMOTES_LIST } from "../constants.js";
+import { HyperfyService } from "../services/index.js";
+import { HyperfyEmoteName } from "../types.js";
 
 export class EmoteManager {
   private emoteHashMap: Map<
@@ -67,7 +68,7 @@ export class EmoteManager {
     }
 
     try {
-      await this.service.playEmote(emoteToPlay);
+      await this.service.playEmote(emoteToPlay as HyperfyEmoteName);
       this.logger.info(`Service requested to play emote: ${emoteToPlay}`);
     } catch (serviceError) {
       const errorMessage =
@@ -101,5 +102,30 @@ export class EmoteManager {
       clearInterval(this.movementCheckInterval);
       this.movementCheckInterval = null;
     }
+  }
+
+  public resolveEmoteIdentifier(
+    emoteName: HyperfyEmoteName | string
+  ): string | null {
+    if (!emoteName) return null;
+    if (emoteName.startsWith("asset://") || emoteName.endsWith(".glb")) {
+      return emoteName;
+    }
+    if (this.emoteHashMap && this.emoteHashMap.has(emoteName)) {
+      return emoteName;
+    }
+    const emoteConstant = EMOTES_LIST.find(
+      (e) => e.name.toLowerCase() === emoteName.toLowerCase()
+    );
+    if (emoteConstant && emoteConstant.path) {
+      this.logger.debug(
+        `[EmoteManager] Resolved '${emoteName}' using EMOTES_LIST path: ${emoteConstant.path}.`
+      );
+      return emoteConstant.path;
+    }
+    this.logger.warn(
+      `[EmoteManager] Emote name '${emoteName}' not found. Returning as is.`
+    );
+    return emoteName;
   }
 }

@@ -1,10 +1,19 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES2022", // compiles down to ES6 for better compatibility with modern browsers and Node.js
+    "module": "NodeNext", // uses ES modules to enable tree shaking and module optimization
+    "moduleResolution": "NodeNext", // resolves modules like Node.js, helpful for Node and frontend compatibility
+    "esModuleInterop": true, // allows importing CommonJS modules with `import` syntax (e.g., `import x from 'y'`)
+    "forceConsistentCasingInFileNames": true, // prevents issues from inconsistent file name casing across different OSes (e.g., "foo.ts" vs "Foo.ts")
+    "strict": true, // enables all strict type-checking options (e.g., `noImplicitAny`, `strictNullChecks`, etc.) for better type safety
+    "skipLibCheck": true, // speeds up compilation by skipping type checking of declaration files (.d.ts), useful for large projects
+    "noUncheckedIndexedAccess": true, // ensures array elements and object properties are properly checked for undefined when accessed with an index (e.g., `arr[0]`)
+    "noEmit": false, // disables generating output files, just checks types; useful as a linter for type-checking without building
+    "types": ["node", "dom"], // includes Node.js types for better IntelliSense and type-checking
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "declaration": true,
     "declarationDir": "./dist"
   },
-  "include": ["src/**/*"]
+  "include": ["./src/**/*", "./hyperfy/**/*"]
 }

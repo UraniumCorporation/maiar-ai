@@ -1,0 +1,4 @@
+[submodule "packages/plugin-hyperfy/hyperfy"]
+	path = packages/plugin-hyperfy/hyperfy
+	url = https://github.com/tcm390/hyperfy
+	branch = dev

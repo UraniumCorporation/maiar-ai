@@ -2,6 +2,7 @@
   "name": "@maiar-ai/starter",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "main": "./dist/index.js",
   "scripts": {
     "dev": "chokidar '../.build-complete' 'src/**/*.ts' --initial --verbose -c 'pnpm build && pnpm run restart'",
@@ -9,7 +10,7 @@
     "build": "tsc --project tsconfig.json",
     "clean": "rm -rf data",
     "prestart": "pnpm build",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js --experimental-print-required-tla."
   },
   "dependencies": {
     "@maiar-ai/core": "workspace:*",
@@ -29,6 +30,7 @@
     "@maiar-ai/plugin-websocket": "workspace:*",
     "@maiar-ai/plugin-x": "workspace:*",
     "@maiar-ai/plugin-codex": "workspace:*",
+    "@maiar-ai/plugin-hyperfy": "workspace:*",
     "cors": "2.8.5",
     "dotenv": "16.4.7",
     "express": "4.21.2",

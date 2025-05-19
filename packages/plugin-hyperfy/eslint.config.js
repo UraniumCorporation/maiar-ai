@@ -23,8 +23,7 @@ export default tseslint.config([
     ],
     rules: {
       "no-unused-vars": "off",
-      "@typescript-eslint/no-this-alias": "off",
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-explicit-any": "off" // TODO: Remove this rule when you are ready to enforce no-explicit-any
     }
   }

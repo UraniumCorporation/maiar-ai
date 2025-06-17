@@ -73,7 +73,3 @@ function getSchemaType<T>(schema: z.ZodType<T>): string {
 
   return schema.constructor.name;
 }
-
-export function serializeForPrompt(obj: unknown): string {
-  return JSON.stringify(obj, null, 2);
-}

@@ -10,7 +10,6 @@ import {
   Response,
   Space
 } from "@maiar-ai/core";
-import { serializeForPrompt } from "@maiar-ai/core/src/runtime/pipeline/operations";
 
 import {
   multiModalTextGenerationCapability,
@@ -82,7 +81,7 @@ export class TextGenerationPlugin extends Plugin {
   private async generateText(task: AgentTask): Promise<PluginResult> {
     const textPrompt = await this.runtime.templates.render(
       `${this.id}/text_to_text`,
-      { context: serializeForPrompt(task) }
+      { context: JSON.stringify(task, null, 2) }
     );
 
     const text = await this.runtime.executeCapability(
@@ -96,7 +95,7 @@ export class TextGenerationPlugin extends Plugin {
   private async generateTextMultimodal(task: AgentTask): Promise<PluginResult> {
     const multimodalPromptTemplate = await this.runtime.templates.render(
       `${this.id}/multimodal_text_prompt`,
-      { context: serializeForPrompt(task) }
+      { context: JSON.stringify(task, null, 2) }
     );
 
     const promptResponse = await this.runtime.getObject(

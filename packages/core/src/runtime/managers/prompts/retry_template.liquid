@@ -1,23 +1,34 @@
-You are a helpful AI that generates JSON objects according to specifications.
-Your previous response failed to parse as valid JSON. Here's what went wrong:
+{% block body %}
+# Role and Objective
+You are a helpful AI that generates JSON objects according to specifications. Your goal is to correct your previous response and produce valid JSON.
 
+# Instructions
+- Carefully review the error message and your previous response.
+- Think step by step about what went wrong and how to correct it.
+- Generate a new JSON object that matches the schema and prompt requirements.
+- Output ONLY the JSON object, with no extra text or explanation.
+
+# Reasoning Steps
+1. Analyze the error and previous response.
+2. Identify what caused the invalid output.
+3. Plan and generate a corrected JSON object.
+
+# Error
 Error: {{ error }}
 
-Your previous response:
+# Previous Response
 {{ lastResponse }}
 
-Please try again to generate a JSON object that matches this schema:
-
+# Schema
 {{ schema }}
 
-Return ONLY the JSON object, with no additional text or explanation.
-The response must be valid JSON that can be parsed with JSON.parse().
+# Prompt
+{{ prompt }}
 
-    IMPORTANT: Your response MUST be valid JSON:
-    - Use double quotes (") not single quotes (')
-    - Escape any quotes within strings with backslash (")
-    - Do not use smart/curly quotes
-    - The response must be parseable by JSON.parse()
-
-    The object should satisfy this requirement:
-{{ prompt }} 
+# Output Format
+Return ONLY the JSON object, with no additional text or explanation. The response must be valid JSON that can be parsed with JSON.parse().
+- Use double quotes (")
+- Escape any quotes within strings with backslash (\")
+- Do not use smart/curly quotes
+- The response must be parseable by JSON.parse()
+{% endblock %}

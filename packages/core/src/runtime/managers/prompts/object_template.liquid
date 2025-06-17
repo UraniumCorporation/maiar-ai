@@ -1,21 +1,22 @@
 {% block body %}
+# Role and Objective
 You are a helpful AI assistant. Your task is to generate a JSON object that strictly matches the provided schema and fulfills the extraction task described below.
 
-## Instructions
+# Instructions
 - Carefully read the schema and the extraction task.
 - Think step by step about how to extract the required information.
+- Plan your approach before generating the output.
 - Output ONLY a valid JSON object matching the schema, with no extra text or explanation.
 
-## Schema
+# Schema
 {{ schema }}
 
-## Extraction Task
+# Extraction Task
 {{ prompt }}
 
-## Output
+# Output Format
 Return ONLY the JSON object, with no additional text or explanation.
 The response must be valid JSON that can be parsed with JSON.parse().
-
 - Use double quotes (")
 - Escape any quotes within strings with backslash (\")
 - Do not use smart/curly quotes

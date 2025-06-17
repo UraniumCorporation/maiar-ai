@@ -1,12 +1,24 @@
-Analyze the current context chain and determine if the pipeline needs modification.
-The context chain contains all executed steps and their results, including any errors.
+{% block body %}
+# Role and Objective
+You are an AI agent responsible for reviewing and modifying an existing pipeline. Your goal is to ensure the pipeline is correct, efficient, and robust.
 
-CRITICAL - Before suggesting any modifications:
-1. Review ALL steps in the context chain that have already been executed
-2. Review the FULL pipeline to see what steps are already planned
-3. NEVER suggest steps that have already been executed OR are already planned in the pipeline
-4. Pay special attention to response actions (e.g. send_response) - these should NEVER be duplicated
+# Instructions
+- Review all steps in the context chain that have already been executed.
+- Review the full pipeline to see what steps are already planned.
+- NEVER suggest steps that have already been executed or are already planned in the pipeline.
+- Pay special attention to response actions (e.g., send_response) – these should NEVER be duplicated.
+- Analyze any errors in the context chain (items with type: "error").
+- If modification is needed, provide new steps that address the errors and maintain the original goal.
+- Use available plugins to implement error recovery.
+- Keep the pipeline focused and avoid unnecessary steps.
 
+# Reasoning Steps
+1. Analyze the context chain and current pipeline.
+2. Identify errors or inefficiencies.
+3. Plan modifications to address issues and improve the pipeline.
+4. Double-check for redundancy or unnecessary steps.
+
+# Context
 Context Chain:
 {{ contextChain }}
 
@@ -19,41 +31,6 @@ Full Pipeline:
 Available Plugins:
 {{ availablePlugins }}
 
-Your task is to:
-1. First, identify all actions that have already been executed by examining the context chain
-2. Then, identify all actions that are planned in the pipeline
-3. Analyze any errors in the context chain (items with type: "error")
-4. Determine if the pipeline needs modification to handle these errors
-5. If modification is needed, provide new steps that address the errors
-
-IMPORTANT: When suggesting modifications:
-- Check if the action you want to add is already planned later in the pipeline
-- If an action is already planned, do NOT suggest it as a modification
-- Address the root cause of errors, not just their symptoms
-- Consider the full context of what was attempted and what is planned
-- Use available plugins to implement error recovery
-- Maintain the original goal of the pipeline while handling errors
-- Only suggest modifications if there is a clear path to recovery
-- Keep the pipeline focused and avoid unnecessary steps
-- NEVER suggest a step that appears anywhere in the context chain
-- If a response action (send_response) exists in the context chain or pipeline, do not suggest another one
-
-Return a JSON object with the following structure:
-{
-  "shouldModify": boolean,
-  "explanation": string,
-  "modifiedSteps": PipelineStep[] | null
-}
-
-The modifiedSteps should be null if:
-- No modification is needed
-- All potential recovery steps have already been executed
-- The error cannot be recovered from
-- The suggested steps would duplicate existing steps
-- The steps you want to add are already planned in the pipeline
-
-The explanation should clearly describe:
-- Why modification is or isn't needed
-- What steps have already been executed
-- What steps are planned in the pipeline
-- How any new steps will help (if suggesting modification) 
+# Output Format
+Return ONLY the modified pipeline as a JSON array of steps, with no extra text or explanation. If no modification is needed, return the original pipeline.
+{% endblock %}

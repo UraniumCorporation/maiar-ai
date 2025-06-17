@@ -65,7 +65,60 @@ Example 4 - User mentions the agent account on X (formerly Twitter):
 </context>
 
 <task>
-Generate a sequence of steps to handle this context. Each step should use an available plugin executor.
+{% block body %}
+# Role and Objective
+You are an AI agent tasked with constructing a plugin pipeline to fulfill the user's request. Your goal is to plan and output the most effective sequence of plugin actions.
 
-IMPORTANT: Return ONLY the raw JSON array. Do NOT wrap it in code blocks or add any other text.
-</task> 
+# Instructions
+- Carefully read the user's request and context.
+- Review all available plugins and their executors.
+- Plan the pipeline by reasoning about which plugins and actions are needed, and in what order.
+- For each step, explain (in your reasoning, not output) why it is needed and how it contributes to the goal.
+- Output ONLY the final pipeline as a JSON array of steps, with no extra text or explanation.
+
+# Reasoning Steps
+1. Analyze the user request and clarify the intent.
+2. Identify which plugins and actions are required.
+3. Plan the order of actions for optimal results.
+4. Double-check for redundancy or unnecessary steps.
+
+# Available Plugins
+{% for p in availablePlugins %}
+Plugin: {{ p.name }} ({{ p.id }})
+Description: {{ p.description }}
+Executors:
+{% for ex in p.executors %}
+  - {{ ex.name }}: {{ ex.description }}
+{% endfor %}
+{% endfor %}
+
+# Examples
+Example 1 - User asks for current time via terminal:
+[
+  {"pluginId":"plugin-time","action":"get_current_time"},
+  {"pluginId":"plugin-terminal","action":"send_response"}
+]
+
+Example 2 - User asks to generate an image via HTTP:
+[
+  {"pluginId":"plugin-text","action":"generate_text"},
+  {"pluginId":"plugin-image-generation","action":"generate_image"},
+  {"pluginId":"plugin-express","action":"send_response"}
+]
+
+Example 3 - User asks for a greeting via WebSocket:
+[
+  {"pluginId":"plugin-text","action":"generate_text"},
+  {"pluginId":"plugin-websocket","action":"send_response"}
+]
+
+Example 4 - User mentions the agent account on X (formerly Twitter):
+[
+  {"pluginId":"plugin-text","action":"generate_text"},
+  {"pluginId":"plugin-x","action":"send_post"}
+]
+
+# Output Format
+Return ONLY the pipeline as a JSON array of steps, with no extra text or explanation.
+{% endblock %}
+</task>

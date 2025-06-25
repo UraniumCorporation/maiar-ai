@@ -2,7 +2,7 @@
 name: ♻️ CI Workflow
 run-name: "♻️ CI Workflow - PR #${{ github.event.pull_request.number }} commit ${{ github.sha }} by @${{ github.actor }}"
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - "*"
 
@@ -23,7 +23,9 @@ jobs:
       - name: 🛒 Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for all branches and tags
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 1
 
       - uses: ./.github/actions/setup
 

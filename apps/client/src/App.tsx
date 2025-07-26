@@ -4,6 +4,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
 
 import { AgentStatus } from "./components/AgentStatus";
+import Analytics from "./components/Analytics";
 import { Chat } from "./components/Chat";
 import { ConnectionSettings } from "./components/ConnectionSettings";
 import { ContextChain } from "./components/ContextChain";
@@ -11,7 +12,6 @@ import { Events } from "./components/Events";
 import { GridLayout } from "./components/GridLayout";
 import { Pipeline } from "./components/Pipeline";
 import { PromptList } from "./components/PromptList";
-import TokenAnalytics from "./components/TokenAnalytics";
 import { MonitorProvider } from "./contexts/MonitorProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
 
@@ -94,7 +94,7 @@ function AppContent() {
           chat: <Chat />,
           events: <Events />,
           prompts: <PromptList />,
-          tokenAnalytics: <TokenAnalytics />
+          tokenAnalytics: <Analytics />
         }}
         onResetLayout={setResetFn}
       />

@@ -1,36 +1,6 @@
 import React, { useMemo } from "react";
 
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-  Chip,
-  LinearProgress,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography
-} from "@mui/material";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  XAxis,
-  YAxis
-} from "recharts";
+import { Alert, Box, Typography } from "@mui/material";
 
 import { useEvents } from "../contexts/MonitorContext";
 
@@ -54,21 +24,16 @@ interface TokenAnalyticsData {
   totalOperations: number;
 }
 
-const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884D8",
-  "#82CA9D"
-];
-
 const TokenAnalytics: React.FC = () => {
   const events = useEvents();
 
   const analyticsData = useMemo((): TokenAnalyticsData => {
-    // Filter for token-related events - only use dedicated token.usage events
-    const tokenEvents = events.filter((event) => event.type === "token.usage");
+    // Filter for token-related analytics events from the new system
+    const tokenEvents = events.filter((event) => {
+      if (event.type !== "analytics") return false;
+      const metadata = event.metadata as Record<string, unknown> | undefined;
+      return metadata?.trackerId === "openai-tokens";
+    });
 
     const operationCounts: Record<
       string,
@@ -87,12 +52,14 @@ const TokenAnalytics: React.FC = () => {
       let outputTokens = 0;
       let operationLabel = "unknown_operation";
 
-      if (event.type === "token.usage") {
-        // Token usage events have the data in metadata
+      if (event.type === "analytics") {
+        // New analytics events have the data in metadata.data
         const metadata = event.metadata as Record<string, unknown> | undefined;
-        tokens = Number(metadata?.totalTokens) || 0;
-        inputTokens = Number(metadata?.inputTokens) || 0;
-        outputTokens = Number(metadata?.outputTokens) || 0;
+        const data = metadata?.data as Record<string, unknown> | undefined;
+
+        tokens = Number(data?.totalTokens) || 0;
+        inputTokens = Number(data?.inputTokens) || 0;
+        outputTokens = Number(data?.outputTokens) || 0;
         operationLabel = String(
           metadata?.operationLabel || "unknown_operation"
         );
@@ -156,32 +123,19 @@ const TokenAnalytics: React.FC = () => {
     };
   }, [events]);
 
-  const formatNumber = (num: number): string => {
-    if (num >= 1000) {
-      return `${(num / 1000).toFixed(1)}K`;
-    }
-    return num.toString();
-  };
+  return (
+    <Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
+      <Typography variant="h5" gutterBottom>
+        Token Usage Analytics (Legacy)
+      </Typography>
+      <Alert severity="warning" sx={{ mb: 2 }}>
+        <strong>Migration Notice:</strong> This component now uses the new
+        generic analytics system. Token data is now available through the new
+        Analytics component which supports multiple metric types. Filter by
+        "openai-tokens" tracker to see token-specific data.
+      </Alert>
 
-  const getCategoryColor = (category: string): string => {
-    switch (category) {
-      case "pipeline":
-        return "#FF6B6B";
-      case "plugin":
-        return "#4ECDC4";
-      case "memory":
-        return "#45B7D1";
-      default:
-        return "#96CEB4";
-    }
-  };
-
-  if (analyticsData.totalTokens === 0) {
-    return (
-      <Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
-        <Typography variant="h5" gutterBottom>
-          Token Usage Analytics
-        </Typography>
+      {analyticsData.totalTokens === 0 ? (
         <Alert severity="info">
           No token usage data detected yet. Start using the agent to see
           meaningful operation breakdowns like:
@@ -206,315 +160,14 @@ const TokenAnalytics: React.FC = () => {
             </li>
           </ul>
         </Alert>
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ p: 2, height: "100%", overflow: "auto" }}>
-      <Typography variant="h5" gutterBottom>
-        Token Usage Analytics
-      </Typography>
-
-      <Stack spacing={3}>
-        {/* Summary Cards */}
-        <Stack direction="row" spacing={2}>
-          <Card sx={{ flex: 1 }}>
-            <CardContent>
-              <Typography variant="body2" color="textSecondary">
-                Total Tokens
-              </Typography>
-              <Typography variant="h4">
-                {formatNumber(analyticsData.totalTokens)}
-              </Typography>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ flex: 1 }}>
-            <CardContent>
-              <Typography variant="body2" color="textSecondary">
-                Total Operations
-              </Typography>
-              <Typography variant="h4">
-                {analyticsData.totalOperations}
-              </Typography>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ flex: 1 }}>
-            <CardContent>
-              <Typography variant="body2" color="textSecondary">
-                Avg Tokens/Operation
-              </Typography>
-              <Typography variant="h4">
-                {analyticsData.totalOperations > 0
-                  ? Math.round(
-                      analyticsData.totalTokens / analyticsData.totalOperations
-                    )
-                  : 0}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Stack>
-
-        {/* Operations Summary - Grouped by Base Operation */}
-        <Card>
-          <CardHeader title="Operations Summary (Including Retries)" />
-          <CardContent>
-            <TableContainer component={Paper} sx={{ mb: 2 }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Base Operation</TableCell>
-                    <TableCell align="right">Total Tokens</TableCell>
-                    <TableCell align="right">Successful Calls</TableCell>
-                    <TableCell align="right">Retry Calls</TableCell>
-                    <TableCell align="right">Total Calls</TableCell>
-                    <TableCell align="right">Success Rate</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.entries(
-                    analyticsData.operations.reduce(
-                      (acc, op) => {
-                        const baseOp = op.operationLabel.split("_retry")[0];
-                        if (!acc[baseOp]) {
-                          acc[baseOp] = {
-                            totalTokens: 0,
-                            successCalls: 0,
-                            retryCalls: 0
-                          };
-                        }
-                        acc[baseOp].totalTokens += op.totalTokens;
-                        if (op.operationLabel.includes("retry")) {
-                          acc[baseOp].retryCalls += op.count;
-                        } else {
-                          acc[baseOp].successCalls += op.count;
-                        }
-                        return acc;
-                      },
-                      {} as Record<
-                        string,
-                        {
-                          totalTokens: number;
-                          successCalls: number;
-                          retryCalls: number;
-                        }
-                      >
-                    )
-                  )
-                    .map(([baseOp, data]) => ({
-                      baseOp,
-                      ...data,
-                      totalCalls: data.successCalls + data.retryCalls,
-                      successRate:
-                        (data.successCalls /
-                          (data.successCalls + data.retryCalls)) *
-                        100
-                    }))
-                    .sort((a, b) => b.totalTokens - a.totalTokens)
-                    .map((row) => (
-                      <TableRow key={row.baseOp}>
-                        <TableCell>
-                          <Chip
-                            label={row.baseOp}
-                            size="small"
-                            color={row.retryCalls > 0 ? "error" : "success"}
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          {formatNumber(row.totalTokens)}
-                        </TableCell>
-                        <TableCell align="right">{row.successCalls}</TableCell>
-                        <TableCell align="right">
-                          {row.retryCalls > 0 ? (
-                            <Chip
-                              label={row.retryCalls}
-                              size="small"
-                              color="error"
-                            />
-                          ) : (
-                            "0"
-                          )}
-                        </TableCell>
-                        <TableCell align="right">{row.totalCalls}</TableCell>
-                        <TableCell align="right">
-                          <Typography
-                            variant="body2"
-                            color={
-                              row.successRate < 50
-                                ? "error"
-                                : row.successRate < 80
-                                  ? "warning.main"
-                                  : "success.main"
-                            }
-                          >
-                            {row.successRate.toFixed(1)}%
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-
-        {/* Operations Breakdown Chart */}
-        <Card>
-          <CardHeader title="Token Usage by Individual Operation" />
-          <CardContent>
-            <Box sx={{ height: 300 }}>
-              <ResponsiveContainer>
-                <BarChart data={analyticsData.operations.slice(0, 10)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="operationLabel"
-                    angle={-45}
-                    textAnchor="end"
-                    height={100}
-                    fontSize={10}
-                  />
-                  <YAxis />
-                  <RechartsTooltip
-                    formatter={(value) => [
-                      formatNumber(value as number),
-                      "Tokens"
-                    ]}
-                  />
-                  <Bar dataKey="totalTokens" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Category Breakdown */}
-        <Card>
-          <CardHeader title="Tokens by Category" />
-          <CardContent>
-            <Box sx={{ height: 250 }}>
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie
-                    data={analyticsData.operations.reduce(
-                      (acc, op) => {
-                        const existing = acc.find(
-                          (item) => item.category === op.category
-                        );
-                        if (existing) {
-                          existing.tokens += op.totalTokens;
-                        } else {
-                          acc.push({
-                            category: op.category,
-                            tokens: op.totalTokens
-                          });
-                        }
-                        return acc;
-                      },
-                      [] as { category: string; tokens: number }[]
-                    )}
-                    dataKey="tokens"
-                    nameKey="category"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                  >
-                    {analyticsData.operations.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip
-                    formatter={(value) => [
-                      formatNumber(value as number),
-                      "Tokens"
-                    ]}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Detailed Operations Table */}
-        <Card>
-          <CardHeader title="Operation Details" />
-          <CardContent>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Operation</TableCell>
-                    <TableCell>Category</TableCell>
-                    <TableCell align="right">Total Tokens</TableCell>
-                    <TableCell align="right">Input/Output</TableCell>
-                    <TableCell align="right">Count</TableCell>
-                    <TableCell align="right">Avg per Call</TableCell>
-                    <TableCell align="right">Percentage</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {analyticsData.operations.map((row) => (
-                    <TableRow key={row.operationLabel}>
-                      <TableCell>
-                        <Chip
-                          label={row.operationLabel}
-                          size="small"
-                          style={{
-                            backgroundColor: getCategoryColor(row.category),
-                            color: "white"
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={row.category}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        {formatNumber(row.totalTokens)}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" color="textSecondary">
-                          {formatNumber(row.inputTokens)} /{" "}
-                          {formatNumber(row.outputTokens)}
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          {row.inputOutputRatio.toFixed(1)}:1 ratio
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">{row.count}</TableCell>
-                      <TableCell align="right">
-                        {formatNumber(row.avgTokens)}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <LinearProgress
-                            variant="determinate"
-                            value={row.percentage}
-                            sx={{ flexGrow: 1, height: 8 }}
-                          />
-                          <Typography variant="body2">
-                            {row.percentage.toFixed(1)}%
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-      </Stack>
+      ) : (
+        <Alert severity="info">
+          Found {analyticsData.totalTokens} tokens from{" "}
+          {analyticsData.totalOperations} operations using the legacy event
+          format. The new analytics system provides more detailed metrics
+          through the Analytics component.
+        </Alert>
+      )}
     </Box>
   );
 };

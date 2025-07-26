@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { ModelProvider, ModelRequestConfig } from "@maiar-ai/core";
 
+import { createOpenAIAnalytics } from "./analytics";
 import {
   imageGenerationCapability,
   multiModalImageGenerationCapability,
@@ -47,6 +48,7 @@ const PROVIDER_ID = "openai";
 export class OpenAIModelProvider extends ModelProvider {
   private client: OpenAI;
   private models: OpenAIModel[];
+  private lastUsageData: OpenAI.Completions.CompletionUsage | undefined; // Store usage for analytics
 
   constructor(config: OpenAIConfig) {
     super({
@@ -58,6 +60,7 @@ export class OpenAIModelProvider extends ModelProvider {
     if (this.models.some((m) => TEXT_MODELS.has(m))) {
       this.addCapability({
         ...textGenerationCapability,
+        analytics: createOpenAIAnalytics(this),
         execute: this.generateTextWithText.bind(this)
       });
     }
@@ -170,45 +173,8 @@ export class OpenAIModelProvider extends ModelProvider {
         throw new Error("No content in response");
       }
 
-      // Extract operation label and token usage for tracking
-      const operationLabel =
-        ((config as Record<string, unknown>)?.operationLabel as string) ||
-        "unknown_operation";
-      const tokenUsage = completion.usage;
-
-      // Log the interaction with token tracking
-      this.logger.info({
-        type: "model.provider.interaction",
-        message: `model provider ${this.id} executed capability text-generation`,
-        metadata: {
-          modelId: this.id,
-          capabilityId: "text-generation",
-          operationLabel,
-          input: input,
-          output: content,
-          tokenUsage: tokenUsage
-            ? {
-                inputTokens: tokenUsage.prompt_tokens,
-                outputTokens: tokenUsage.completion_tokens,
-                totalTokens: tokenUsage.total_tokens
-              }
-            : undefined
-        }
-      });
-
-      // Emit specific token usage event for analytics
-      if (tokenUsage) {
-        this.logger.info("token usage", {
-          type: "token.usage",
-          operationLabel,
-          inputTokens: tokenUsage.prompt_tokens,
-          outputTokens: tokenUsage.completion_tokens,
-          totalTokens: tokenUsage.total_tokens,
-          model: textModel,
-          inputOutputRatio:
-            tokenUsage.prompt_tokens / tokenUsage.completion_tokens
-        });
-      }
+      // Store usage data for analytics
+      this.lastUsageData = completion.usage;
 
       return content;
     } catch (error) {

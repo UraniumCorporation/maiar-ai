@@ -2,6 +2,7 @@ import { Logger } from "winston";
 import { z } from "zod";
 
 import logger from "../../lib/logger";
+import { AnalyticsTracker } from "../managers/analytics";
 import { ICapabilities } from "../managers/model/capability/types";
 
 /**
@@ -16,6 +17,7 @@ export interface ModelCapability<
   readonly input: z.ZodType<InputType>;
   readonly output: z.ZodType<OutputType>;
   readonly config?: z.ZodType<ConfigType>;
+  readonly analytics?: AnalyticsTracker[];
 
   execute(input: InputType, config?: ConfigType): Promise<OutputType>;
 }

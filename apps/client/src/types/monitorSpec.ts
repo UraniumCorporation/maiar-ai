@@ -41,6 +41,31 @@ export interface BaseEvent {
   metadata?: Record<string, unknown>;
 }
 
+export interface AnalyticsEvent extends BaseEvent {
+  type: "analytics";
+  metadata: {
+    trackerId: string;
+    operationLabel: string;
+    capabilityId: string;
+    modelId: string;
+    duration: number;
+    data: Record<string, unknown>;
+  };
+}
+
+export interface AnalyticsErrorEvent extends BaseEvent {
+  type: "analytics.error";
+  metadata: {
+    trackerId: string;
+    operationLabel: string;
+    capabilityId: string;
+    modelId: string;
+    duration: number;
+    error: string;
+    data: Record<string, unknown>;
+  };
+}
+
 export interface TokenUsageEvent extends BaseEvent {
   type: "token.usage";
   metadata: {
@@ -117,6 +142,8 @@ export interface StateUpdate extends BaseEvent {
 }
 
 export type MonitorEvent =
+  | AnalyticsEvent
+  | AnalyticsErrorEvent
   | TokenUsageEvent
   | PipelineTokenUsageEvent
   | PipelineGenerationComplete

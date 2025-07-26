@@ -75,7 +75,8 @@ export class TelegramPlugin extends Plugin {
 
       const formattedResponse = await this.runtime.getObject(
         TelegramResponseSchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "plugin_telegram_send_response" }
       );
 
       // Use the main bot instance to send the reply

@@ -138,10 +138,9 @@ export class MCPPlugin extends Plugin {
 
         try {
           // Ask the LLM to produce arguments matching the schema
-          const args = (await this.runtime.getObject(
-            zodSchema,
-            prompt
-          )) as Record<string, unknown>;
+          const args = (await this.runtime.getObject(zodSchema, prompt, {
+            operationLabel: "plugin_mcp_call_tool"
+          })) as Record<string, unknown>;
 
           const result = await client.callTool({
             name: tool.name,

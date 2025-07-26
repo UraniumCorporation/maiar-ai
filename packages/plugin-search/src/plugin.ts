@@ -43,7 +43,8 @@ export class SearchPlugin extends Plugin {
 
     const params = await this.runtime.getObject(
       PerplexityQueryResponseSchema,
-      queryPrompt
+      queryPrompt,
+      { operationLabel: "plugin_search_query" }
     );
 
     const query = params.query;

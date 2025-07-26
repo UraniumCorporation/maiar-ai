@@ -124,16 +124,11 @@ export class Processor {
         generatePipelineContext
       });
 
-      // Calculate sizes for analysis
-      const contextChainSize = JSON.stringify(task.contextChain).length;
-      const availablePluginsCount = availablePlugins.length;
-      const promptSize = generatePipelineContext.length;
-
       const pipeline = await this.runtime.getObject(
         PipelineSchema,
         generatePipelineContext,
         {
-          operationLabel: `pipeline_generation_OPTIMIZED_ctx${Math.round(contextChainSize / 1000)}k_plugins${availablePluginsCount}_prompt${Math.round(promptSize / 1000)}k`
+          operationLabel: `pipeline_generation`
         }
       );
 
@@ -376,16 +371,11 @@ export class Processor {
     });
 
     try {
-      // Calculate sizes for modification analysis
-      const contextChainLength = modificationContext.contextChain.length;
-      const currentPipelineLength = currentPipeline.length;
-      const templateSize = template.length;
-
       const modification = await this.runtime.getObject(
         PipelineModificationSchema,
         template,
         {
-          operationLabel: `pipeline_modification_OPTIMIZED_ctx${contextChainLength}_pipeline${currentPipelineLength}_prompt${Math.round(templateSize / 1000)}k`
+          operationLabel: `pipeline_modification`
         }
       );
 

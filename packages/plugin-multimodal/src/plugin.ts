@@ -86,7 +86,8 @@ export class MultiModalPlugin extends Plugin {
 
     const promptResponse = await this.runtime.getObject(
       MultimodalTextPromptResponseSchema,
-      multimodalPromptTemplate
+      multimodalPromptTemplate,
+      { operationLabel: "plugin_multimodal_generate_text" }
     );
 
     const prompt = promptResponse.prompt;
@@ -114,7 +115,8 @@ export class MultiModalPlugin extends Plugin {
 
       const promptResponse = await this.runtime.getObject(
         MultimodalImagePromptResponseSchema,
-        promptTemplate
+        promptTemplate,
+        { operationLabel: "plugin_multimodal_generate_image" }
       );
 
       const prompt = promptResponse.prompt;
@@ -231,7 +233,8 @@ export class MultiModalPlugin extends Plugin {
 
       const formattedResponse = await this.runtime.getObject(
         ChatResponseSchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "plugin_multimodal_send_chat_response" }
       );
 
       // Type assertion for responseHandler since TypeScript doesn't know its type

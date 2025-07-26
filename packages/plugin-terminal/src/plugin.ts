@@ -79,7 +79,8 @@ export class TerminalPlugin extends Plugin {
 
       const formattedResponse = await this.runtime.getObject(
         TerminalResponseSchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "plugin_terminal_send_response" }
       );
 
       await platformContext.responseHandler(formattedResponse.message);

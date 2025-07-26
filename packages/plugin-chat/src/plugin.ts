@@ -65,7 +65,8 @@ export class ChatPlugin extends Plugin {
 
     const text = await this.runtime.executeCapability(
       textGenerationCapability.id,
-      textPrompt
+      textPrompt,
+      { operationLabel: "plugin_chat_generate_text" }
     );
 
     return { success: true, data: { text } };

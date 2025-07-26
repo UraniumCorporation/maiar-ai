@@ -71,7 +71,8 @@ export class PostgresMemoryPlugin extends Plugin {
 
       const queryFormattedResponse = await this.runtime.getObject(
         PostgresQuerySchema,
-        queryPrompt
+        queryPrompt,
+        { operationLabel: "plugin_postgres_memory_remove_document" }
       );
 
       // First find matching documents
@@ -126,7 +127,8 @@ export class PostgresMemoryPlugin extends Plugin {
 
     const formattedResponse = await this.runtime.getObject(
       PostgresMemoryUploadSchema,
-      uploadPrompt
+      uploadPrompt,
+      { operationLabel: "plugin_postgres_memory_add_document" }
     );
 
     const client = await this.pool.connect();
@@ -170,7 +172,8 @@ export class PostgresMemoryPlugin extends Plugin {
 
       const queryFormattedResponse = await this.runtime.getObject(
         PostgresQuerySchema,
-        queryPrompt
+        queryPrompt,
+        { operationLabel: "plugin_postgres_memory_query" }
       );
 
       const queryResults = await client.query(queryFormattedResponse.query);

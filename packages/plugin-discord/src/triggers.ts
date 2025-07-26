@@ -109,7 +109,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         relatedSpaces: {
           prefix: discordSpacePrefix
         },
-        limit: 10
+        limit: 2
       });
 
       const intentPrompt = await runtime.templates.render(
@@ -124,7 +124,13 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         }
       );
 
-      const intent = await runtime.getObject(MessageIntentSchema, intentPrompt);
+      const intent = await runtime.getObject(
+        MessageIntentSchema,
+        intentPrompt,
+        {
+          operationLabel: "plugin_discord_message_intent"
+        }
+      );
 
       logger.info("intent analysis result", {
         type: "discord.message.intent",

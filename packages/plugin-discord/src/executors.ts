@@ -2,7 +2,13 @@ import { BaseGuildTextChannel } from "discord.js";
 import os from "os";
 import path from "path";
 
-import { AgentTask, Executor, PluginResult, Runtime } from "@maiar-ai/core";
+import {
+  AgentTask,
+  Executor,
+  JsonUtils,
+  PluginResult,
+  Runtime
+} from "@maiar-ai/core";
 import * as maiarLogger from "@maiar-ai/core/dist/logger";
 
 import { DiscordService } from "./services";
@@ -58,7 +64,7 @@ export const sendMessageExecutor = discordExecutorFactory(
     try {
       const responsePrompt = await runtime.templates.render(
         `${service.pluginId}/response`,
-        { context: JSON.stringify(task, null, 2) }
+        { context: JsonUtils.toJsonString(task) }
       );
 
       const response = await runtime.getObject(
@@ -72,12 +78,13 @@ export const sendMessageExecutor = discordExecutorFactory(
       try {
         const imagePrompt = await runtime.templates.render(
           `${service.pluginId}/image_list`,
-          { context: JSON.stringify(task, null, 2) }
+          { context: JsonUtils.toJsonString(task) }
         );
 
         const imageList = await runtime.getObject(
           DiscordImageListSchema,
-          imagePrompt
+          imagePrompt,
+          { operationLabel: "plugin_discord_image_list" }
         );
         images = imageList.images || [];
       } catch {
@@ -245,12 +252,13 @@ export const replyMessageExecutor = discordExecutorFactory(
     try {
       const responsePrompt = await runtime.templates.render(
         `${service.pluginId}/response`,
-        { context: JSON.stringify(task, null, 2) }
+        { context: JsonUtils.toJsonString(task) }
       );
 
       const response = await runtime.getObject(
         DiscordReplySchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "plugin_discord_reply_message" }
       );
 
       const channel = await service.client.channels.fetch(channelId);

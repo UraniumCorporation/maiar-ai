@@ -120,9 +120,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
           isReply: !!message.reference?.messageId,
           botId: discordService.clientId,
           commandPrefix: discordService.commandPrefix,
-          recentHistory: JsonUtils.safeStringify(
-            JsonUtils.normalizeObject(recentHistory)
-          )
+          recentHistory: JsonUtils.toJsonString(recentHistory)
         }
       );
 

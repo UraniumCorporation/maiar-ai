@@ -104,7 +104,7 @@ export class MemoryManager {
     // martial the task event into a memory object for the initial trigger event
     const memory: Omit<Memory, "id"> = {
       spaceId: taskEvent.space?.id,
-      trigger: JsonUtils.safeStringify(taskEvent.trigger),
+      trigger: JsonUtils.toJsonString(taskEvent.trigger),
       context: undefined,
       createdAt: taskEvent.trigger.timestamp,
       updatedAt: undefined,

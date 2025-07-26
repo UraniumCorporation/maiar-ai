@@ -336,9 +336,7 @@ export class Scheduler {
       const completedTaskChain = await this.processor.spawn(task);
 
       await this.memoryManager.updateMemory(memoryId, {
-        context: JsonUtils.safeStringify(
-          JsonUtils.normalizeObject(completedTaskChain)
-        )
+        context: JsonUtils.toJsonString(completedTaskChain)
       });
 
       this.logger.info("pipeline execution complete", {
@@ -369,7 +367,7 @@ export class Scheduler {
     // Add conversationId to platform context metadata
     const task: AgentTask = {
       trigger,
-      contextChain: [trigger],
+      contextChain: [],
       space,
       metadata: {}
     };

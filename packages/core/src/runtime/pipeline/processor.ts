@@ -83,12 +83,10 @@ export class Processor {
     const relatedMemories = await this.runtime.templates.render(
       "core/related_memories",
       {
-        relatedMemoriesContext: JsonUtils.safeStringify(
-          JsonUtils.normalizeObject({
-            task: task.trigger,
-            relatedMemoriesResults
-          })
-        )
+        relatedMemoriesContext: JsonUtils.toJsonString({
+          task: task.trigger,
+          relatedMemoriesResults
+        })
       }
     );
 
@@ -360,20 +358,14 @@ export class Processor {
       }))
     );
 
-    const availablePluginsString = JsonUtils.safeStringify(availablePlugins);
+    const availablePluginsString = JsonUtils.toJsonString(availablePlugins);
 
     const template = await this.runtime.templates.render(
       "core/pipeline_modify",
       {
-        contextChain: JsonUtils.safeStringify(
-          JsonUtils.normalizeObject(modificationContext.contextChain)
-        ),
-        currentStep: JsonUtils.safeStringify(
-          JsonUtils.normalizeObject(modificationContext.currentStep)
-        ),
-        pipeline: JsonUtils.safeStringify(
-          JsonUtils.normalizeObject(modificationContext.pipeline)
-        ),
+        contextChain: JsonUtils.toJsonString(modificationContext.contextChain),
+        currentStep: JsonUtils.toJsonString(modificationContext.currentStep),
+        pipeline: JsonUtils.toJsonString(modificationContext.pipeline),
         availablePlugins: availablePluginsString
       }
     );
@@ -503,11 +495,8 @@ export class Processor {
     task.contextChain.push({
       id: `${step.pluginId}-${Date.now()}`,
       pluginId: step.pluginId,
-      type: step.action,
-      action: step.action,
-      content: JsonUtils.safeStringify(result.data),
-      timestamp: Date.now(),
-      ...result.data
+      content: JsonUtils.toJsonString(result.data),
+      timestamp: Date.now()
     });
   }
 

@@ -63,4 +63,13 @@ export class JsonUtils {
 
     return this.normalizeContent(obj);
   }
+
+  /**
+   * One-stop function: takes any input, normalizes over-serialization, returns clean JSON string
+   * Perfect for template interpolation and prompt building
+   */
+  static toJsonString(value: unknown): string {
+    const normalized = this.normalizeObject(value);
+    return this.safeStringify(normalized);
+  }
 }

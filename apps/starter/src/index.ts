@@ -57,8 +57,10 @@ async function main() {
   // });
 
   const plugins: Plugin[] = [
+    new CharacterPlugin({
+      character: readFileSync(join(process.cwd(), "character.xml"), "utf-8")
+    }),
     new ChatPlugin(),
-    //new SearchPermissionPlugin(["0xPBIT"]),
     new SearchPlugin({
       apiKey: process.env.PERPLEXITY_API_KEY as string
     }),
@@ -74,9 +76,6 @@ async function main() {
       token: process.env.TELEGRAM_BOT_TOKEN as string,
       pollingTimeout: 10000,
       dropPendingUpdates: true
-    }),
-    new CharacterPlugin({
-      character: readFileSync(join(process.cwd(), "character.xml"), "utf-8")
     })
   ];
 

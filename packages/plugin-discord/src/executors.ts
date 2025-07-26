@@ -63,7 +63,8 @@ export const sendMessageExecutor = discordExecutorFactory(
 
       const response = await runtime.getObject(
         DiscordSendSchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "plugin_discord_send_message" }
       );
 
       // Extract images from context chain using DiscordImageListSchema and template
@@ -152,7 +153,8 @@ export const sendMessageExecutor = discordExecutorFactory(
 
       const channelSelection = await runtime.getObject(
         DiscordChannelSelectionSchema,
-        channelPrompt
+        channelPrompt,
+        { operationLabel: "plugin_discord_select_channel" }
       );
 
       const selectedChannel = textChannels.get(channelSelection.channelId);

@@ -170,17 +170,45 @@ export class OpenAIModelProvider extends ModelProvider {
         throw new Error("No content in response");
       }
 
-      // Log the interaction
+      // Extract operation label and token usage for tracking
+      const operationLabel =
+        ((config as Record<string, unknown>)?.operationLabel as string) ||
+        "unknown_operation";
+      const tokenUsage = completion.usage;
+
+      // Log the interaction with token tracking
       this.logger.info({
         type: "model.provider.interaction",
         message: `model provider ${this.id} executed capability text-generation`,
         metadata: {
           modelId: this.id,
           capabilityId: "text-generation",
+          operationLabel,
           input: input,
-          output: content
+          output: content,
+          tokenUsage: tokenUsage
+            ? {
+                inputTokens: tokenUsage.prompt_tokens,
+                outputTokens: tokenUsage.completion_tokens,
+                totalTokens: tokenUsage.total_tokens
+              }
+            : undefined
         }
       });
+
+      // Emit specific token usage event for analytics
+      if (tokenUsage) {
+        this.logger.info("token usage", {
+          type: "token.usage",
+          operationLabel,
+          inputTokens: tokenUsage.prompt_tokens,
+          outputTokens: tokenUsage.completion_tokens,
+          totalTokens: tokenUsage.total_tokens,
+          model: textModel,
+          inputOutputRatio:
+            tokenUsage.prompt_tokens / tokenUsage.completion_tokens
+        });
+      }
 
       return content;
     } catch (error) {

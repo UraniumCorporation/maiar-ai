@@ -148,7 +148,8 @@ export class ChatPlugin extends Plugin {
 
       const formattedResponse = await this.runtime.getObject(
         ChatResponseSchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "plugin_chat_send_response" }
       );
 
       // Type assertion for responseHandler since TypeScript doesn't know its type

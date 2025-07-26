@@ -11,6 +11,7 @@ import { Events } from "./components/Events";
 import { GridLayout } from "./components/GridLayout";
 import { Pipeline } from "./components/Pipeline";
 import { PromptList } from "./components/PromptList";
+import TokenAnalytics from "./components/TokenAnalytics";
 import { MonitorProvider } from "./contexts/MonitorProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
 
@@ -92,7 +93,8 @@ function AppContent() {
           contextChain: <ContextChain />,
           chat: <Chat />,
           events: <Events />,
-          prompts: <PromptList />
+          prompts: <PromptList />,
+          tokenAnalytics: <TokenAnalytics />
         }}
         onResetLayout={setResetFn}
       />

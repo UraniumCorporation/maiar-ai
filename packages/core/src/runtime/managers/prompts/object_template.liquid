@@ -1,17 +1,7 @@
-{% block body %}
-You are a helpful AI that generates JSON objects according to specifications.
-Please generate a JSON object that matches the following schema:
+Generate JSON matching this schema:
 
 {{ schema }}
 
-Return ONLY the JSON object, with no additional text or explanation.
-The response must be valid JSON that can be parsed with JSON.parse().
+Task: {{ prompt }}
 
-    IMPORTANT: Your response MUST be valid JSON:
-    - Use double quotes (") not single quotes (')
-    - Escape any quotes within strings with backslash (")
-    - Do not use smart/curly quotes
-    - The response must be parseable by JSON.parse()
-
-{{ prompt }}
-{% endblock %} 
+Return valid JSON only. 

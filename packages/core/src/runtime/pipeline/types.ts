@@ -114,4 +114,6 @@ export type PipelineModification = z.infer<typeof PipelineModificationSchema>;
 
 export interface GetObjectConfig {
   maxRetries?: number;
+  temperature?: number;
+  operationLabel?: string; // Meaningful label like "pipeline_generation", "plugin_discord_send_message", etc.
 }

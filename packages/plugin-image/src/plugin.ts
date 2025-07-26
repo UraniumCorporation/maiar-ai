@@ -39,7 +39,8 @@ export class ImageGenerationPlugin extends Plugin {
 
       const promptResponse = await this.runtime.getObject(
         PromptResponseSchema,
-        promptTemplate
+        promptTemplate,
+        { operationLabel: "plugin_image_generate_prompt" }
       );
 
       const prompt = promptResponse.prompt;

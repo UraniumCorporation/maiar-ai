@@ -1,6 +1,7 @@
 import { Logger } from "winston";
 
 import { MemoryManager, PluginRegistry, Runtime } from "../..";
+import { JsonUtils } from "../../lib/json-utils";
 import type { StateUpdate } from "../../monitor/events";
 import { PluginResult } from "../providers";
 import { Plugin } from "../providers/plugin";
@@ -76,16 +77,18 @@ export class Processor {
     // Get related memories from the space search
     const relatedMemoriesResults = await this.memoryManager.queryMemory({
       relatedSpaces: task.space.relatedSpaces,
-      limit: 10
+      limit: 2
     });
 
     const relatedMemories = await this.runtime.templates.render(
       "core/related_memories",
       {
-        relatedMemoriesContext: JSON.stringify({
-          task: task.trigger,
-          relatedMemoriesResults
-        })
+        relatedMemoriesContext: JsonUtils.safeStringify(
+          JsonUtils.normalizeObject({
+            task: task.trigger,
+            relatedMemoriesResults
+          })
+        )
       }
     );
 
@@ -123,9 +126,17 @@ export class Processor {
         generatePipelineContext
       });
 
+      // Calculate sizes for analysis
+      const contextChainSize = JSON.stringify(task.contextChain).length;
+      const availablePluginsCount = availablePlugins.length;
+      const promptSize = generatePipelineContext.length;
+
       const pipeline = await this.runtime.getObject(
         PipelineSchema,
-        generatePipelineContext
+        generatePipelineContext,
+        {
+          operationLabel: `pipeline_generation_OPTIMIZED_ctx${Math.round(contextChainSize / 1000)}k_plugins${availablePluginsCount}_prompt${Math.round(promptSize / 1000)}k`
+        }
       );
 
       // Add concise pipeline steps log
@@ -349,14 +360,20 @@ export class Processor {
       }))
     );
 
-    const availablePluginsString = JSON.stringify(availablePlugins);
+    const availablePluginsString = JsonUtils.safeStringify(availablePlugins);
 
     const template = await this.runtime.templates.render(
       "core/pipeline_modify",
       {
-        contextChain: JSON.stringify(modificationContext.contextChain, null, 2),
-        currentStep: JSON.stringify(modificationContext.currentStep, null, 2),
-        pipeline: JSON.stringify(modificationContext.pipeline, null, 2),
+        contextChain: JsonUtils.safeStringify(
+          JsonUtils.normalizeObject(modificationContext.contextChain)
+        ),
+        currentStep: JsonUtils.safeStringify(
+          JsonUtils.normalizeObject(modificationContext.currentStep)
+        ),
+        pipeline: JsonUtils.safeStringify(
+          JsonUtils.normalizeObject(modificationContext.pipeline)
+        ),
         availablePlugins: availablePluginsString
       }
     );
@@ -367,9 +384,17 @@ export class Processor {
     });
 
     try {
+      // Calculate sizes for modification analysis
+      const contextChainLength = modificationContext.contextChain.length;
+      const currentPipelineLength = currentPipeline.length;
+      const templateSize = template.length;
+
       const modification = await this.runtime.getObject(
         PipelineModificationSchema,
-        template
+        template,
+        {
+          operationLabel: `pipeline_modification_OPTIMIZED_ctx${contextChainLength}_pipeline${currentPipelineLength}_prompt${Math.round(templateSize / 1000)}k`
+        }
       );
 
       this.logger.info("pipeline modification evaluation result", {
@@ -480,7 +505,7 @@ export class Processor {
       pluginId: step.pluginId,
       type: step.action,
       action: step.action,
-      content: JSON.stringify(result.data),
+      content: JsonUtils.safeStringify(result.data),
       timestamp: Date.now(),
       ...result.data
     });

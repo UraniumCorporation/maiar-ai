@@ -3,11 +3,56 @@
  * NOTE: keep in sync with packages/core/src/monitor/events.ts until we extract a shared package.
  */
 
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  estimatedCost?: number;
+  modelId?: string;
+  timestamp: number;
+}
+
+export interface DetailedTokenUsage extends TokenUsage {
+  operation: string;
+  context: string;
+  operationId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface PipelineTokenUsage {
+  totalUsage: TokenUsage;
+  breakdown: {
+    pipelineGeneration?: DetailedTokenUsage;
+    memoryQuery?: DetailedTokenUsage;
+    stepExecutions: DetailedTokenUsage[];
+    pipelineModifications: DetailedTokenUsage[];
+    retries: DetailedTokenUsage[];
+  };
+  pipelineId: string;
+  taskId: string;
+  startTime: number;
+  endTime?: number;
+}
+
 export interface BaseEvent {
   type: string;
   message: string;
   timestamp: number;
   metadata?: Record<string, unknown>;
+}
+
+export interface TokenUsageEvent extends BaseEvent {
+  type: "token.usage";
+  metadata: {
+    usage: DetailedTokenUsage;
+  };
+}
+
+export interface PipelineTokenUsageEvent extends BaseEvent {
+  type: "pipeline.token.usage";
+  metadata: {
+    usage: PipelineTokenUsage;
+  };
 }
 
 export interface PipelineGenerationComplete extends BaseEvent {
@@ -18,6 +63,7 @@ export interface PipelineGenerationComplete extends BaseEvent {
       relatedMemories: string;
     };
     currentStepIndex: number;
+    tokenUsage?: DetailedTokenUsage;
   };
 }
 
@@ -27,6 +73,7 @@ export interface PipelineStepExecuted extends BaseEvent {
     pipeline: Array<{ pluginId: string; action: string }>;
     currentStep: { pluginId: string; action: string };
     currentStepIndex: number;
+    tokenUsage?: DetailedTokenUsage;
   };
 }
 
@@ -37,6 +84,7 @@ export interface PipelineModificationApplied extends BaseEvent {
     modifiedSteps: Array<{ pluginId: string; action: string }>;
     currentStep: { pluginId: string; action: string };
     pipeline: Array<{ pluginId: string; action: string }>;
+    tokenUsage?: DetailedTokenUsage;
   };
 }
 
@@ -58,6 +106,7 @@ export interface AgentStatePayload {
   modifiedSteps?: Array<{ pluginId: string; action: string }>;
   explanation?: string;
   modificationCheckInProgress?: boolean;
+  pipelineTokenUsage?: PipelineTokenUsage;
 }
 
 export interface StateUpdate extends BaseEvent {
@@ -67,4 +116,11 @@ export interface StateUpdate extends BaseEvent {
   };
 }
 
-export type MonitorEvent = StateUpdate | BaseEvent;
+export type MonitorEvent =
+  | TokenUsageEvent
+  | PipelineTokenUsageEvent
+  | PipelineGenerationComplete
+  | PipelineStepExecuted
+  | PipelineModificationApplied
+  | StateUpdate
+  | BaseEvent;

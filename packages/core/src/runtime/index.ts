@@ -551,11 +551,34 @@ export class Runtime {
     prompt: string,
     config?: GetObjectConfig
   ): Promise<z.infer<T>> {
+    const baseOperationLabel = config?.operationLabel || "unknown_operation";
+    const startTime = Date.now();
+
+    this.logger.info("starting getObject operation", {
+      type: "runtime.getObject.start",
+      operationLabel: baseOperationLabel,
+      schemaDescription: schema.description
+    });
+
     const maxRetries = config?.maxRetries ?? 3;
     let lastError: Error | null = null;
     let lastResponse: string | null = null;
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const operationLabel =
+        attempt === 0
+          ? baseOperationLabel
+          : `${baseOperationLabel}_retry${attempt}`;
+
+      if (attempt > 0) {
+        this.logger.info("retrying getObject operation", {
+          type: "runtime.getObject.retry",
+          operationLabel,
+          attempt: attempt + 1,
+          baseOperationLabel
+        });
+      }
+
       try {
         // Generate prompt using Liquid templates via the registry
         const templateId =
@@ -577,7 +600,11 @@ export class Runtime {
         const fullPrompt: string = await this.templates.render(templateId, ctx);
         const response = await this.modelManager.executeCapability(
           "text-generation",
-          fullPrompt
+          fullPrompt,
+          {
+            temperature: config?.temperature,
+            operationLabel
+          }
         );
         lastResponse = response;
 
@@ -587,17 +614,23 @@ export class Runtime {
         try {
           const parsed = JSON.parse(jsonString);
           const result = schema.parse(parsed);
-          if (attempt > 0) {
-            logger.info("successfully parsed JSON after retries", {
-              type: "runtime.getObject.success.retry",
-              attempts: attempt + 1
-            });
-          }
+
+          const duration = Date.now() - startTime;
+
+          // Log final success with base operation label to avoid counting retries as separate operations
+          logger.info("successfully parsed JSON", {
+            type: "runtime.getObject.success",
+            operationLabel: baseOperationLabel,
+            totalAttempts: attempt + 1,
+            hadRetries: attempt > 0,
+            duration
+          });
           return result;
         } catch (parseError) {
           lastError = parseError as Error;
           logger.warn(`attempt ${attempt + 1}/${maxRetries} failed`, {
             type: "runtime.getObject.parse.failed",
+            operationLabel,
             error: parseError,
             response: jsonString
           });
@@ -607,6 +640,7 @@ export class Runtime {
         lastError = error as Error;
         logger.error(`attempt ${attempt + 1}/${maxRetries} failed`, {
           type: "runtime.getObject.execution.failed",
+          operationLabel,
           error,
           prompt,
           schema: schema.description,

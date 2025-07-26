@@ -1,5 +1,11 @@
 Generate a response based on the context chain. Your response should be a JSON object with a single "query" field containing a valid SQL query on the sandbox table.
-The query should return document values {{ properties }}.
+
+You must SELECT the following columns: {{ properties | join: ", " }}
+
+Use proper SQL syntax: SELECT column1, column2 FROM sandbox WHERE conditions
+
+CRITICAL: In SQL, escape single quotes by doubling them ('') not with backslashes (\')
+Example: "what's up" becomes '%what''s up%' in LIKE clauses
 
 IMPORTANT: Output MUST be valid JSON; no extra text.
 
@@ -8,5 +14,5 @@ Context chain:
 
 Example:
 {
-  "query": "SELECT id FROM sandbox WHERE content LIKE '%birthday%'"
+  "query": "SELECT id, content FROM sandbox WHERE content LIKE '%birthday%'"
 } 

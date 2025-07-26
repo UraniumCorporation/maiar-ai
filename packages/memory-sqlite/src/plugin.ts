@@ -154,7 +154,8 @@ export class SQLiteMemoryPlugin extends Plugin {
 
     const queryFormattedResponse = await this.runtime.getObject(
       SQLiteQuerySchema,
-      queryPrompt
+      queryPrompt,
+      { operationLabel: "memory_sqlite_query" }
     );
     const queryStmt = this.db.prepare(queryFormattedResponse.query);
     const results = queryStmt.all() as { id: string; content: string }[];

@@ -5,7 +5,7 @@
 import { BaseGuildTextChannel, Events } from "discord.js";
 import { Message } from "discord.js";
 
-import { AgentTask, Context, Runtime, Space } from "@maiar-ai/core";
+import { AgentTask, Context, JsonUtils, Runtime, Space } from "@maiar-ai/core";
 import * as maiarLogger from "@maiar-ai/core/dist/logger";
 
 import { DiscordService } from "./services";
@@ -120,7 +120,9 @@ export const postListenerTrigger: DiscordTriggerFactory = (
           isReply: !!message.reference?.messageId,
           botId: discordService.clientId,
           commandPrefix: discordService.commandPrefix,
-          recentHistory: JSON.stringify(recentHistory)
+          recentHistory: JsonUtils.safeStringify(
+            JsonUtils.normalizeObject(recentHistory)
+          )
         }
       );
 

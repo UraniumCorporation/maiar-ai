@@ -1,5 +1,6 @@
 import { Logger } from "winston";
 
+import { JsonUtils } from "../../lib/json-utils";
 import logger from "../../lib/logger";
 import { AgentTask } from "../pipeline";
 import {
@@ -103,7 +104,7 @@ export class MemoryManager {
     // martial the task event into a memory object for the initial trigger event
     const memory: Omit<Memory, "id"> = {
       spaceId: taskEvent.space?.id,
-      trigger: JSON.stringify(taskEvent.trigger),
+      trigger: JsonUtils.safeStringify(taskEvent.trigger),
       context: undefined,
       createdAt: taskEvent.trigger.timestamp,
       updatedAt: undefined,

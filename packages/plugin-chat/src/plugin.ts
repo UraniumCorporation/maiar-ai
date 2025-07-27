@@ -17,7 +17,7 @@ import { ChatPlatformContext, ChatResponseSchema } from "./types";
 export class ChatPlugin extends Plugin {
   constructor() {
     super({
-      id: "plugin-chat",
+      id: "chat",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -66,7 +66,7 @@ export class ChatPlugin extends Plugin {
     const text = await this.runtime.executeCapability(
       textGenerationCapability.id,
       textPrompt,
-      { operationLabel: "plugin_chat_generate_text" }
+      { operationLabel: "generate_text" }
     );
 
     return { success: true, data: { text } };
@@ -150,7 +150,7 @@ export class ChatPlugin extends Plugin {
       const formattedResponse = await this.runtime.getObject(
         ChatResponseSchema,
         responsePrompt,
-        { operationLabel: "plugin_chat_send_response" }
+        { operationLabel: "send_response" }
       );
 
       // Type assertion for responseHandler since TypeScript doesn't know its type

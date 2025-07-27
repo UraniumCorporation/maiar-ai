@@ -24,7 +24,7 @@ export class DiscordPlugin extends Plugin {
     triggerFactories?: DiscordTriggerFactory[];
   }) {
     super({
-      id: "plugin-discord",
+      id: "discord",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)

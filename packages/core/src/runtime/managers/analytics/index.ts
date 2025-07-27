@@ -18,12 +18,14 @@ export class AnalyticsManager {
     input: unknown,
     config: unknown,
     trackers: AnalyticsTracker[],
-    executor: () => Promise<T>
+    executor: () => Promise<T>,
+    pluginId?: string
   ): Promise<T> {
     const context: ExecutionContext = {
       capabilityId,
       modelId,
       operationLabel,
+      pluginId,
       input,
       config,
       startTime: Date.now(),
@@ -80,6 +82,7 @@ export class AnalyticsManager {
             type: "analytics",
             trackerId: tracker.id,
             operationLabel: context.operationLabel,
+            pluginId: context.pluginId,
             capabilityId: context.capabilityId,
             modelId: context.modelId,
             timestamp: Date.now(),
@@ -111,6 +114,7 @@ export class AnalyticsManager {
             type: "analytics.error",
             trackerId: tracker.id,
             operationLabel: context.operationLabel,
+            pluginId: context.pluginId,
             capabilityId: context.capabilityId,
             modelId: context.modelId,
             timestamp: Date.now(),

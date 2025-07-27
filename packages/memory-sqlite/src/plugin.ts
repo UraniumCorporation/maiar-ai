@@ -11,7 +11,7 @@ export class SQLiteMemoryPlugin extends Plugin {
 
   constructor() {
     super({
-      id: "plugin-sqlite-memory",
+      id: "memory-sqlite",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)

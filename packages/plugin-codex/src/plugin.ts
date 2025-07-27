@@ -12,7 +12,7 @@ export class CodexPlugin extends Plugin {
     maxBuffer?: number;
   }) {
     super({
-      id: "plugin-codex",
+      id: "codex",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)

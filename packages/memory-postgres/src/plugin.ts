@@ -11,7 +11,7 @@ export class PostgresMemoryPlugin extends Plugin {
 
   constructor() {
     super({
-      id: "plugin-postgres-memory",
+      id: "memory-postgres",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)

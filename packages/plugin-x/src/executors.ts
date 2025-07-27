@@ -44,7 +44,7 @@ export const createPostExecutor = xExecutorFactory(
         context: JSON.stringify(task, null, 2)
       });
       const params = await runtime.getObject(PostTweetSchema, tweetTemplate, {
-        operationLabel: "plugin_x_post_tweet"
+        operationLabel: "post_tweet"
       });
       const message = params.tweetText;
       // Post the tweet

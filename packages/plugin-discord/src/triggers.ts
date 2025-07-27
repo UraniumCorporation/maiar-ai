@@ -128,7 +128,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         MessageIntentSchema,
         intentPrompt,
         {
-          operationLabel: "plugin_discord_message_intent"
+          operationLabel: "message_intent"
         }
       );
 

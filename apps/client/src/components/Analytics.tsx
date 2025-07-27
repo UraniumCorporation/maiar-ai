@@ -40,6 +40,7 @@ import { AnalyticsEvent } from "../types/monitorSpec";
 interface MetricData {
   operationLabel: string;
   trackerId: string;
+  pluginId?: string;
   capabilityId: string;
   modelId: string;
   count: number;
@@ -100,7 +101,18 @@ const Analytics: React.FC = () => {
     > = {};
 
     filteredEvents.forEach((event) => {
-      const key = `${event.metadata.operationLabel}__${event.metadata.trackerId}`;
+      // Extract plugin ID from operation label if not directly available
+      let pluginId = event.metadata.pluginId;
+
+      if (!pluginId && event.metadata.operationLabel.startsWith("plugin_")) {
+        const parts = event.metadata.operationLabel.split("_");
+        if (parts.length >= 3 && parts[0] === "plugin") {
+          pluginId = parts[1]; // Extract plugin ID from "plugin_{pluginId}_..."
+        }
+      }
+
+      const pluginPart = pluginId ? `${pluginId}__` : "";
+      const key = `${pluginPart}${event.metadata.operationLabel}__${event.metadata.trackerId}`;
 
       if (!operationCounts[key]) {
         operationCounts[key] = {
@@ -128,7 +140,11 @@ const Analytics: React.FC = () => {
     // Convert to operations array
     const operations: MetricData[] = Object.entries(operationCounts)
       .map(([key, data]) => {
-        const [operationLabel, trackerId] = key.split("__");
+        const parts = key.split("__");
+        const hasPlugin = parts.length === 3;
+        const pluginId = hasPlugin ? parts[0] : undefined;
+        const operationLabel = hasPlugin ? parts[1] : parts[0];
+        const trackerId = hasPlugin ? parts[2] : parts[1];
         const firstEvent = data.events[0];
 
         // Calculate aggregated values
@@ -142,6 +158,7 @@ const Analytics: React.FC = () => {
         return {
           operationLabel,
           trackerId,
+          pluginId,
           capabilityId: firstEvent.metadata.capabilityId,
           modelId: firstEvent.metadata.modelId,
           count: data.events.length,
@@ -229,23 +246,8 @@ const Analytics: React.FC = () => {
         <Typography variant="h5" gutterBottom>
           Analytics Dashboard
         </Typography>
-        <Alert severity="info">
-          No analytics data detected yet. Start using the agent to see analytics
-          from various trackers like:
-          <ul>
-            <li>
-              <strong>openai-tokens</strong> - Token usage tracking
-            </li>
-            <li>
-              <strong>openai-interaction</strong> - Model interaction details
-            </li>
-            <li>
-              <strong>video-metrics</strong> - Video generation analytics
-            </li>
-            <li>
-              <strong>audio-metrics</strong> - Audio processing metrics
-            </li>
-          </ul>
+        <Alert severity="success">
+          No analytics detected yet. Start using agent to see analytics.
         </Alert>
       </Box>
     );
@@ -379,6 +381,7 @@ const Analytics: React.FC = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>Operation</TableCell>
+                      <TableCell>Plugin</TableCell>
                       <TableCell>Tracker</TableCell>
                       <TableCell>Model</TableCell>
                       <TableCell align="right">Count</TableCell>
@@ -388,9 +391,28 @@ const Analytics: React.FC = () => {
                   </TableHead>
                   <TableBody>
                     {analyticsData.operations.map((row) => (
-                      <TableRow key={`${row.operationLabel}-${row.trackerId}`}>
+                      <TableRow
+                        key={`${row.pluginId || "core"}-${row.operationLabel}-${row.trackerId}`}
+                      >
                         <TableCell>
                           <Chip label={row.operationLabel} size="small" />
+                        </TableCell>
+                        <TableCell>
+                          {row.pluginId ? (
+                            <Chip
+                              label={row.pluginId}
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                            />
+                          ) : (
+                            <Chip
+                              label="core"
+                              size="small"
+                              color="secondary"
+                              variant="outlined"
+                            />
+                          )}
                         </TableCell>
                         <TableCell>
                           <Chip

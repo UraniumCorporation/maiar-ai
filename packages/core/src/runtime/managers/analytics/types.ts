@@ -20,6 +20,7 @@ export interface ExecutionContext {
   capabilityId: string;
   modelId: string;
   operationLabel: string;
+  pluginId?: string; // Auto-injected by PluginScopedRuntime
   input: unknown;
   config?: unknown;
   startTime: number;

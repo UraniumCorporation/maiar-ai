@@ -21,7 +21,7 @@ export class WebSocketPlugin extends Plugin {
 
   constructor({ path }: { path: string }) {
     super({
-      id: "plugin-websocket",
+      id: "websocket",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)

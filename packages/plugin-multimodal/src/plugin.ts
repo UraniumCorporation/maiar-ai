@@ -25,7 +25,7 @@ import {
 export class MultiModalPlugin extends Plugin {
   constructor() {
     super({
-      id: "plugin-multimodal",
+      id: "multimodal",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -87,7 +87,7 @@ export class MultiModalPlugin extends Plugin {
     const promptResponse = await this.runtime.getObject(
       MultimodalTextPromptResponseSchema,
       multimodalPromptTemplate,
-      { operationLabel: "plugin_multimodal_generate_text" }
+      { operationLabel: "generate_text" }
     );
 
     const prompt = promptResponse.prompt;
@@ -116,7 +116,7 @@ export class MultiModalPlugin extends Plugin {
       const promptResponse = await this.runtime.getObject(
         MultimodalImagePromptResponseSchema,
         promptTemplate,
-        { operationLabel: "plugin_multimodal_generate_image" }
+        { operationLabel: "generate_image" }
       );
 
       const prompt = promptResponse.prompt;
@@ -234,7 +234,7 @@ export class MultiModalPlugin extends Plugin {
       const formattedResponse = await this.runtime.getObject(
         ChatResponseSchema,
         responsePrompt,
-        { operationLabel: "plugin_multimodal_send_chat_response" }
+        { operationLabel: "send_chat_response" }
       );
 
       // Type assertion for responseHandler since TypeScript doesn't know its type

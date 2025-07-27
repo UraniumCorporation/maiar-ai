@@ -16,7 +16,7 @@ export class TelegramPlugin extends Plugin {
 
   constructor(private config: TelegramPluginConfig) {
     super({
-      id: "plugin-telegram",
+      id: "telegram",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -76,7 +76,7 @@ export class TelegramPlugin extends Plugin {
       const formattedResponse = await this.runtime.getObject(
         TelegramResponseSchema,
         responsePrompt,
-        { operationLabel: "plugin_telegram_send_response" }
+        { operationLabel: "send_response" }
       );
 
       // Use the main bot instance to send the reply

@@ -54,7 +54,7 @@ export const periodicPostTrigger: XTriggerFactory = (
             // Create new context chain with a direction to make a post
             const initialContext: Context = {
               id: `x-post-${Date.now()}`,
-              pluginId: "plugin-x",
+              pluginId: "x",
               content: postTemplate,
               timestamp: Date.now()
             };

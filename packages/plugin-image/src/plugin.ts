@@ -8,7 +8,7 @@ import { PromptResponseSchema } from "./types";
 export class ImageGenerationPlugin extends Plugin {
   constructor() {
     super({
-      id: "plugin-image-generation",
+      id: "image",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -40,7 +40,7 @@ export class ImageGenerationPlugin extends Plugin {
       const promptResponse = await this.runtime.getObject(
         PromptResponseSchema,
         promptTemplate,
-        { operationLabel: "plugin_image_generate_prompt" }
+        { operationLabel: "generate_prompt" }
       );
 
       const prompt = promptResponse.prompt;

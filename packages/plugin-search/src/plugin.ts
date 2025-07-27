@@ -10,7 +10,7 @@ export class SearchPlugin extends Plugin {
 
   constructor(config: SearchPluginConfig) {
     super({
-      id: "plugin-search",
+      id: "search",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -44,7 +44,7 @@ export class SearchPlugin extends Plugin {
     const params = await this.runtime.getObject(
       PerplexityQueryResponseSchema,
       queryPrompt,
-      { operationLabel: "plugin_search_query" }
+      { operationLabel: "query" }
     );
 
     const query = params.query;

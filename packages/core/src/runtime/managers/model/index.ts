@@ -304,10 +304,21 @@ export class ModelManager {
       );
     }
 
-    // Extract operation label for analytics
+    // Extract operation label and plugin ID for analytics
+    const configAsRecord = config as Record<string, unknown>;
     const operationLabel =
-      ((config as Record<string, unknown>)?.operationLabel as string) ||
-      "unknown_operation";
+      (configAsRecord?.operationLabel as string) || "unknown_operation";
+
+    // Extract plugin ID from config or operation label
+    let pluginId = configAsRecord?.__pluginId as string | undefined;
+
+    // Fallback: extract from operation label if it follows plugin pattern
+    if (!pluginId && operationLabel.startsWith("plugin_")) {
+      const parts = operationLabel.split("_");
+      if (parts.length >= 3 && parts[0] === "plugin") {
+        pluginId = parts[1]; // Extract plugin ID from "plugin_{pluginId}_..."
+      }
+    }
 
     // Execute capability with analytics tracking
     const rawResult = await this.analyticsManager.wrapExecution(
@@ -319,7 +330,8 @@ export class ModelManager {
       capability.analytics || [],
       async () => {
         return await capability.execute(validatedInput.data, validatedConfig);
-      }
+      },
+      pluginId
     );
 
     // Validate the provider's raw output against the provider-side schema

@@ -46,6 +46,7 @@ export interface AnalyticsEvent extends BaseEvent {
   metadata: {
     trackerId: string;
     operationLabel: string;
+    pluginId?: string;
     capabilityId: string;
     modelId: string;
     duration: number;
@@ -58,6 +59,7 @@ export interface AnalyticsErrorEvent extends BaseEvent {
   metadata: {
     trackerId: string;
     operationLabel: string;
+    pluginId?: string;
     capabilityId: string;
     modelId: string;
     duration: number;

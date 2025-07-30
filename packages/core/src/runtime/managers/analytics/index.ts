@@ -11,7 +11,7 @@ export class AnalyticsManager {
   /**
    * Wraps capability execution with analytics tracking
    */
-  async wrapExecution<T>(
+  public async wrapExecution<T>(
     capabilityId: string,
     modelId: string,
     operationLabel: string,

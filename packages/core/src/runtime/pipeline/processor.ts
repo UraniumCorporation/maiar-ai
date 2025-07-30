@@ -1,7 +1,7 @@
 import { Logger } from "winston";
 
 import { MemoryManager, PluginRegistry, Runtime } from "../..";
-import { JsonUtils } from "../../lib/json-utils";
+import { Json } from "../../lib/json";
 import type { StateUpdate } from "../../monitor/events";
 import { PluginResult } from "../providers";
 import { Plugin } from "../providers/plugin";
@@ -83,7 +83,7 @@ export class Processor {
     const relatedMemories = await this.runtime.templates.render(
       "core/related_memories",
       {
-        relatedMemoriesContext: JsonUtils.toJsonString({
+        relatedMemoriesContext: Json.toJsonString({
           task: task.trigger,
           relatedMemoriesResults
         })
@@ -353,14 +353,14 @@ export class Processor {
       }))
     );
 
-    const availablePluginsString = JsonUtils.toJsonString(availablePlugins);
+    const availablePluginsString = Json.toJsonString(availablePlugins);
 
     const template = await this.runtime.templates.render(
       "core/pipeline_modify",
       {
-        contextChain: JsonUtils.toJsonString(modificationContext.contextChain),
-        currentStep: JsonUtils.toJsonString(modificationContext.currentStep),
-        pipeline: JsonUtils.toJsonString(modificationContext.pipeline),
+        contextChain: Json.toJsonString(modificationContext.contextChain),
+        currentStep: Json.toJsonString(modificationContext.currentStep),
+        pipeline: Json.toJsonString(modificationContext.pipeline),
         availablePlugins: availablePluginsString
       }
     );
@@ -485,7 +485,7 @@ export class Processor {
     task.contextChain.push({
       id: `${step.pluginId}-${Date.now()}`,
       pluginId: step.pluginId,
-      content: JsonUtils.toJsonString(result.data),
+      content: Json.toJsonString(result.data),
       timestamp: Date.now()
     });
   }

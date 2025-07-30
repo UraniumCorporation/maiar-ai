@@ -1,8 +1,8 @@
-export class JsonUtils {
+export class Json {
   /**
    * Detects if a string is over-serialized JSON and normalizes it
    */
-  static normalizeContent(value: unknown): unknown {
+  public static normalizeContent(value: unknown): unknown {
     if (typeof value !== "string") return value;
 
     // Detect over-escaped patterns: \\", \\\\", etc.
@@ -31,7 +31,7 @@ export class JsonUtils {
   /**
    * Smart stringify that doesn't double-serialize
    */
-  static safeStringify(value: unknown): string {
+  public static safeStringify(value: unknown): string {
     // If it's already a JSON string, don't re-stringify
     if (typeof value === "string") {
       try {
@@ -48,7 +48,7 @@ export class JsonUtils {
   /**
    * Normalize all string values in an object recursively
    */
-  static normalizeObject(obj: unknown): unknown {
+  public static normalizeObject(obj: unknown): unknown {
     if (Array.isArray(obj)) {
       return obj.map((item) => this.normalizeObject(item));
     }
@@ -68,7 +68,7 @@ export class JsonUtils {
    * One-stop function: takes any input, normalizes over-serialization, returns clean JSON string
    * Perfect for template interpolation and prompt building
    */
-  static toJsonString(value: unknown): string {
+  public static toJsonString(value: unknown): string {
     const normalized = this.normalizeObject(value);
     return this.safeStringify(normalized);
   }

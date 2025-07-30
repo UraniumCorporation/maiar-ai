@@ -602,7 +602,6 @@ export class Runtime {
           "text-generation",
           fullPrompt,
           {
-            temperature: config?.temperature,
             operationLabel
           }
         );

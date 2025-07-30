@@ -9,15 +9,18 @@ import { AgentTask, GetObjectConfig } from "../pipeline/types";
  * This provides automatic operationLabel generation while preserving manual overrides.
  */
 export class PluginScopedRuntime {
-  constructor(
-    private readonly realRuntime: Runtime,
-    private readonly pluginId: string
-  ) {}
+  private readonly runtime: Runtime;
+  private readonly pluginId: string;
+
+  constructor(runtime: Runtime, pluginId: string) {
+    this.runtime = runtime;
+    this.pluginId = pluginId;
+  }
 
   /**
    * Execute a capability with automatic plugin context injection
    */
-  async executeCapability<K extends keyof ICapabilities>(
+  public async executeCapability<K extends keyof ICapabilities>(
     capabilityId: K,
     input: ICapabilities[K]["input"],
     config?: ICapabilities[K] extends { config: infer C } ? C : unknown
@@ -26,7 +29,7 @@ export class PluginScopedRuntime {
       config,
       capabilityId as string
     );
-    return this.realRuntime.executeCapability(
+    return this.runtime.executeCapability(
       capabilityId,
       input,
       enhancedConfig as ICapabilities[K] extends { config: infer C }
@@ -38,13 +41,13 @@ export class PluginScopedRuntime {
   /**
    * Generate object with automatic plugin context injection
    */
-  async getObject<T extends z.ZodType>(
+  public async getObject<T extends z.ZodType>(
     schema: T,
     prompt: string,
     config?: GetObjectConfig
   ): Promise<z.infer<T>> {
     const enhancedConfig = this.enhanceObjectConfig(config);
-    return this.realRuntime.getObject(schema, prompt, enhancedConfig);
+    return this.runtime.getObject(schema, prompt, enhancedConfig);
   }
 
   /**
@@ -99,35 +102,35 @@ export class PluginScopedRuntime {
   }
 
   // Forward all other Runtime properties and methods unchanged
-  get templates() {
-    return this.realRuntime.templates;
+  public get templates() {
+    return this.runtime.templates;
   }
 
-  get memory() {
-    return this.realRuntime.memory;
+  public get memory() {
+    return this.runtime.memory;
   }
 
-  get server() {
-    return this.realRuntime.server;
+  public get server() {
+    return this.runtime.server;
   }
 
-  get logger() {
-    return this.realRuntime.logger;
+  public get logger() {
+    return this.runtime.logger;
   }
 
   // Forward instance methods that don't need context injection
-  async start() {
-    return this.realRuntime.start();
+  public async start() {
+    return this.runtime.start();
   }
 
-  async stop() {
-    return this.realRuntime.stop();
+  public async stop() {
+    return this.runtime.stop();
   }
 
-  async createEvent(
+  public async createEvent(
     trigger: AgentTask["trigger"],
     space: AgentTask["space"]
   ): Promise<void> {
-    return this.realRuntime.createEvent(trigger, space);
+    return this.runtime.createEvent(trigger, space);
   }
 }

@@ -5,7 +5,7 @@ import path from "path";
 import {
   AgentTask,
   Executor,
-  JsonUtils,
+  Json,
   PluginResult,
   Runtime
 } from "@maiar-ai/core";
@@ -64,7 +64,7 @@ export const sendMessageExecutor = discordExecutorFactory(
     try {
       const responsePrompt = await runtime.templates.render(
         `${service.pluginId}/response`,
-        { context: JsonUtils.toJsonString(task) }
+        { context: Json.toJsonString(task) }
       );
 
       const response = await runtime.getObject(
@@ -78,7 +78,7 @@ export const sendMessageExecutor = discordExecutorFactory(
       try {
         const imagePrompt = await runtime.templates.render(
           `${service.pluginId}/image_list`,
-          { context: JsonUtils.toJsonString(task) }
+          { context: Json.toJsonString(task) }
         );
 
         const imageList = await runtime.getObject(
@@ -252,7 +252,7 @@ export const replyMessageExecutor = discordExecutorFactory(
     try {
       const responsePrompt = await runtime.templates.render(
         `${service.pluginId}/response`,
-        { context: JsonUtils.toJsonString(task) }
+        { context: Json.toJsonString(task) }
       );
 
       const response = await runtime.getObject(

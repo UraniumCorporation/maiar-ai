@@ -120,7 +120,7 @@ importers:
         specifier: 1.8.11
         version: 1.8.11(react-dom@19.0.0)(react@19.0.0)
       recharts:
-        specifier: ^3.1.0
+        specifier: 3.1.0
         version: 3.1.0(@types/react@19.0.10)(react-dom@19.0.0)(react-is@19.1.0)(react@19.0.0)(redux@5.0.1)
     devDependencies:
       '@eslint/js':
@@ -9599,10 +9599,6 @@ packages:
       is-symbol: 1.1.1
     dev: false
 
-  /es-toolkit@1.35.0:
-    resolution: {integrity: sha512-kVHyrRoC0eLc1hWJ6npG8nNFtOG+nWfcMI+XE0RaFO0gxd6Ions8r0O/U64QyZgY7IeidUnS5oZlRZYUgMGCAg==}
-    dev: false
-
   /es-toolkit@1.39.8:
     resolution: {integrity: sha512-A8QO9TfF+rltS8BXpdu8OS+rpGgEdnRhqIVxO/ZmNvnXBYgOdSsxukT55ELyP94gZIntWJ+Li9QRrT2u1Kitpg==}
     dev: false
@@ -11458,7 +11454,7 @@ packages:
       cli-cursor: 4.0.0
       cli-truncate: 4.0.0
       code-excerpt: 4.0.0
-      es-toolkit: 1.35.0
+      es-toolkit: 1.39.8
       indent-string: 5.0.0
       is-in-ci: 1.0.0
       patch-console: 2.0.0

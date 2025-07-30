@@ -309,16 +309,8 @@ export class ModelManager {
     const operationLabel =
       (configAsRecord?.operationLabel as string) || "unknown_operation";
 
-    // Extract plugin ID from config or operation label
-    let pluginId = configAsRecord?.__pluginId as string | undefined;
-
-    // Fallback: extract from operation label if it follows plugin pattern
-    if (!pluginId && operationLabel.startsWith("plugin_")) {
-      const parts = operationLabel.split("_");
-      if (parts.length >= 3 && parts[0] === "plugin") {
-        pluginId = parts[1]; // Extract plugin ID from "plugin_{pluginId}_..."
-      }
-    }
+    // Extract plugin ID from config
+    const pluginId = configAsRecord?.__pluginId as string | undefined;
 
     // Execute capability with analytics tracking
     const rawResult = await this.analyticsManager.wrapExecution(

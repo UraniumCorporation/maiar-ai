@@ -1,7 +1,7 @@
 import { Logger } from "winston";
 
 import { Runtime } from "../..";
-import { JsonUtils } from "../../lib/json-utils";
+import { Json } from "../../lib/json";
 import logger from "../../lib/logger";
 import { StateUpdate } from "../../monitor/events";
 import { MemoryManager } from "../managers/memory";
@@ -336,7 +336,7 @@ export class Scheduler {
       const completedTaskChain = await this.processor.spawn(task);
 
       await this.memoryManager.updateMemory(memoryId, {
-        context: JsonUtils.toJsonString(completedTaskChain)
+        context: Json.toJsonString(completedTaskChain)
       });
 
       this.logger.info("pipeline execution complete", {

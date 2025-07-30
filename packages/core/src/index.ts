@@ -8,7 +8,7 @@ export * from "./runtime/managers";
 export * from "./runtime/managers/analytics";
 export * from "./runtime/pipeline";
 export * from "./runtime/providers";
-export * from "./lib/json-utils";
+export * from "./lib/json";
 
 export type { Request, Response };
 

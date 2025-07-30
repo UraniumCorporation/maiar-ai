@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 import {
-  JsonUtils,
+  Json,
   Memory,
   MemoryProvider,
   Plugin,
@@ -197,9 +197,9 @@ export class SQLiteMemoryProvider extends MemoryProvider {
     return results.map((row) => ({
       id: row.id,
       spaceId: row.space_id,
-      trigger: JsonUtils.normalizeContent(row.trigger) as string,
+      trigger: Json.normalizeContent(row.trigger) as string,
       context: row.context
-        ? (JsonUtils.normalizeContent(row.context) as string)
+        ? (Json.normalizeContent(row.context) as string)
         : undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at || undefined,

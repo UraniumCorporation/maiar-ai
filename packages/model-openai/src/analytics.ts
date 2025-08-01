@@ -73,5 +73,45 @@ export function createOpenAIAnalytics(
     }
   };
 
-  return [tokenTracker, interactionTracker];
+  const fullExecutionTracker: AnalyticsTracker = {
+    id: "openai-execution-log",
+
+    afterExecution: (context, result) => {
+      return {
+        modelId: context.modelId,
+        capabilityId: context.capabilityId,
+        operationLabel: context.operationLabel,
+        pluginId: context.pluginId,
+        input: context.input,
+        output: result,
+        inputLength:
+          typeof context.input === "string"
+            ? context.input.length
+            : JSON.stringify(context.input || {}).length,
+        outputLength:
+          typeof result === "string"
+            ? result.length
+            : JSON.stringify(result || {}).length,
+        duration: Date.now() - context.startTime
+      };
+    },
+
+    onError: (context, error) => {
+      return {
+        modelId: context.modelId,
+        capabilityId: context.capabilityId,
+        operationLabel: context.operationLabel,
+        pluginId: context.pluginId,
+        input: context.input,
+        inputLength:
+          typeof context.input === "string"
+            ? context.input.length
+            : JSON.stringify(context.input || {}).length,
+        duration: Date.now() - context.startTime,
+        error: error.message
+      };
+    }
+  };
+
+  return [tokenTracker, interactionTracker, fullExecutionTracker];
 }

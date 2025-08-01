@@ -584,20 +584,50 @@ export class Runtime {
         const templateId =
           attempt === 0 ? "core/object_template" : "core/retry_template";
 
+        const formattedSchema = formatZodSchema(schema);
+
+        this.logger.debug("getObject schema formatting", {
+          type: "runtime.getObject.schema.debug",
+          operationLabel,
+          schemaType: schema.constructor.name,
+          formattedSchema,
+          formattedSchemaLength: formattedSchema.length
+        });
+
         const ctx =
           attempt === 0
             ? {
-                schema: formatZodSchema(schema),
+                schema: formattedSchema,
                 prompt
               }
             : {
-                schema: formatZodSchema(schema),
+                schema: formattedSchema,
                 prompt,
                 lastResponse: lastResponse!,
                 error: (lastError as Error).message
               };
 
+        this.logger.debug("template rendering context", {
+          type: "runtime.getObject.template.context",
+          operationLabel,
+          templateId,
+          contextKeys: Object.keys(ctx),
+          context: ctx
+        });
+
         const fullPrompt: string = await this.templates.render(templateId, ctx);
+
+        this.logger.debug("template rendering result", {
+          type: "runtime.getObject.template.result",
+          operationLabel,
+          templateId,
+          promptLength: fullPrompt.length,
+          promptPreview: fullPrompt.substring(0, 500),
+          containsSchemaMarker: fullPrompt.includes(
+            "Generate JSON matching this schema:"
+          ),
+          schemaStartIndex: fullPrompt.indexOf("{{ schema }}")
+        });
         const response = await this.modelManager.executeCapability(
           "text-generation",
           fullPrompt,

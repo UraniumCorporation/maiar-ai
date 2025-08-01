@@ -57,10 +57,12 @@ export class OpenAIModelProvider extends ModelProvider {
     this.client = new OpenAI({ apiKey: config.apiKey });
     this.models = config.models;
 
+    const analytics = createOpenAIAnalytics(this);
+
     if (this.models.some((m) => TEXT_MODELS.has(m))) {
       this.addCapability({
         ...textGenerationCapability,
-        analytics: createOpenAIAnalytics(this),
+        analytics,
         execute: this.generateTextWithText.bind(this)
       });
     }
@@ -68,6 +70,7 @@ export class OpenAIModelProvider extends ModelProvider {
     if (this.models.some((m) => MULTI_MODAL_TEXT_MODELS.has(m))) {
       this.addCapability({
         ...multiModalTextGenerationCapability,
+        analytics,
         execute: this.generateTextMultimodal.bind(this)
       });
     }
@@ -75,6 +78,7 @@ export class OpenAIModelProvider extends ModelProvider {
     if (this.models.some((m) => IMAGE_MODELS.has(m))) {
       this.addCapability({
         ...imageGenerationCapability,
+        analytics,
         execute: this.generateImageWithText.bind(this)
       });
     }
@@ -82,6 +86,7 @@ export class OpenAIModelProvider extends ModelProvider {
     if (this.models.some((m) => MULTI_MODAL_IMAGE_MODELS.has(m))) {
       this.addCapability({
         ...multiModalImageGenerationCapability,
+        analytics,
         execute: this.generateImageMultimodal.bind(this)
       });
     }

@@ -77,9 +77,15 @@ export class AnalyticsManager {
         try {
           const analyticsData = await tracker.afterExecution(context, result);
 
-          // Emit generic analytics event
-          this.logger.info("analytics data", {
-            type: "analytics",
+          // Create descriptive message following event viewer patterns
+          const pluginContext = context.pluginId
+            ? ` for ${context.pluginId} plugin`
+            : "";
+          const message = `${context.operationLabel} analytics${pluginContext}`;
+
+          // Emit analytics event with descriptive type and message
+          this.logger.info(message, {
+            type: `analytics.${tracker.id}`,
             trackerId: tracker.id,
             operationLabel: context.operationLabel,
             pluginId: context.pluginId,
@@ -109,9 +115,15 @@ export class AnalyticsManager {
         try {
           const analyticsData = await tracker.onError(context, error);
 
+          // Create descriptive error message following event viewer patterns
+          const pluginContext = context.pluginId
+            ? ` for ${context.pluginId} plugin`
+            : "";
+          const errorMessage = `${context.operationLabel} analytics error${pluginContext}`;
+
           // Emit analytics event for errors
-          this.logger.info("analytics error data", {
-            type: "analytics.error",
+          this.logger.error(errorMessage, {
+            type: `analytics.${tracker.id}.error`,
             trackerId: tracker.id,
             operationLabel: context.operationLabel,
             pluginId: context.pluginId,

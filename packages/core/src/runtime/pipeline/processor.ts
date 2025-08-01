@@ -1,4 +1,5 @@
 import { Logger } from "winston";
+import { z } from "zod";
 
 import { MemoryManager, PluginRegistry, Runtime } from "../..";
 import { Json } from "../../lib/json";
@@ -80,15 +81,53 @@ export class Processor {
       limit: 2
     });
 
-    const relatedMemories = await this.runtime.templates.render(
-      "core/related_memories",
-      {
-        relatedMemoriesContext: Json.toJsonString({
-          task: task.trigger,
-          relatedMemoriesResults
-        })
+    // Filter out any related memory that matches the current task ID to prevent recursion
+    const filteredRelatedMemories = relatedMemoriesResults.filter((memory) => {
+      try {
+        const parsedTrigger = JSON.parse(memory.trigger);
+        return parsedTrigger.id !== task.trigger.id;
+      } catch {
+        // Keep memory if trigger can't be parsed
+        return true;
       }
-    );
+    });
+
+    // Generate a summary of related memories using the model instead of just template rendering
+    let relatedMemories = "";
+    if (filteredRelatedMemories.length > 0) {
+      const memoryPrompt = await this.runtime.templates.render(
+        "core/related_memories",
+        {
+          relatedMemoriesContext: Json.toJsonString(filteredRelatedMemories)
+        }
+      );
+
+      // Use the model to generate an actual summary
+      const summarySchema = z.object({
+        summary: z
+          .string()
+          .describe(
+            "A concise summary of the key context from related memories that should inform pipeline decisions"
+          )
+      });
+
+      try {
+        const memoryResult = await this.runtime.getObject(
+          summarySchema,
+          memoryPrompt,
+          {
+            operationLabel: "related_memories_summary"
+          }
+        );
+        relatedMemories = memoryResult.summary;
+      } catch (error) {
+        this.logger.warn("Failed to generate memory summary, using fallback", {
+          type: "runtime.pipeline.memory.summary.failed",
+          error
+        });
+        relatedMemories = "Unable to summarize related memories";
+      }
+    }
 
     this.updateMonitoringState(task, {
       relatedMemories
@@ -98,6 +137,13 @@ export class Processor {
       type: "runtime.pipeline.related.memories",
       relatedMemories
     });
+
+    // Create a minimal trigger for pipeline generation (strip redundant fields)
+    const minimalTrigger = {
+      id: task.trigger.id,
+      pluginId: task.trigger.pluginId,
+      content: task.trigger.content
+    };
 
     // Create the generation context
     const pipelineContext: PipelineGenerationContext = {
@@ -114,7 +160,7 @@ export class Processor {
         {
           availablePlugins,
           relatedMemories,
-          trigger: pipelineContext.trigger
+          trigger: minimalTrigger
         }
       );
 
@@ -361,6 +407,7 @@ export class Processor {
         contextChain: Json.toJsonString(modificationContext.contextChain),
         currentStep: Json.toJsonString(modificationContext.currentStep),
         pipeline: Json.toJsonString(modificationContext.pipeline),
+        currentStepIndex: currentStepIndex + 1, // +1 because we want remaining steps after current
         availablePlugins: availablePluginsString
       }
     );

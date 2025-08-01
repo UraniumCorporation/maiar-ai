@@ -146,7 +146,11 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         logger.info("message processing started - agent locked", {
           type: "discord.message.processing",
           content: message.content,
-          author: message.author.username
+          author: message.author.username,
+          channelId: message.channelId,
+          messageId: message.id,
+          userId: message.author.id,
+          plugin: discordService.pluginId
         });
 
         // Start typing indicator

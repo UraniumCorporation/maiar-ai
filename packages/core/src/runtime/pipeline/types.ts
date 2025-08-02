@@ -56,7 +56,9 @@ export const PipelineSchema = z
       .describe("A sequence of steps to execute in order"),
     relatedMemories: z
       .string()
-      .describe("The memory context to use for the pipeline during execution")
+      .describe(
+        "Take the value you have from the context if present and summarize it in the context of the current task."
+      )
   })
   .describe("A sequence of steps to execute in order");
 
@@ -114,5 +116,5 @@ export type PipelineModification = z.infer<typeof PipelineModificationSchema>;
 
 export interface GetObjectConfig {
   maxRetries?: number;
-  operationLabel?: string; // Meaningful label like "pipeline_generation", "plugin_discord_send_message", etc.
+  operationLabel?: string; // Meaningful label like "pipeline_generation", "send_message", etc.
 }

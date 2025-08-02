@@ -137,8 +137,8 @@ export class Processor {
       relatedMemories
     });
 
-    // Create a minimal trigger for pipeline generation (strip redundant fields)
-    const minimalTrigger = {
+    // Create a trigger for pipeline generation
+    const trigger = {
       id: task.trigger.id,
       pluginId: task.trigger.pluginId,
       content: task.trigger.content
@@ -159,7 +159,7 @@ export class Processor {
         {
           availablePlugins,
           relatedMemories,
-          trigger: minimalTrigger
+          trigger
         }
       );
 

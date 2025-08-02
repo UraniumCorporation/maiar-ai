@@ -2,13 +2,7 @@ import { BaseGuildTextChannel } from "discord.js";
 import os from "os";
 import path from "path";
 
-import {
-  AgentTask,
-  Executor,
-  Json,
-  PluginResult,
-  Runtime
-} from "@maiar-ai/core";
+import { AgentTask, Executor, PluginResult, Runtime } from "@maiar-ai/core";
 import * as maiarLogger from "@maiar-ai/core/dist/logger";
 
 import { DiscordService } from "./services";
@@ -64,7 +58,7 @@ export const sendMessageExecutor = discordExecutorFactory(
     try {
       const responsePrompt = await runtime.templates.render(
         `${service.pluginId}/response`,
-        { context: Json.toJsonString(task) }
+        { context: JSON.stringify(task) }
       );
 
       const response = await runtime.getObject(
@@ -78,7 +72,7 @@ export const sendMessageExecutor = discordExecutorFactory(
       try {
         const imagePrompt = await runtime.templates.render(
           `${service.pluginId}/image_list`,
-          { context: Json.toJsonString(task) }
+          { context: JSON.stringify(task) }
         );
 
         const imageList = await runtime.getObject(
@@ -252,7 +246,7 @@ export const replyMessageExecutor = discordExecutorFactory(
     try {
       const responsePrompt = await runtime.templates.render(
         `${service.pluginId}/response`,
-        { context: Json.toJsonString(task) }
+        { context: JSON.stringify(task) }
       );
 
       const response = await runtime.getObject(

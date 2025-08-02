@@ -16,22 +16,7 @@ export function formatZodSchema<T>(schema: z.ZodType<T>): string {
   // Handle different schema types
   if (schema instanceof z.ZodObject) {
     const shape = schema._def.shape();
-    const fields = Object.entries(shape)
-      .map(([key, value]) => {
-        const isOptional = value instanceof z.ZodOptional;
-        // If the field is optional, its actual schema is in _def.innerType
-        const innerSchema = isOptional
-          ? (value as z.ZodOptional<z.ZodTypeAny>)._def.innerType
-          : (value as z.ZodTypeAny);
-
-        const fieldType = getSchemaType(innerSchema as z.ZodTypeAny);
-        const fieldDescription =
-          (innerSchema as z.ZodTypeAny).description || "";
-        return `  ${key}${isOptional ? "?" : ""}: ${fieldType}${fieldDescription ? ` // ${fieldDescription}` : ""}`;
-      })
-      .join("\n");
-
-    // Create the descriptive explanations for each field
+    // Create field descriptions section
     const fieldDescriptions = Object.entries(shape)
       .map(([key, value]) => {
         const isOptional = value instanceof z.ZodOptional;
@@ -46,7 +31,20 @@ export function formatZodSchema<T>(schema: z.ZodType<T>): string {
       })
       .join("\n");
 
-    return `${description ? description + "\n\n" : ""}Return JSON object with structure:\n{\n${fields}\n}\n\nField descriptions:\n${fieldDescriptions}`;
+    // Create clean field structure without inline comments
+    const fields = Object.entries(shape)
+      .map(([key, value]) => {
+        const isOptional = value instanceof z.ZodOptional;
+        const innerSchema = isOptional
+          ? (value as z.ZodOptional<z.ZodTypeAny>)._def.innerType
+          : (value as z.ZodTypeAny);
+
+        const fieldType = getSchemaType(innerSchema as z.ZodTypeAny);
+        return `  ${key}${isOptional ? "?" : ""}: ${fieldType}`;
+      })
+      .join("\n");
+
+    return `${description ? description + "\n\n" : ""}Field descriptions:\n${fieldDescriptions}\n\nReturn JSON object with structure:\n{\n${fields}\n}`;
   }
 
   if (schema instanceof z.ZodArray) {

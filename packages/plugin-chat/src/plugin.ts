@@ -12,7 +12,11 @@ import {
 } from "@maiar-ai/core";
 
 import { textGenerationCapability } from "./capabiliites";
-import { ChatPlatformContext, ChatResponseSchema } from "./types";
+import {
+  ChatPlatformContext,
+  ChatResponseSchema,
+  TextGenerationSchema
+} from "./types";
 
 export class ChatPlugin extends Plugin {
   constructor() {
@@ -63,13 +67,13 @@ export class ChatPlugin extends Plugin {
       { context: JSON.stringify(task, null, 2) }
     );
 
-    const text = await this.runtime.executeCapability(
-      textGenerationCapability.id,
+    const result = await this.runtime.getObject(
+      TextGenerationSchema,
       textPrompt,
       { operationLabel: "generate_text" }
     );
 
-    return { success: true, data: { text } };
+    return { success: true, data: { text: result.text } };
   }
 
   private async handleChat(req: Request, res: Response): Promise<void> {

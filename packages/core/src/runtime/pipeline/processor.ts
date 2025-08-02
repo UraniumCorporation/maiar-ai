@@ -2,7 +2,6 @@ import { Logger } from "winston";
 import { z } from "zod";
 
 import { MemoryManager, PluginRegistry, Runtime } from "../..";
-import { Json } from "../../lib/json";
 import type { StateUpdate } from "../../monitor/events";
 import { PluginResult } from "../providers";
 import { Plugin } from "../providers/plugin";
@@ -98,7 +97,7 @@ export class Processor {
       const memoryPrompt = await this.runtime.templates.render(
         "core/related_memories",
         {
-          relatedMemoriesContext: Json.toJsonString(filteredRelatedMemories)
+          relatedMemoriesContext: JSON.stringify(filteredRelatedMemories)
         }
       );
 
@@ -399,14 +398,14 @@ export class Processor {
       }))
     );
 
-    const availablePluginsString = Json.toJsonString(availablePlugins);
+    const availablePluginsString = JSON.stringify(availablePlugins);
 
     const template = await this.runtime.templates.render(
       "core/pipeline_modify",
       {
-        contextChain: Json.toJsonString(modificationContext.contextChain),
-        currentStep: Json.toJsonString(modificationContext.currentStep),
-        pipeline: Json.toJsonString(modificationContext.pipeline),
+        contextChain: JSON.stringify(modificationContext.contextChain),
+        currentStep: JSON.stringify(modificationContext.currentStep),
+        pipeline: JSON.stringify(modificationContext.pipeline),
         currentStepIndex: currentStepIndex + 1, // +1 because we want remaining steps after current
         availablePlugins: availablePluginsString
       }
@@ -532,7 +531,7 @@ export class Processor {
     task.contextChain.push({
       id: `${step.pluginId}-${Date.now()}`,
       pluginId: step.pluginId,
-      content: Json.toJsonString(result.data),
+      content: JSON.stringify(result.data),
       timestamp: Date.now()
     });
   }

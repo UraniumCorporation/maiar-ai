@@ -197,7 +197,7 @@ export class SQLiteMemoryProvider extends MemoryProvider {
       id: row.id,
       spaceId: row.space_id,
       trigger: row.trigger,
-      context: row.context ? row.context : undefined,
+      context: row.context || undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at || undefined,
       replyToId: undefined,

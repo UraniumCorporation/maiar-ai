@@ -2,6 +2,7 @@ import { Logger } from "winston";
 
 import logger from "../../../lib/logger";
 import { ModelProvider } from "../../providers/model";
+import { AnalyticsManager } from "../analytics";
 import { CapabilityRegistry } from "./capability";
 import { CapabilityTransformEntry } from "./capability/transform";
 import { ICapabilities } from "./capability/types";
@@ -20,6 +21,7 @@ export class ModelManager {
       entries: CapabilityTransformEntry[];
     }
   >();
+  private analyticsManager: AnalyticsManager;
 
   public get logger(): Logger {
     return logger.child({ scope: "model.manager" });
@@ -33,6 +35,7 @@ export class ModelManager {
     this._modelProviders = new Map<string, ModelProvider>();
     this.capabilityRegistry = new CapabilityRegistry();
     this.capabilityAliases = new Map<string, string>();
+    this.analyticsManager = new AnalyticsManager();
   }
 
   /**
@@ -300,10 +303,29 @@ export class ModelManager {
         `Invalid input for capability ${resolvedCapabilityId}: ${validatedInput.error}`
       );
     }
-    const rawResult = await capability.execute(
+
+    // Extract operation label and plugin ID for analytics
+    const configAsRecord = config as Record<string, unknown>;
+    const operationLabel =
+      (configAsRecord?.operationLabel as string) || "unknown_operation";
+
+    // Extract plugin ID from config
+    const pluginId = configAsRecord?.__pluginId as string | undefined;
+
+    // Execute capability with analytics tracking
+    const rawResult = await this.analyticsManager.wrapExecution(
+      resolvedCapabilityId as string,
+      effectiveModelId,
+      operationLabel,
       validatedInput.data,
-      validatedConfig
+      validatedConfig,
+      capability.analytics || [],
+      async () => {
+        return await capability.execute(validatedInput.data, validatedConfig);
+      },
+      pluginId
     );
+
     // Validate the provider's raw output against the provider-side schema
     const providerOutputSchema = entry?.output?.provider ?? capability.output;
     const providerParsedOutput = providerOutputSchema.safeParse(rawResult);

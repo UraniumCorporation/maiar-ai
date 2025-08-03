@@ -58,12 +58,13 @@ export const sendMessageExecutor = discordExecutorFactory(
     try {
       const responsePrompt = await runtime.templates.render(
         `${service.pluginId}/response`,
-        { context: JSON.stringify(task, null, 2) }
+        { context: JSON.stringify(task) }
       );
 
       const response = await runtime.getObject(
         DiscordSendSchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "send_message" }
       );
 
       // Extract images from context chain using DiscordImageListSchema and template
@@ -71,12 +72,13 @@ export const sendMessageExecutor = discordExecutorFactory(
       try {
         const imagePrompt = await runtime.templates.render(
           `${service.pluginId}/image_list`,
-          { context: JSON.stringify(task, null, 2) }
+          { context: JSON.stringify(task) }
         );
 
         const imageList = await runtime.getObject(
           DiscordImageListSchema,
-          imagePrompt
+          imagePrompt,
+          { operationLabel: "image_list" }
         );
         images = imageList.images || [];
       } catch {
@@ -152,7 +154,8 @@ export const sendMessageExecutor = discordExecutorFactory(
 
       const channelSelection = await runtime.getObject(
         DiscordChannelSelectionSchema,
-        channelPrompt
+        channelPrompt,
+        { operationLabel: "select_channel" }
       );
 
       const selectedChannel = textChannels.get(channelSelection.channelId);
@@ -243,12 +246,13 @@ export const replyMessageExecutor = discordExecutorFactory(
     try {
       const responsePrompt = await runtime.templates.render(
         `${service.pluginId}/response`,
-        { context: JSON.stringify(task, null, 2) }
+        { context: JSON.stringify(task) }
       );
 
       const response = await runtime.getObject(
         DiscordReplySchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "reply_message" }
       );
 
       const channel = await service.client.channels.fetch(channelId);

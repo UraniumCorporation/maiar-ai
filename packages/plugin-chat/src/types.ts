@@ -13,4 +13,9 @@ export const ChatResponseSchema = z.object({
   message: z.string().describe("The response data to send back to the client")
 });
 
+export const TextGenerationSchema = z.object({
+  text: z.string().describe("The generated text response")
+});
+
 export type ChatResponse = z.infer<typeof ChatResponseSchema>;
+export type TextGeneration = z.infer<typeof TextGenerationSchema>;

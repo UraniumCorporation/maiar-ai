@@ -9,7 +9,7 @@ export class CharacterPlugin extends Plugin {
 
   constructor(config: CharacterPluginConfig) {
     super({
-      id: "plugin-character",
+      id: "character",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)

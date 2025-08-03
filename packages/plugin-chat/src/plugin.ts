@@ -12,12 +12,16 @@ import {
 } from "@maiar-ai/core";
 
 import { textGenerationCapability } from "./capabiliites";
-import { ChatPlatformContext, ChatResponseSchema } from "./types";
+import {
+  ChatPlatformContext,
+  ChatResponseSchema,
+  TextGenerationSchema
+} from "./types";
 
 export class ChatPlugin extends Plugin {
   constructor() {
     super({
-      id: "plugin-chat",
+      id: "chat",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -63,12 +67,13 @@ export class ChatPlugin extends Plugin {
       { context: JSON.stringify(task, null, 2) }
     );
 
-    const text = await this.runtime.executeCapability(
-      textGenerationCapability.id,
-      textPrompt
+    const result = await this.runtime.getObject(
+      TextGenerationSchema,
+      textPrompt,
+      { operationLabel: "generate_text" }
     );
 
-    return { success: true, data: { text } };
+    return { success: true, data: { text: result.text } };
   }
 
   private async handleChat(req: Request, res: Response): Promise<void> {
@@ -148,7 +153,8 @@ export class ChatPlugin extends Plugin {
 
       const formattedResponse = await this.runtime.getObject(
         ChatResponseSchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "send_response" }
       );
 
       // Type assertion for responseHandler since TypeScript doesn't know its type

@@ -366,7 +366,7 @@ export class Scheduler {
     // Add conversationId to platform context metadata
     const task: AgentTask = {
       trigger,
-      contextChain: [trigger],
+      contextChain: [],
       space,
       metadata: {}
     };

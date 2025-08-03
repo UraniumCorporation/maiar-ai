@@ -1,4 +1,5 @@
 import { Logger } from "winston";
+import { z } from "zod";
 
 import { MemoryManager, PluginRegistry, Runtime } from "../..";
 import type { StateUpdate } from "../../monitor/events";
@@ -76,18 +77,56 @@ export class Processor {
     // Get related memories from the space search
     const relatedMemoriesResults = await this.memoryManager.queryMemory({
       relatedSpaces: task.space.relatedSpaces,
-      limit: 10
+      limit: 2
     });
 
-    const relatedMemories = await this.runtime.templates.render(
-      "core/related_memories",
-      {
-        relatedMemoriesContext: JSON.stringify({
-          task: task.trigger,
-          relatedMemoriesResults
-        })
+    // Filter out any related memory that matches the current task ID to prevent recursion
+    const filteredRelatedMemories = relatedMemoriesResults.filter((memory) => {
+      try {
+        const parsedTrigger = JSON.parse(memory.trigger);
+        return parsedTrigger.id !== task.trigger.id;
+      } catch {
+        // Keep memory if trigger can't be parsed
+        return true;
       }
-    );
+    });
+
+    // Generate a summary of related memories using the model instead of just template rendering
+    let relatedMemories = "";
+    if (filteredRelatedMemories.length > 0) {
+      const memoryPrompt = await this.runtime.templates.render(
+        "core/related_memories",
+        {
+          relatedMemoriesContext: JSON.stringify(filteredRelatedMemories)
+        }
+      );
+
+      // Use the model to generate an actual summary
+      const summarySchema = z.object({
+        summary: z
+          .string()
+          .describe(
+            "A concise summary of the key context from related memories that should inform pipeline decisions"
+          )
+      });
+
+      try {
+        const memoryResult = await this.runtime.getObject(
+          summarySchema,
+          memoryPrompt,
+          {
+            operationLabel: "related_memories_summary"
+          }
+        );
+        relatedMemories = memoryResult.summary;
+      } catch (error) {
+        this.logger.warn("Failed to generate memory summary, using fallback", {
+          type: "runtime.pipeline.memory.summary.failed",
+          error
+        });
+        relatedMemories = "Unable to summarize related memories";
+      }
+    }
 
     this.updateMonitoringState(task, {
       relatedMemories
@@ -97,6 +136,13 @@ export class Processor {
       type: "runtime.pipeline.related.memories",
       relatedMemories
     });
+
+    // Create a trigger for pipeline generation
+    const trigger = {
+      id: task.trigger.id,
+      pluginId: task.trigger.pluginId,
+      content: task.trigger.content
+    };
 
     // Create the generation context
     const pipelineContext: PipelineGenerationContext = {
@@ -113,7 +159,7 @@ export class Processor {
         {
           availablePlugins,
           relatedMemories,
-          trigger: pipelineContext.trigger
+          trigger
         }
       );
 
@@ -125,7 +171,10 @@ export class Processor {
 
       const pipeline = await this.runtime.getObject(
         PipelineSchema,
-        generatePipelineContext
+        generatePipelineContext,
+        {
+          operationLabel: `pipeline_generation`
+        }
       );
 
       // Add concise pipeline steps log
@@ -354,9 +403,10 @@ export class Processor {
     const template = await this.runtime.templates.render(
       "core/pipeline_modify",
       {
-        contextChain: JSON.stringify(modificationContext.contextChain, null, 2),
-        currentStep: JSON.stringify(modificationContext.currentStep, null, 2),
-        pipeline: JSON.stringify(modificationContext.pipeline, null, 2),
+        contextChain: JSON.stringify(modificationContext.contextChain),
+        currentStep: JSON.stringify(modificationContext.currentStep),
+        pipeline: JSON.stringify(modificationContext.pipeline),
+        currentStepIndex: currentStepIndex + 1, // +1 because we want remaining steps after current
         availablePlugins: availablePluginsString
       }
     );
@@ -369,7 +419,10 @@ export class Processor {
     try {
       const modification = await this.runtime.getObject(
         PipelineModificationSchema,
-        template
+        template,
+        {
+          operationLabel: `pipeline_modification`
+        }
       );
 
       this.logger.info("pipeline modification evaluation result", {
@@ -478,11 +531,8 @@ export class Processor {
     task.contextChain.push({
       id: `${step.pluginId}-${Date.now()}`,
       pluginId: step.pluginId,
-      type: step.action,
-      action: step.action,
       content: JSON.stringify(result.data),
-      timestamp: Date.now(),
-      ...result.data
+      timestamp: Date.now()
     });
   }
 

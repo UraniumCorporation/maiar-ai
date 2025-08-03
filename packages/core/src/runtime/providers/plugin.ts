@@ -3,6 +3,7 @@ import { Logger } from "winston";
 import { Runtime } from "../";
 import logger from "../../lib/logger";
 import { ICapabilities } from "../managers/model/capability/types";
+import { PluginScopedRuntime } from "./plugin-scoped-runtime";
 import { Executor, Resolvable, Trigger } from "./plugin.types";
 
 /**
@@ -43,13 +44,16 @@ export abstract class Plugin {
   }
 
   /**
-   * Retrieves the assigned runtime instance.
+   * Retrieves the assigned runtime instance with automatic plugin context injection.
    * @throws {Error} If the runtime is not available.
-   * @returns {Runtime} The plugin's assigned runtime.
+   * @returns {Runtime} The plugin's scoped runtime wrapper.
    */
   public get runtime(): Runtime {
     if (!this._runtime) throw new Error("Runtime not available");
-    return this._runtime;
+    return new PluginScopedRuntime(
+      this._runtime,
+      this.id
+    ) as unknown as Runtime;
   }
 
   /**

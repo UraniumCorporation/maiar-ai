@@ -20,7 +20,7 @@ export class MCPPlugin extends Plugin {
 
   constructor(config: ServerConfig | ServerConfig[]) {
     super({
-      id: "plugin-mcp",
+      id: "mcp",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -138,10 +138,9 @@ export class MCPPlugin extends Plugin {
 
         try {
           // Ask the LLM to produce arguments matching the schema
-          const args = (await this.runtime.getObject(
-            zodSchema,
-            prompt
-          )) as Record<string, unknown>;
+          const args = (await this.runtime.getObject(zodSchema, prompt, {
+            operationLabel: "call_tool"
+          })) as Record<string, unknown>;
 
           const result = await client.callTool({
             name: tool.name,

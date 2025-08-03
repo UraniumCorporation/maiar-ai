@@ -109,7 +109,7 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         relatedSpaces: {
           prefix: discordSpacePrefix
         },
-        limit: 10
+        limit: 2
       });
 
       const intentPrompt = await runtime.templates.render(
@@ -124,7 +124,13 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         }
       );
 
-      const intent = await runtime.getObject(MessageIntentSchema, intentPrompt);
+      const intent = await runtime.getObject(
+        MessageIntentSchema,
+        intentPrompt,
+        {
+          operationLabel: "message_intent"
+        }
+      );
 
       logger.info("intent analysis result", {
         type: "discord.message.intent",
@@ -140,7 +146,11 @@ export const postListenerTrigger: DiscordTriggerFactory = (
         logger.info("message processing started - agent locked", {
           type: "discord.message.processing",
           content: message.content,
-          author: message.author.username
+          author: message.author.username,
+          channelId: message.channelId,
+          messageId: message.id,
+          userId: message.author.id,
+          plugin: discordService.pluginId
         });
 
         // Start typing indicator

@@ -551,33 +551,89 @@ export class Runtime {
     prompt: string,
     config?: GetObjectConfig
   ): Promise<z.infer<T>> {
+    const baseOperationLabel = config?.operationLabel || "unknown_operation";
+    const startTime = Date.now();
+
+    this.logger.info("starting getObject operation", {
+      type: "runtime.getObject.start",
+      operationLabel: baseOperationLabel,
+      schemaDescription: schema.description
+    });
+
     const maxRetries = config?.maxRetries ?? 3;
     let lastError: Error | null = null;
     let lastResponse: string | null = null;
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const operationLabel =
+        attempt === 0
+          ? baseOperationLabel
+          : `${baseOperationLabel}_retry${attempt}`;
+
+      if (attempt > 0) {
+        this.logger.info("retrying getObject operation", {
+          type: "runtime.getObject.retry",
+          operationLabel,
+          attempt: attempt + 1,
+          baseOperationLabel
+        });
+      }
+
       try {
         // Generate prompt using Liquid templates via the registry
         const templateId =
           attempt === 0 ? "core/object_template" : "core/retry_template";
 
+        const formattedSchema = formatZodSchema(schema);
+
+        this.logger.debug("getObject schema formatting", {
+          type: "runtime.getObject.schema.debug",
+          operationLabel,
+          schemaType: schema.constructor.name,
+          formattedSchema,
+          formattedSchemaLength: formattedSchema.length
+        });
+
         const ctx =
           attempt === 0
             ? {
-                schema: formatZodSchema(schema),
+                schema: formattedSchema,
                 prompt
               }
             : {
-                schema: formatZodSchema(schema),
+                schema: formattedSchema,
                 prompt,
                 lastResponse: lastResponse!,
                 error: (lastError as Error).message
               };
 
+        this.logger.debug("template rendering context", {
+          type: "runtime.getObject.template.context",
+          operationLabel,
+          templateId,
+          contextKeys: Object.keys(ctx),
+          context: ctx
+        });
+
         const fullPrompt: string = await this.templates.render(templateId, ctx);
+
+        this.logger.debug("template rendering result", {
+          type: "runtime.getObject.template.result",
+          operationLabel,
+          templateId,
+          promptLength: fullPrompt.length,
+          promptPreview: fullPrompt.substring(0, 500),
+          containsSchemaMarker: fullPrompt.includes(
+            "Generate JSON matching this schema:"
+          ),
+          schemaStartIndex: fullPrompt.indexOf("{{ schema }}")
+        });
         const response = await this.modelManager.executeCapability(
           "text-generation",
-          fullPrompt
+          fullPrompt,
+          {
+            operationLabel
+          }
         );
         lastResponse = response;
 
@@ -587,17 +643,23 @@ export class Runtime {
         try {
           const parsed = JSON.parse(jsonString);
           const result = schema.parse(parsed);
-          if (attempt > 0) {
-            logger.info("successfully parsed JSON after retries", {
-              type: "runtime.getObject.success.retry",
-              attempts: attempt + 1
-            });
-          }
+
+          const duration = Date.now() - startTime;
+
+          // Log final success with base operation label to avoid counting retries as separate operations
+          logger.info("successfully parsed JSON", {
+            type: "runtime.getObject.success",
+            operationLabel: baseOperationLabel,
+            totalAttempts: attempt + 1,
+            hadRetries: attempt > 0,
+            duration
+          });
           return result;
         } catch (parseError) {
           lastError = parseError as Error;
           logger.warn(`attempt ${attempt + 1}/${maxRetries} failed`, {
             type: "runtime.getObject.parse.failed",
+            operationLabel,
             error: parseError,
             response: jsonString
           });
@@ -607,6 +669,7 @@ export class Runtime {
         lastError = error as Error;
         logger.error(`attempt ${attempt + 1}/${maxRetries} failed`, {
           type: "runtime.getObject.execution.failed",
+          operationLabel,
           error,
           prompt,
           schema: schema.description,

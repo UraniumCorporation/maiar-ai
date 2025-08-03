@@ -1,5 +1,7 @@
 import { z, ZodType } from "zod";
 
+import { AnalyticsTracker } from "../../analytics";
+
 export interface CapabilityDescriptor<
   I,
   O,
@@ -10,6 +12,7 @@ export interface CapabilityDescriptor<
   readonly input: ZodType<I>;
   readonly output: ZodType<O>;
   readonly config?: ZodType<C>; // optional provider/plugin-specific config schema
+  readonly analytics?: AnalyticsTracker[]; // optional analytics trackers
 }
 
 /**

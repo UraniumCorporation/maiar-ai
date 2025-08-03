@@ -11,7 +11,7 @@ export class SQLiteMemoryPlugin extends Plugin {
 
   constructor() {
     super({
-      id: "plugin-sqlite-memory",
+      id: "memory-sqlite",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -76,7 +76,8 @@ export class SQLiteMemoryPlugin extends Plugin {
 
     const formattedResponse = await this.runtime.getObject(
       SQLiteMemoryUploadSchema,
-      uploadPrompt
+      uploadPrompt,
+      { operationLabel: "plugin_sqlite_memory_add_document" }
     );
 
     // Get conversation ID from context
@@ -108,7 +109,8 @@ export class SQLiteMemoryPlugin extends Plugin {
 
     const queryFormattedResponse = await this.runtime.getObject(
       SQLiteQuerySchema,
-      queryPrompt
+      queryPrompt,
+      { operationLabel: "plugin_sqlite_memory_remove_document" }
     );
     const queryStmt = this.db.prepare(queryFormattedResponse.query);
     const queryResults = queryStmt.all() as { id: string }[];
@@ -154,7 +156,8 @@ export class SQLiteMemoryPlugin extends Plugin {
 
     const queryFormattedResponse = await this.runtime.getObject(
       SQLiteQuerySchema,
-      queryPrompt
+      queryPrompt,
+      { operationLabel: "plugin_sqlite_memory_query" }
     );
     const queryStmt = this.db.prepare(queryFormattedResponse.query);
     const results = queryStmt.all() as { id: string; content: string }[];

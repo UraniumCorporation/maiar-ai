@@ -34,27 +34,30 @@ type LayoutType = {
 const DEFAULT_LAYOUTS: LayoutType = {
   lg: [
     { i: "status", x: 0, y: 0, w: 12, h: 3, minW: 3, minH: 3 },
-    { i: "pipeline", x: 0, y: 2, w: 4, h: 12, minW: 3, minH: 6 },
-    { i: "contextChain", x: 4, y: 2, w: 4, h: 12, minW: 3, minH: 6 },
-    { i: "chat", x: 8, y: 2, w: 4, h: 6, minW: 3, minH: 4 },
-    { i: "events", x: 8, y: 8, w: 4, h: 6, minW: 3, minH: 4 },
-    { i: "prompts", x: 0, y: 14, w: 12, h: 8, minW: 3, minH: 4 }
+    { i: "pipeline", x: 0, y: 3, w: 4, h: 12, minW: 3, minH: 6 },
+    { i: "contextChain", x: 4, y: 3, w: 4, h: 12, minW: 3, minH: 6 },
+    { i: "chat", x: 8, y: 3, w: 4, h: 6, minW: 3, minH: 4 },
+    { i: "events", x: 8, y: 9, w: 4, h: 6, minW: 3, minH: 4 },
+    { i: "tokenAnalytics", x: 0, y: 15, w: 8, h: 8, minW: 4, minH: 6 },
+    { i: "prompts", x: 8, y: 15, w: 4, h: 8, minW: 3, minH: 4 }
   ],
   md: [
     { i: "status", x: 0, y: 0, w: 12, h: 3, minW: 3, minH: 3 },
-    { i: "pipeline", x: 0, y: 2, w: 6, h: 12, minW: 3, minH: 6 },
-    { i: "contextChain", x: 6, y: 2, w: 6, h: 12, minW: 3, minH: 6 },
-    { i: "chat", x: 0, y: 14, w: 6, h: 6, minW: 3, minH: 4 },
-    { i: "events", x: 6, y: 14, w: 6, h: 6, minW: 3, minH: 4 },
-    { i: "prompts", x: 0, y: 20, w: 12, h: 8, minW: 3, minH: 4 }
+    { i: "pipeline", x: 0, y: 3, w: 6, h: 12, minW: 3, minH: 6 },
+    { i: "contextChain", x: 6, y: 3, w: 6, h: 12, minW: 3, minH: 6 },
+    { i: "chat", x: 0, y: 15, w: 6, h: 6, minW: 3, minH: 4 },
+    { i: "events", x: 6, y: 15, w: 6, h: 6, minW: 3, minH: 4 },
+    { i: "tokenAnalytics", x: 0, y: 21, w: 8, h: 8, minW: 4, minH: 6 },
+    { i: "prompts", x: 8, y: 21, w: 4, h: 8, minW: 3, minH: 4 }
   ],
   sm: [
     { i: "status", x: 0, y: 0, w: 12, h: 3, minW: 3, minH: 3 },
-    { i: "pipeline", x: 0, y: 2, w: 12, h: 8, minW: 3, minH: 6 },
-    { i: "contextChain", x: 0, y: 10, w: 12, h: 8, minW: 3, minH: 6 },
-    { i: "chat", x: 0, y: 18, w: 12, h: 6, minW: 3, minH: 4 },
-    { i: "events", x: 0, y: 24, w: 12, h: 6, minW: 3, minH: 4 },
-    { i: "prompts", x: 0, y: 30, w: 12, h: 8, minW: 3, minH: 4 }
+    { i: "pipeline", x: 0, y: 3, w: 12, h: 8, minW: 3, minH: 6 },
+    { i: "contextChain", x: 0, y: 11, w: 12, h: 8, minW: 3, minH: 6 },
+    { i: "chat", x: 0, y: 19, w: 12, h: 6, minW: 3, minH: 4 },
+    { i: "events", x: 0, y: 25, w: 12, h: 6, minW: 3, minH: 4 },
+    { i: "tokenAnalytics", x: 0, y: 31, w: 12, h: 8, minW: 4, minH: 6 },
+    { i: "prompts", x: 0, y: 39, w: 12, h: 8, minW: 3, minH: 4 }
   ]
 };
 
@@ -122,6 +125,7 @@ interface GridLayoutProps {
     chat: ReactNode;
     events: ReactNode;
     prompts: ReactNode;
+    tokenAnalytics: ReactNode;
   };
   onResetLayout?: (resetFn: () => void) => void;
 }
@@ -332,6 +336,9 @@ export const GridLayout = ({ children, onResetLayout }: GridLayoutProps) => {
         </div>
         <div key="events">
           <Panel title="Events">{children.events}</Panel>
+        </div>
+        <div key="tokenAnalytics">
+          <Panel title="Token Analytics">{children.tokenAnalytics}</Panel>
         </div>
         <div key="prompts">
           <Panel title="Prompts">{children.prompts}</Panel>

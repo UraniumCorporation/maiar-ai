@@ -23,7 +23,7 @@ export class TerminalPlugin extends Plugin {
 
   constructor(private config: TerminalPluginConfig) {
     super({
-      id: "plugin-terminal",
+      id: "terminal",
       description: async () =>
         (
           await this.runtime.templates.render(`${this.id}/plugin_description`)
@@ -79,7 +79,8 @@ export class TerminalPlugin extends Plugin {
 
       const formattedResponse = await this.runtime.getObject(
         TerminalResponseSchema,
-        responsePrompt
+        responsePrompt,
+        { operationLabel: "send_response" }
       );
 
       await platformContext.responseHandler(formattedResponse.message);

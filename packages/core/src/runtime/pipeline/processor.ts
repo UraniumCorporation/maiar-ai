@@ -1,5 +1,4 @@
 import { Logger } from "winston";
-import { z } from "zod";
 
 import { MemoryManager, PluginRegistry, Runtime } from "../..";
 import type { StateUpdate } from "../../monitor/events";
@@ -14,7 +13,8 @@ import {
   PipelineModificationContext,
   PipelineModificationSchema,
   PipelineSchema,
-  PipelineStep
+  PipelineStep,
+  RelatedMemoriesSchema
 } from "./types";
 
 export class Processor {
@@ -37,13 +37,73 @@ export class Processor {
   }
 
   /**
+   * Analyzes related memories to provide structured context for pipeline planning.
+   * Retrieves memories from the space, filters out the current task, and generates
+   * enhanced analysis with asset preservation and tiered context.
+   *
+   * @param task - The current agent task
+   * @returns Structured memory analysis as JSON string or simple summary
+   */
+  private async analyzeRelatedMemories(task: AgentTask): Promise<string> {
+    // Get related memories from the space search (increased limit for better context)
+    const relatedMemoriesResults = await this.memoryManager.queryMemory({
+      relatedSpaces: task.space.relatedSpaces,
+      limit: 25 // increased from 2 to get more context
+    });
+
+    // Filter out any related memory that matches the current task ID to prevent recursion
+    const filteredRelatedMemories = relatedMemoriesResults.filter((memory) => {
+      try {
+        const parsedTrigger = JSON.parse(memory.trigger);
+        return parsedTrigger.id !== task.trigger.id;
+      } catch {
+        // Keep memory if trigger can't be parsed
+        return true;
+      }
+    });
+
+    // Generate structured analysis of related memories
+    let relatedMemories = "";
+    if (filteredRelatedMemories.length > 0) {
+      const memoryPrompt = await this.runtime.templates.render(
+        "core/related_memories",
+        {
+          memories: filteredRelatedMemories
+        }
+      );
+
+      const memoryResult = await this.runtime.getObject(
+        RelatedMemoriesSchema,
+        memoryPrompt,
+        {
+          operationLabel: "related_memories_analysis"
+        }
+      );
+
+      // Convert structured result to JSON string for context chain
+      relatedMemories = JSON.stringify(memoryResult);
+    }
+
+    this.updateMonitoringState(task, {
+      relatedMemories
+    });
+
+    this.logger.debug("related memories context", {
+      type: "runtime.pipeline.related.memories",
+      relatedMemories
+    });
+
+    return relatedMemories;
+  }
+
+  /**
    * Spawns the pipeline workflow, which creates a pipeline, executes pipeline steps, and modifies the pipeline as needed during execution
    * @param task - the task to execute, internally contains the context chain which is modified as the pipeline is executed
    * @returns the context chain after the pipeline has been executed
    */
   public async spawn(task: AgentTask): Promise<Context[]> {
-    const pipeline = await this.createPipeline(task);
-    await this.executePipeline(pipeline, task);
+    const { pipeline, relatedMemories } = await this.createPipeline(task);
+    await this.executePipeline(pipeline, task, relatedMemories);
     return task.contextChain;
   }
 
@@ -55,7 +115,9 @@ export class Processor {
    * @param task - tasks originate from plugin triggers and define different kinds of metadata, as well as storing the context chain
    * @returns
    */
-  private async createPipeline(task: AgentTask): Promise<Pipeline> {
+  private async createPipeline(
+    task: AgentTask
+  ): Promise<{ pipeline: Pipeline; relatedMemories: string }> {
     this.updateMonitoringState(task, {
       isRunning: true
     });
@@ -74,68 +136,8 @@ export class Processor {
       }))
     );
 
-    // Get related memories from the space search
-    const relatedMemoriesResults = await this.memoryManager.queryMemory({
-      relatedSpaces: task.space.relatedSpaces,
-      limit: 2
-    });
-
-    // Filter out any related memory that matches the current task ID to prevent recursion
-    const filteredRelatedMemories = relatedMemoriesResults.filter((memory) => {
-      try {
-        const parsedTrigger = JSON.parse(memory.trigger);
-        return parsedTrigger.id !== task.trigger.id;
-      } catch {
-        // Keep memory if trigger can't be parsed
-        return true;
-      }
-    });
-
-    // Generate a summary of related memories using the model instead of just template rendering
-    let relatedMemories = "";
-    if (filteredRelatedMemories.length > 0) {
-      const memoryPrompt = await this.runtime.templates.render(
-        "core/related_memories",
-        {
-          relatedMemoriesContext: JSON.stringify(filteredRelatedMemories)
-        }
-      );
-
-      // Use the model to generate an actual summary
-      const summarySchema = z.object({
-        summary: z
-          .string()
-          .describe(
-            "A concise summary of the key context from related memories that should inform pipeline decisions"
-          )
-      });
-
-      try {
-        const memoryResult = await this.runtime.getObject(
-          summarySchema,
-          memoryPrompt,
-          {
-            operationLabel: "related_memories_summary"
-          }
-        );
-        relatedMemories = memoryResult.summary;
-      } catch (error) {
-        this.logger.warn("Failed to generate memory summary, using fallback", {
-          type: "runtime.pipeline.memory.summary.failed",
-          error
-        });
-        relatedMemories = "Unable to summarize related memories";
-      }
-    }
-
-    this.updateMonitoringState(task, {
-      relatedMemories
-    });
-
-    this.logger.debug("related memories context", {
-      type: "runtime.pipeline.related.memories",
-      relatedMemories
-    });
+    // Analyze related memories for pipeline context
+    const relatedMemories = await this.analyzeRelatedMemories(task);
 
     // Create a trigger for pipeline generation
     const trigger = {
@@ -189,7 +191,7 @@ export class Processor {
       // Emit unified state snapshot instead of legacy generation event
       this.updateMonitoringState(task, {
         pipeline: pipeline.steps,
-        relatedMemories: pipeline.relatedMemories,
+        relatedMemories: relatedMemories,
         currentStepIndex: 0,
         currentStep: pipeline.steps[0]
       });
@@ -199,7 +201,7 @@ export class Processor {
         pipeline
       });
 
-      return pipeline;
+      return { pipeline, relatedMemories };
     } catch (error) {
       // Log pipeline generation error
       this.logger.error("pipeline generation failed", {
@@ -239,7 +241,8 @@ export class Processor {
    */
   private async executePipeline(
     pipeline: Pipeline,
-    task: AgentTask
+    task: AgentTask,
+    relatedMemories: string
   ): Promise<void> {
     try {
       let currentPipeline = [...pipeline.steps];
@@ -249,7 +252,7 @@ export class Processor {
       const relatedMemoriesContext: Context = {
         id: `related-memories-${Date.now()}`,
         pluginId: "related-memories",
-        content: pipeline.relatedMemories,
+        content: relatedMemories,
         timestamp: Date.now()
       };
 
@@ -274,7 +277,7 @@ export class Processor {
         // Snapshot BEFORE executing the step so UI can highlight long-running step
         this.updateMonitoringState(task, {
           pipeline: currentPipeline,
-          relatedMemories: pipeline.relatedMemories,
+          relatedMemories: relatedMemories,
           currentStepIndex,
           currentStep,
           modificationCheckInProgress: false
@@ -289,7 +292,7 @@ export class Processor {
           // Update monitoring state after error context changes
           this.updateMonitoringState(task, {
             pipeline: currentPipeline,
-            relatedMemories: pipeline.relatedMemories,
+            relatedMemories: relatedMemories,
             currentStepIndex,
             currentStep
           });
@@ -300,7 +303,7 @@ export class Processor {
           // Update monitoring state after context changes
           this.updateMonitoringState(task, {
             pipeline: currentPipeline,
-            relatedMemories: pipeline.relatedMemories,
+            relatedMemories: relatedMemories,
             currentStepIndex,
             currentStep
           });
@@ -309,7 +312,7 @@ export class Processor {
         // Emit state snapshot indicating modification evaluation started
         this.updateMonitoringState(task, {
           pipeline: currentPipeline,
-          relatedMemories: pipeline.relatedMemories,
+          relatedMemories: relatedMemories,
           currentStepIndex,
           currentStep,
           modificationCheckInProgress: true
@@ -342,7 +345,7 @@ export class Processor {
           explanation?: string;
         } = {
           pipeline: currentPipeline,
-          relatedMemories: pipeline.relatedMemories,
+          relatedMemories: relatedMemories,
           currentStepIndex,
           currentStep: nextStep,
           modificationCheckInProgress: false
@@ -358,7 +361,7 @@ export class Processor {
     } finally {
       this.updateMonitoringState(task, {
         pipeline: pipeline.steps,
-        relatedMemories: pipeline.relatedMemories,
+        relatedMemories: relatedMemories,
         currentStepIndex: pipeline.steps.length,
         currentStep: undefined,
         modificationCheckInProgress: false,

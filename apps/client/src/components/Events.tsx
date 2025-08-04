@@ -5,7 +5,7 @@ import { VariableSizeList as List } from "react-window";
 import CodeIcon from "@mui/icons-material/Code";
 import { alpha, Box, Paper, Popover, Stack, Typography } from "@mui/material";
 
-import { useEvents } from "../contexts/MonitorContext";
+import { useEvents } from "../hooks/useMonitor";
 import { MonitorEvent } from "../types/monitorSpec";
 import { EventFilter } from "./EventFilter";
 import JsonView from "./JsonView";

@@ -10,7 +10,7 @@ import {
 } from "@mui/lab";
 import { Box, Link, Paper, Typography } from "@mui/material";
 
-import { useAgentState } from "../contexts/MonitorContext";
+import { useAgentState } from "../hooks/useMonitor";
 import { AutoScroll } from "./AutoScroll";
 
 export function ContextChain() {

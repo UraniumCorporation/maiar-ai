@@ -16,8 +16,8 @@ import {
 } from "@mui/material";
 
 import { DEFAULT_URLS } from "../config";
-import { useWsConnected } from "../contexts/MonitorContext";
 import { useChatApi } from "../hooks/useChatApi";
+import { useWsConnected } from "../hooks/useMonitor";
 import { MessageSegment, parseMessage } from "../utils/parseMessage";
 import { AutoScroll } from "./AutoScroll";
 

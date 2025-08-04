@@ -53,12 +53,7 @@ export const PipelineSchema = z
   .object({
     steps: z
       .array(PipelineStepSchema)
-      .describe("A sequence of steps to execute in order"),
-    relatedMemories: z
-      .string()
-      .describe(
-        "Take the value you have from the context if present and summarize it in the context of the current task."
-      )
+      .describe("A sequence of steps to execute in order")
   })
   .describe("A sequence of steps to execute in order");
 
@@ -113,6 +108,52 @@ export const PipelineModificationSchema = z
   .describe("Result of pipeline modification evaluation");
 
 export type PipelineModification = z.infer<typeof PipelineModificationSchema>;
+
+/**
+ * Schema for enhanced related memories analysis with structured context preservation
+ */
+export const RelatedMemoriesSchema = z.object({
+  immediateContext: z
+    .string()
+    .describe(
+      "Full context from the last 2-3 interactions, preserving all details and specific references"
+    ),
+
+  recentSummary: z
+    .string()
+    .describe(
+      "Summary of last 5-10 interactions, maintaining key outcomes and patterns while preserving URLs, file paths, and generated assets"
+    ),
+
+  historicalSummary: z
+    .string()
+    .describe(
+      "General themes and patterns from older interactions, high-level conversation context"
+    ),
+
+  availableAssets: z
+    .array(
+      z.object({
+        type: z
+          .string()
+          .describe(
+            "Type of asset, e.g. 'image', 'file', 'url', 'data', video, audio, etc."
+          ),
+        reference: z
+          .string()
+          .describe("Actual URL, file path, or reference string"),
+        context: z
+          .string()
+          .describe("When and how this asset was created or used"),
+        timestamp: z.number().describe("When this asset was created")
+      })
+    )
+    .describe(
+      "Images, files, URLs, and other assets that were generated or referenced and might be needed again"
+    )
+});
+
+export type RelatedMemories = z.infer<typeof RelatedMemoriesSchema>;
 
 export interface GetObjectConfig {
   maxRetries?: number;

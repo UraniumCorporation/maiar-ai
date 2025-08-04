@@ -1,26 +1,9 @@
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useReducer
-} from "react";
+import React, { ReactNode, useEffect, useReducer } from "react";
 
 import { DEFAULT_URLS, STORAGE_KEYS } from "../config";
-import { monitorReducer, MonitorState } from "../state/monitorReducer";
+import { monitorReducer } from "../state/monitorReducer";
 import { parseRaw } from "../utils/parseEvent";
-
-// ----------------------
-// Context + Provider
-// ----------------------
-type ExtendedMonitorState = MonitorState & {
-  url: string;
-  setUrl: (url: string) => void;
-};
-
-export const MonitorContext = createContext<ExtendedMonitorState | undefined>(
-  undefined
-);
+import { MonitorContext } from "./MonitorContext";
 
 export function MonitorProvider({ children }: { children: ReactNode }) {
   // Initial state
@@ -114,18 +97,3 @@ export function MonitorProvider({ children }: { children: ReactNode }) {
     </MonitorContext.Provider>
   );
 }
-
-// ----------------------
-// Selector hooks
-// ----------------------
-export const useMonitorState = () => {
-  const ctx = useContext(MonitorContext);
-  if (!ctx)
-    throw new Error("useMonitor hooks must be used within MonitorProvider");
-  return ctx;
-};
-
-export const useAgentState = () => useMonitorState().agentState;
-export const usePipelineState = () => useMonitorState().pipelineState;
-export const useEvents = () => useMonitorState().events;
-export const useWsConnected = () => useMonitorState().connected;

@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
-import { useAgentState } from "../contexts/MonitorContext";
+import { useAgentState } from "../hooks/useMonitor";
 
 const StyledGridItem = styled(Grid)({
   display: "flex",

@@ -10,6 +10,8 @@ import {
 import { alpha, Box, Chip, Paper, Stack, Typography } from "@mui/material";
 import { styled, Theme } from "@mui/material/styles";
 
+import { RelatedMemoriesView } from "./RelatedMemoriesView";
+
 interface PipelineStep {
   pluginId: string;
   action: string;
@@ -222,32 +224,7 @@ export function PipelineSteps({
 
   return (
     <Stack spacing={2} sx={{ width: "100%", maxWidth: "1200px" }}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          width: "100%",
-          maxWidth: "1200px",
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
-          border: 1,
-          borderColor: (theme) => alpha(theme.palette.primary.main, 0.2)
-        }}
-      >
-        <Typography
-          variant="subtitle2"
-          sx={{
-            color: "primary.main",
-            fontFamily: "monospace",
-            fontWeight: 500,
-            mb: 1
-          }}
-        >
-          Memory Summary
-        </Typography>
-        <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-          {relatedMemories}
-        </Typography>
-      </Paper>
+      <RelatedMemoriesView relatedMemories={relatedMemories} />
       {explanation && (
         <Paper
           elevation={0}

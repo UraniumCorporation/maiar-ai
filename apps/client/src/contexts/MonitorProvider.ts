@@ -1,1 +1,1 @@
-export { MonitorProvider } from "./MonitorContext";
+export { MonitorProvider } from "./MonitorContext.tsx";

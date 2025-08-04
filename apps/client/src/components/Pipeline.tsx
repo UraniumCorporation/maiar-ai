@@ -1,6 +1,6 @@
 import { Box, Paper, Typography } from "@mui/material";
 
-import { usePipelineState } from "../contexts/MonitorContext";
+import { usePipelineState } from "../hooks/useMonitor";
 import { AutoScroll } from "./AutoScroll";
 import { PipelineSteps } from "./PipelineSteps";
 

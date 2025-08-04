@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 
 import { Alert, Box, Typography } from "@mui/material";
 
-import { useEvents } from "../contexts/MonitorContext";
+import { useEvents } from "../hooks/useMonitor";
 
 interface OperationTokenData {
   operationLabel: string;

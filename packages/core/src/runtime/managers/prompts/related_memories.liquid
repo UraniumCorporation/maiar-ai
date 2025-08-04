@@ -1,5 +1,31 @@
-These related memories are previous interactions related to or taking place in the same forum as your current task. Summarize the key context from these memories to inform your pipeline decisions:
+Analyze conversation history to provide structured context for tool calls and pipeline planning.
 
-{{ relatedMemoriesContext }}
+RELATED MEMORIES (JSON format, most recent first):
+{{ memories | json }}
 
-Based on the above memories, provide a concise summary of the relevant context that should be considered when planning the pipeline.
+ANALYSIS INSTRUCTIONS:
+
+Provide structured analysis with these specific sections:
+
+1. IMMEDIATE CONTEXT (last 2-3 interactions):
+   - Preserve ALL specific details including URLs, file paths, generated content
+   - Include exact references that might be needed for follow-up actions
+   - Do NOT summarize - provide full context for recent interactions
+
+2. RECENT SUMMARY (interactions 4-10):
+   - Summarize key outcomes and decisions from recent history
+   - PRESERVE any specific references (URLs, file paths, generated assets)
+   - Focus on actionable information and established patterns
+
+3. HISTORICAL SUMMARY (older interactions):
+   - High-level themes and general conversation context  
+   - Background patterns without specific details
+   - Overall relationship/conversation climate
+
+4. AVAILABLE ASSETS (critical for follow-ups):
+   - Extract ALL URLs, file paths, image references, structured data
+   - Note when each asset was created and in what context
+   - Include the specific reference/path and brief description
+   - Focus on assets that could be referenced in future tool calls
+
+Provide comprehensive structured analysis that enables effective tool planning and asset reuse.

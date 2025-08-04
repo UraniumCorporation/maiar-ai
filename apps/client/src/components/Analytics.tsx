@@ -34,7 +34,7 @@ import {
   YAxis
 } from "recharts";
 
-import { useEvents } from "../contexts/MonitorContext";
+import { useEvents } from "../hooks/useMonitor";
 import { AnalyticsEvent } from "../types/monitorSpec";
 
 interface MetricData {

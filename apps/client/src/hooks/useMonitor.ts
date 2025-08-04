@@ -2,11 +2,20 @@ import { useContext } from "react";
 
 import { MonitorContext } from "../contexts/MonitorContext";
 
-// Hook to use the monitor context
-export function useMonitor() {
-  const context = useContext(MonitorContext);
-  if (!context) {
-    throw new Error("useMonitor must be used within a MonitorProvider");
-  }
-  return context;
-}
+// ----------------------
+// Selector hooks
+// ----------------------
+export const useMonitorState = () => {
+  const ctx = useContext(MonitorContext);
+  if (!ctx)
+    throw new Error("useMonitor hooks must be used within MonitorProvider");
+  return ctx;
+};
+
+// Alias for backward compatibility
+export const useMonitor = useMonitorState;
+
+export const useAgentState = () => useMonitorState().agentState;
+export const usePipelineState = () => useMonitorState().pipelineState;
+export const useEvents = () => useMonitorState().events;
+export const useWsConnected = () => useMonitorState().connected;

@@ -49,7 +49,7 @@
   "dependencies": {
     "@clack/prompts": "0.11.0",
     "commander": "14.0.0",
-    "liquidjs": "10.21.1"
+    "liquidjs": "10.25.0"
   },
   "devDependencies": {
     "@types/node": "22.13.1",

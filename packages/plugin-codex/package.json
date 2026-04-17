@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@maiar-ai/core": "workspace:*",
-    "@openai/codex": "0.1.2504211509",
+    "@openai/codex": "0.39.0",
     "execa": "9.3.1",
     "zod": "3.24.1"
   },

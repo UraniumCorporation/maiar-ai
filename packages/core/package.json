@@ -60,12 +60,12 @@
     "cors": "2.8.5",
     "express": "4.21.2",
     "fast-glob": "3.3.3",
-    "liquidjs": "10.21.1",
+    "liquidjs": "10.27.1",
     "openai": "4.82.0",
     "rxjs": "7.8.1",
     "winston": "3.17.0",
     "winston-transport": "4.9.0",
-    "ws": "8.18.1",
+    "ws": "8.21.0",
     "zod": "3.24.1"
   },
   "devDependencies": {
